@@ -126,15 +126,7 @@ public sealed class ReconciliationMatch
     }
 
     /// <summary>
-    /// Gets the budget scope (Shared or Personal).
-    /// </summary>
-    public BudgetScope Scope
-    {
-        get; private set;
-    }
-
-    /// <summary>
-    /// Gets the owner user ID. NULL for Shared scope, user ID for Personal scope.
+    /// Gets the owner user ID. Null for shared items, user ID for user-owned items.
     /// </summary>
     public Guid? OwnerUserId
     {
@@ -150,8 +142,7 @@ public sealed class ReconciliationMatch
     /// <param name="confidenceScore">The match confidence score (0.0 to 1.0).</param>
     /// <param name="amountVariance">The variance between expected and actual amount.</param>
     /// <param name="dateOffsetDays">The offset in days from scheduled date.</param>
-    /// <param name="scope">The budget scope.</param>
-    /// <param name="ownerUserId">The owner user ID (required for Personal scope).</param>
+    /// <param name="ownerUserId">The owner user ID (null for shared items).</param>
     /// <returns>A new <see cref="ReconciliationMatch"/> instance.</returns>
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
     public static ReconciliationMatch Create(
@@ -161,7 +152,6 @@ public sealed class ReconciliationMatch
         decimal confidenceScore,
         decimal amountVariance,
         int dateOffsetDays,
-        BudgetScope scope,
         Guid? ownerUserId)
     {
         if (importedTransactionId == Guid.Empty)
@@ -177,11 +167,6 @@ public sealed class ReconciliationMatch
         if (confidenceScore < 0 || confidenceScore > 1)
         {
             throw new DomainException("Confidence score must be between 0 and 1.");
-        }
-
-        if (scope == BudgetScope.Personal && ownerUserId is null)
-        {
-            throw new DomainException("Owner user ID is required for Personal scope.");
         }
 
         var confidenceLevel = DetermineConfidenceLevel(confidenceScore);
@@ -200,7 +185,6 @@ public sealed class ReconciliationMatch
             CreatedAtUtc = DateTime.UtcNow,
             ResolvedAtUtc = null,
             Source = MatchSource.Auto,
-            Scope = scope,
             OwnerUserId = ownerUserId,
         };
     }
@@ -214,8 +198,7 @@ public sealed class ReconciliationMatch
     /// <param name="recurringInstanceDate">The scheduled instance date.</param>
     /// <param name="amountVariance">The variance between expected and actual amount.</param>
     /// <param name="dateOffsetDays">The offset in days from scheduled date.</param>
-    /// <param name="scope">The budget scope.</param>
-    /// <param name="ownerUserId">The owner user ID (required for Personal scope).</param>
+    /// <param name="ownerUserId">The owner user ID (null for shared items).</param>
     /// <returns>A new <see cref="ReconciliationMatch"/> instance with Manual source.</returns>
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
     public static ReconciliationMatch CreateManualLink(
@@ -224,7 +207,6 @@ public sealed class ReconciliationMatch
         DateOnly recurringInstanceDate,
         decimal amountVariance,
         int dateOffsetDays,
-        BudgetScope scope,
         Guid? ownerUserId)
     {
         if (importedTransactionId == Guid.Empty)
@@ -235,11 +217,6 @@ public sealed class ReconciliationMatch
         if (recurringTransactionId == Guid.Empty)
         {
             throw new DomainException("Recurring transaction ID is required.");
-        }
-
-        if (scope == BudgetScope.Personal && ownerUserId is null)
-        {
-            throw new DomainException("Owner user ID is required for Personal scope.");
         }
 
         var now = DateTime.UtcNow;
@@ -257,7 +234,6 @@ public sealed class ReconciliationMatch
             CreatedAtUtc = now,
             ResolvedAtUtc = now,
             Source = MatchSource.Manual,
-            Scope = scope,
             OwnerUserId = ownerUserId,
         };
     }

@@ -41,7 +41,6 @@ public class ReportsDashboardTests : BunitContext, IAsyncLifetime
         this.JSInterop.Mode = JSRuntimeMode.Loose;
         this.Services.AddSingleton<IBudgetApiService>(_fakeApiService);
         this.Services.AddSingleton<IChartDataService>(new FakeChartDataService());
-        this.Services.AddSingleton(new ScopeService(this.JSInterop.JSRuntime));
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
         this.Services.AddSingleton<IToastService, ToastService>();

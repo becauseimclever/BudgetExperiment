@@ -20,7 +20,7 @@ internal sealed class ReconciliationMatchRepository : IReconciliationMatchReposi
     /// Initializes a new instance of the <see cref="ReconciliationMatchRepository"/> class.
     /// </summary>
     /// <param name="context">The database context.</param>
-    /// <param name="userContext">The user context for scope filtering.</param>
+    /// <param name="userContext">The user context for ownership filtering.</param>
     public ReconciliationMatchRepository(BudgetDbContext context, IUserContext userContext)
     {
         _context = context;
@@ -152,17 +152,18 @@ internal sealed class ReconciliationMatchRepository : IReconciliationMatchReposi
     }
 
     /// <summary>
-    /// Applies budget scope filtering to a query. IMPORTANT: Every public query method
-    /// in this repository MUST call this method to prevent cross-scope data leaks.
-    /// See Feature 065 for the audit that established this rule.
+    /// Applies ownership filtering to a query. IMPORTANT: Every public query method
+    /// in this repository MUST call this method to prevent cross-user data leaks.
     /// </summary>
     private IQueryable<ReconciliationMatch> ApplyScopeFilter(IQueryable<ReconciliationMatch> query)
     {
         var userId = _userContext.UserIdAsGuid;
 
-        // Show shared matches and user's personal matches
-        return query.Where(m =>
-            m.Scope == BudgetScope.Shared ||
-            (m.Scope == BudgetScope.Personal && m.OwnerUserId == userId));
+        if (userId is null)
+        {
+            return query.Where(m => m.OwnerUserId == null);
+        }
+
+        return query.Where(m => m.OwnerUserId == null || m.OwnerUserId == userId);
     }
 }

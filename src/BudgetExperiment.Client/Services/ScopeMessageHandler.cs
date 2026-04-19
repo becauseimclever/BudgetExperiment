@@ -14,15 +14,6 @@ public sealed class ScopeMessageHandler : DelegatingHandler
     /// </summary>
     public const string ScopeHeaderName = "X-Budget-Scope";
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ScopeMessageHandler"/> class.
-    /// </summary>
-    /// <param name="scopeService">The scope service.</param>
-    public ScopeMessageHandler(ScopeService scopeService)
-    {
-        _ = scopeService;
-    }
-
     /// <inheritdoc/>
     protected override async Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,

@@ -32,7 +32,6 @@ public class ReconciliationMatchTests
             confidenceScore,
             amountVariance,
             dateOffsetDays,
-            BudgetScope.Personal,
             _ownerUserId);
 
         // Assert
@@ -43,7 +42,6 @@ public class ReconciliationMatchTests
         Assert.Equal(confidenceScore, match.ConfidenceScore);
         Assert.Equal(amountVariance, match.AmountVariance);
         Assert.Equal(dateOffsetDays, match.DateOffsetDays);
-        Assert.Equal(BudgetScope.Personal, match.Scope);
         Assert.Equal(_ownerUserId, match.OwnerUserId);
         Assert.NotEqual(default, match.CreatedAtUtc);
         Assert.Null(match.ResolvedAtUtc);
@@ -63,7 +61,6 @@ public class ReconciliationMatchTests
             score,
             amountVariance: 0m,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
 
         // Assert
@@ -84,7 +81,6 @@ public class ReconciliationMatchTests
             score,
             amountVariance: 0m,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
 
         // Assert
@@ -105,7 +101,6 @@ public class ReconciliationMatchTests
             score,
             amountVariance: 0m,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
 
         // Assert
@@ -123,7 +118,6 @@ public class ReconciliationMatchTests
             confidenceScore: 0.75m,
             amountVariance: 0m,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
 
         // Assert
@@ -142,7 +136,6 @@ public class ReconciliationMatchTests
                 confidenceScore: 0.75m,
                 amountVariance: 0m,
                 dateOffsetDays: 0,
-                BudgetScope.Shared,
                 ownerUserId: null));
 
         Assert.Contains("imported transaction", ex.Message, StringComparison.OrdinalIgnoreCase);
@@ -160,7 +153,6 @@ public class ReconciliationMatchTests
                 confidenceScore: 0.75m,
                 amountVariance: 0m,
                 dateOffsetDays: 0,
-                BudgetScope.Shared,
                 ownerUserId: null));
 
         Assert.Contains("recurring transaction", ex.Message, StringComparison.OrdinalIgnoreCase);
@@ -180,7 +172,6 @@ public class ReconciliationMatchTests
                 score,
                 amountVariance: 0m,
                 dateOffsetDays: 0,
-                BudgetScope.Shared,
                 ownerUserId: null));
 
         Assert.Contains("confidence score", ex.Message, StringComparison.OrdinalIgnoreCase);
@@ -197,7 +188,6 @@ public class ReconciliationMatchTests
             confidenceScore: 0.75m,
             amountVariance: 0m,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
 
         // Act
@@ -219,7 +209,6 @@ public class ReconciliationMatchTests
             confidenceScore: 0.75m,
             amountVariance: 0m,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
 
         // Act
@@ -241,7 +230,6 @@ public class ReconciliationMatchTests
             confidenceScore: 0.90m,
             amountVariance: 0m,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
 
         // Act
@@ -266,7 +254,6 @@ public class ReconciliationMatchTests
             confidenceScore: 0.75m,
             amountVariance: 0m,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
 
         // Set to resolved state
@@ -288,43 +275,6 @@ public class ReconciliationMatchTests
         Assert.Contains("already resolved", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
-    [Fact]
-    public void Create_With_Shared_Scope_Sets_Null_OwnerUserId()
-    {
-        // Act
-        var match = ReconciliationMatch.Create(
-            _importedTransactionId,
-            _recurringTransactionId,
-            _instanceDate,
-            confidenceScore: 0.75m,
-            amountVariance: 0m,
-            dateOffsetDays: 0,
-            BudgetScope.Shared,
-            ownerUserId: null);
-
-        // Assert
-        Assert.Equal(BudgetScope.Shared, match.Scope);
-        Assert.Null(match.OwnerUserId);
-    }
-
-    [Fact]
-    public void Create_With_Personal_Scope_Requires_OwnerUserId()
-    {
-        // Act & Assert
-        var ex = Assert.Throws<DomainException>(() =>
-            ReconciliationMatch.Create(
-                _importedTransactionId,
-                _recurringTransactionId,
-                _instanceDate,
-                confidenceScore: 0.75m,
-                amountVariance: 0m,
-                dateOffsetDays: 0,
-                BudgetScope.Personal,
-                ownerUserId: null));
-
-        Assert.Contains("owner", ex.Message, StringComparison.OrdinalIgnoreCase);
-    }
-
     [Theory]
     [InlineData(10.00)] // paid less than expected
     [InlineData(-10.00)] // paid more than expected
@@ -340,7 +290,6 @@ public class ReconciliationMatchTests
             confidenceScore: 0.75m,
             amountVariance,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
 
         // Assert
@@ -360,7 +309,6 @@ public class ReconciliationMatchTests
             confidenceScore: 0.75m,
             amountVariance: 0m,
             dateOffsetDays,
-            BudgetScope.Shared,
             ownerUserId: null);
 
         // Assert
@@ -378,7 +326,6 @@ public class ReconciliationMatchTests
             confidenceScore: 0.75m,
             amountVariance: 0m,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
 
         // Assert
@@ -395,7 +342,6 @@ public class ReconciliationMatchTests
             _instanceDate,
             amountVariance: 5.00m,
             dateOffsetDays: 2,
-            BudgetScope.Personal,
             _ownerUserId);
 
         // Assert
@@ -412,7 +358,6 @@ public class ReconciliationMatchTests
             _instanceDate,
             amountVariance: 0m,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
 
         // Assert
@@ -430,7 +375,6 @@ public class ReconciliationMatchTests
             _instanceDate,
             amountVariance: 0m,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
 
         // Assert
@@ -449,7 +393,6 @@ public class ReconciliationMatchTests
                 _instanceDate,
                 amountVariance: 0m,
                 dateOffsetDays: 0,
-                BudgetScope.Shared,
                 ownerUserId: null));
 
         Assert.Contains("imported transaction", ex.Message, StringComparison.OrdinalIgnoreCase);
@@ -466,27 +409,9 @@ public class ReconciliationMatchTests
                 _instanceDate,
                 amountVariance: 0m,
                 dateOffsetDays: 0,
-                BudgetScope.Shared,
                 ownerUserId: null));
 
         Assert.Contains("recurring transaction", ex.Message, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public void CreateManualLink_With_Personal_Scope_Requires_OwnerUserId()
-    {
-        // Act & Assert
-        var ex = Assert.Throws<DomainException>(() =>
-            ReconciliationMatch.CreateManualLink(
-                _importedTransactionId,
-                _recurringTransactionId,
-                _instanceDate,
-                amountVariance: 0m,
-                dateOffsetDays: 0,
-                BudgetScope.Personal,
-                ownerUserId: null));
-
-        Assert.Contains("owner", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -499,7 +424,6 @@ public class ReconciliationMatchTests
             _instanceDate,
             amountVariance: 0m,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
 
         // Act
@@ -520,7 +444,6 @@ public class ReconciliationMatchTests
             confidenceScore: 0.90m,
             amountVariance: 0m,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
         match.AutoMatch();
 
@@ -542,7 +465,6 @@ public class ReconciliationMatchTests
             confidenceScore: 0.75m,
             amountVariance: 0m,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
 
         // Act & Assert
@@ -561,7 +483,6 @@ public class ReconciliationMatchTests
             confidenceScore: 0.75m,
             amountVariance: 0m,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
         match.Reject();
 

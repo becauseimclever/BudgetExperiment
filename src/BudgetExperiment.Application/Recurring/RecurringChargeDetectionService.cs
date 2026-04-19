@@ -80,15 +80,10 @@ public sealed class RecurringChargeDetectionService : IRecurringChargeDetectionS
             {
                 var patternAccountId = GetPatternAccountId(transactions, pattern, accountId);
 
-                var scope = _userContext.CurrentScope ?? BudgetScope.Shared;
-                var ownerUserId = scope == BudgetScope.Personal ? userId : (Guid?)null;
-
                 var suggestion = RecurringChargeSuggestion.Create(
                     patternAccountId,
                     pattern,
-                    scope,
-                    userId,
-                    ownerUserId);
+                    userId);
 
                 await _suggestionRepository.AddAsync(suggestion, cancellationToken);
             }

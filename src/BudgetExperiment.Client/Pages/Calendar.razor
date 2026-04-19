@@ -6,13 +6,11 @@
 
 @using BudgetExperiment.Client.Components.Forms
 @using BudgetExperiment.Client.Components.Reflection
-@using BudgetExperiment.Client.Services
 
 @implements IDisposable
 
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
-@inject ScopeService ScopeService
 @inject IChatContextService ChatContext
 @inject IFeatureFlagClientService FeatureFlags
 
@@ -276,8 +274,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        ScopeService.ScopeChanged += OnScopeChanged;
-
         if (Year == 0 || Month == 0)
         {
             var today = DateOnly.FromDateTime(DateTime.Today);
@@ -997,25 +993,8 @@
         }
     }
 
-    private async void OnScopeChanged(BudgetScope? _)
-    {
-        await InvokeAsync(async () =>
-        {
-            selectedDate = null;
-            selectedWeekIndex = -1;
-            dayDetail = null;
-            UpdateChatContext();
-            await LoadAccounts();
-            await LoadCalendarData();
-            await LoadPastDueItems();
-            await LoadBudgetSummary();
-            StateHasChanged();
-        });
-    }
-
     public void Dispose()
     {
-        ScopeService.ScopeChanged -= OnScopeChanged;
         ChatContext.ClearContext();
     }
 

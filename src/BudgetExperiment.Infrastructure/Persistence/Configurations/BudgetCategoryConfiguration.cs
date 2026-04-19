@@ -67,12 +67,7 @@ internal sealed class BudgetCategoryConfiguration : IEntityTypeConfiguration<Bud
         builder.HasIndex(c => c.IsActive);
         builder.HasIndex(c => c.SortOrder);
 
-        // Scope properties for multi-user support
-        builder.Property(c => c.Scope)
-            .IsRequired()
-            .HasConversion<string>()
-            .HasMaxLength(20);
-
+        // Ownership properties for multi-user support
         builder.Property(c => c.OwnerUserId);
 
         builder.Property(c => c.CreatedByUserId)
@@ -81,11 +76,10 @@ internal sealed class BudgetCategoryConfiguration : IEntityTypeConfiguration<Bud
         builder.Property(c => c.KakeiboCategory)
             .IsRequired(false);
 
-        // Indexes for scope filtering
-        builder.HasIndex(c => c.Scope);
+        // Indexes for ownership filtering
         builder.HasIndex(c => c.OwnerUserId);
 
-        // Unique constraint on name within scope
-        builder.HasIndex(c => new { c.Name, c.Scope, c.OwnerUserId }).IsUnique();
+        // Unique constraint on name within owner scope
+        builder.HasIndex(c => new { c.Name, c.OwnerUserId }).IsUnique();
     }
 }

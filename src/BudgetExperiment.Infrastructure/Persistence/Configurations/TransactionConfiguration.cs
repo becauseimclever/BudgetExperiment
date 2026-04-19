@@ -101,19 +101,13 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
         builder.HasIndex(t => t.RecurringTransferId);
         builder.HasIndex(t => t.CategoryId);
 
-        // Scope properties for multi-user support
-        builder.Property(t => t.Scope)
-            .IsRequired()
-            .HasConversion<string>()
-            .HasMaxLength(20);
-
+        // Ownership properties for multi-user support
         builder.Property(t => t.OwnerUserId);
 
         builder.Property(t => t.CreatedByUserId)
             .IsRequired();
 
-        // Indexes for scope filtering
-        builder.HasIndex(t => t.Scope);
+        // Indexes for ownership filtering
         builder.HasIndex(t => t.OwnerUserId);
 
         // Import batch link (nullable FK)

@@ -10,7 +10,7 @@ namespace BudgetExperiment.Domain.Repositories;
 public interface ICustomReportLayoutRepository : IReadRepository<CustomReportLayout>, IWriteRepository<CustomReportLayout>
 {
     /// <summary>
-    /// Gets all layouts accessible in the current scope.
+    /// Gets all layouts accessible to the current user.
     /// </summary>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>All layouts.</returns>

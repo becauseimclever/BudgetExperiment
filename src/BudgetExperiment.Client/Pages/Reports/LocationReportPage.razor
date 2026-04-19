@@ -3,11 +3,8 @@
 @using BudgetExperiment.Client.Components.Reports
 @using BudgetExperiment.Contracts.Dtos
 
-@implements IDisposable
-
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
-@inject ScopeService ScopeService
 
 <PageTitle>Spending by Location - Budget Experiment</PageTitle>
 
@@ -169,7 +166,6 @@
     protected override async Task OnInitializedAsync()
     {
         InitializeDateRange();
-        ScopeService.ScopeChanged += HandleScopeChanged;
         await LoadReportAsync();
     }
 
@@ -186,12 +182,6 @@
             rangeStart = new DateOnly(today.Year, today.Month, 1);
             rangeEnd = rangeStart.AddMonths(1).AddDays(-1);
         }
-    }
-
-    private async void HandleScopeChanged(BudgetScope? scope)
-    {
-        await LoadReportAsync();
-        await InvokeAsync(StateHasChanged);
     }
 
     private async Task HandleRangeChanged((DateOnly Start, DateOnly End) range)
@@ -251,11 +241,5 @@
     private void DismissError()
     {
         errorMessage = null;
-    }
-
-    /// <inheritdoc/>
-    public void Dispose()
-    {
-        ScopeService.ScopeChanged -= HandleScopeChanged;
     }
 }

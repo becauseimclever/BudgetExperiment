@@ -65,15 +65,10 @@ internal sealed class ReconciliationRecordConfiguration : IEntityTypeConfigurati
         builder.Property(r => r.CompletedByUserId)
             .IsRequired();
 
-        builder.Property(r => r.Scope)
-            .IsRequired()
-            .HasConversion<string>()
-            .HasMaxLength(20);
-
         builder.Property(r => r.OwnerUserId);
 
         builder.HasIndex(r => r.AccountId);
         builder.HasIndex(r => new { r.AccountId, r.StatementDate });
-        builder.HasIndex(r => new { r.Scope, r.OwnerUserId });
+        builder.HasIndex(r => r.OwnerUserId);
     }
 }

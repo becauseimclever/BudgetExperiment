@@ -358,7 +358,6 @@ public class ReconciliationMatchActionHandlerTests
             0.85m,
             0m,
             0,
-            BudgetScope.Shared,
             null);
         typeof(ReconciliationMatch).GetProperty(nameof(ReconciliationMatch.Id))!.SetValue(match, id);
         return match;

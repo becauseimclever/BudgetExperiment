@@ -5,7 +5,6 @@
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Identity;
 using BudgetExperiment.Domain.Settings;
-using BudgetExperiment.Shared.Budgeting;
 
 using Moq;
 
@@ -155,7 +154,7 @@ public class BudgetProgressServiceTests
         var categoryRepo = new Mock<IBudgetCategoryRepository>();
         categoryRepo.Setup(r => r.GetByTypeAsync(CategoryType.Expense, default)).ReturnsAsync(allExpenseCategories);
         var transactionRepo = new Mock<ITransactionRepository>();
-        transactionRepo.Setup(r => r.GetSpendingByCategoriesAsync(2026, 1, It.IsAny<BudgetScope>(), default))
+        transactionRepo.Setup(r => r.GetSpendingByCategoriesAsync(2026, 1, default))
             .ReturnsAsync(new Dictionary<Guid, decimal>
             {
                 [category1Id] = 250m,
@@ -194,7 +193,7 @@ public class BudgetProgressServiceTests
         categoryRepo.Setup(r => r.GetByTypeAsync(CategoryType.Expense, default)).ReturnsAsync(allExpenseCategories);
 
         var transactionRepo = new Mock<ITransactionRepository>();
-        transactionRepo.Setup(r => r.GetSpendingByCategoriesAsync(2026, 1, It.IsAny<BudgetScope>(), default))
+        transactionRepo.Setup(r => r.GetSpendingByCategoriesAsync(2026, 1, default))
             .ReturnsAsync(new Dictionary<Guid, decimal>
             {
                 [category1.Id] = 100m,
@@ -213,7 +212,7 @@ public class BudgetProgressServiceTests
 
         // Assert
         transactionRepo.Verify(
-            r => r.GetSpendingByCategoriesAsync(2026, 1, It.IsAny<BudgetScope>(), default),
+            r => r.GetSpendingByCategoriesAsync(2026, 1, default),
             Times.Once);
         transactionRepo.Verify(
             r => r.GetSpendingByCategoryAsync(It.IsAny<Guid>(), It.IsAny<int>(), It.IsAny<int>(), default),
@@ -266,7 +265,7 @@ public class BudgetProgressServiceTests
         categoryRepo.Setup(r => r.GetByTypeAsync(CategoryType.Expense, default)).ReturnsAsync(allExpenseCategories);
 
         var transactionRepo = new Mock<ITransactionRepository>();
-        transactionRepo.Setup(r => r.GetSpendingByCategoriesAsync(2026, 1, It.IsAny<BudgetScope>(), default))
+        transactionRepo.Setup(r => r.GetSpendingByCategoriesAsync(2026, 1, default))
             .ReturnsAsync(new Dictionary<Guid, decimal>
             {
                 [categoryWithGoal.Id] = 250m,
@@ -320,7 +319,7 @@ public class BudgetProgressServiceTests
         categoryRepo.Setup(r => r.GetByTypeAsync(CategoryType.Expense, default)).ReturnsAsync(allExpenseCategories);
 
         var transactionRepo = new Mock<ITransactionRepository>();
-        transactionRepo.Setup(r => r.GetSpendingByCategoriesAsync(2026, 1, It.IsAny<BudgetScope>(), default))
+        transactionRepo.Setup(r => r.GetSpendingByCategoriesAsync(2026, 1, default))
             .ReturnsAsync(new Dictionary<Guid, decimal>
             {
                 [categoryWithGoal.Id] = 100m,
@@ -360,7 +359,7 @@ public class BudgetProgressServiceTests
         categoryRepo.Setup(r => r.GetByTypeAsync(CategoryType.Expense, default)).ReturnsAsync(expenseCategories);
 
         var transactionRepo = new Mock<ITransactionRepository>();
-        transactionRepo.Setup(r => r.GetSpendingByCategoriesAsync(2026, 1, It.IsAny<BudgetScope>(), default))
+        transactionRepo.Setup(r => r.GetSpendingByCategoriesAsync(2026, 1, default))
             .ReturnsAsync(new Dictionary<Guid, decimal>());
         transactionRepo.Setup(r => r.GetSpendingByCategoryAsync(expenseCategory.Id, 2026, 1, default))
             .ReturnsAsync(MoneyValue.Create("USD", 0m));
@@ -399,7 +398,7 @@ public class BudgetProgressServiceTests
         categoryRepo.Setup(r => r.GetByTypeAsync(CategoryType.Expense, default)).ReturnsAsync(activeExpenseCategories);
 
         var transactionRepo = new Mock<ITransactionRepository>();
-        transactionRepo.Setup(r => r.GetSpendingByCategoriesAsync(2026, 1, It.IsAny<BudgetScope>(), default))
+        transactionRepo.Setup(r => r.GetSpendingByCategoriesAsync(2026, 1, default))
             .ReturnsAsync(new Dictionary<Guid, decimal>());
         transactionRepo.Setup(r => r.GetSpendingByCategoryAsync(activeCategory.Id, 2026, 1, default))
             .ReturnsAsync(MoneyValue.Create("USD", 0m));
@@ -426,10 +425,9 @@ public class BudgetProgressServiceTests
         return mock;
     }
 
-    private static Mock<IUserContext> CreateUserContextMock(BudgetScope scope = BudgetScope.Personal)
+    private static Mock<IUserContext> CreateUserContextMock()
     {
         var mock = new Mock<IUserContext>();
-        mock.Setup(c => c.CurrentScope).Returns(scope);
         return mock;
     }
 }

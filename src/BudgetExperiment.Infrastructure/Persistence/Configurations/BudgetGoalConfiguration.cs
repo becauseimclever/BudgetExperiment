@@ -64,19 +64,13 @@ internal sealed class BudgetGoalConfiguration : IEntityTypeConfiguration<BudgetG
         // Index for month queries
         builder.HasIndex(g => new { g.Year, g.Month });
 
-        // Scope properties for multi-user support
-        builder.Property(g => g.Scope)
-            .IsRequired()
-            .HasConversion<string>()
-            .HasMaxLength(20);
-
+        // Ownership properties for multi-user support
         builder.Property(g => g.OwnerUserId);
 
         builder.Property(g => g.CreatedByUserId)
             .IsRequired();
 
-        // Indexes for scope filtering
-        builder.HasIndex(g => g.Scope);
+        // Indexes for ownership filtering
         builder.HasIndex(g => g.OwnerUserId);
     }
 }

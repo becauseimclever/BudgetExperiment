@@ -5,7 +5,6 @@
 using BudgetExperiment.Client.Models;
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
-using BudgetExperiment.Shared.Budgeting;
 
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -24,7 +23,6 @@ public sealed class RulesViewModel : IDisposable
     private readonly IBudgetApiService _apiService;
     private readonly IToastService _toastService;
     private readonly NavigationManager _navigationManager;
-    private readonly ScopeService _scopeService;
     private readonly IApiErrorContext _apiErrorContext;
     private readonly IJSRuntime _jsRuntime;
     private readonly HashSet<string> _collapsedCategories = new(StringComparer.Ordinal);
@@ -37,21 +35,18 @@ public sealed class RulesViewModel : IDisposable
     /// <param name="apiService">The budget API service.</param>
     /// <param name="toastService">The toast notification service.</param>
     /// <param name="navigationManager">The navigation manager.</param>
-    /// <param name="scopeService">The budget scope service.</param>
     /// <param name="apiErrorContext">The API error context for traceId capture.</param>
     /// <param name="jsRuntime">The JavaScript runtime for localStorage access.</param>
     public RulesViewModel(
         IBudgetApiService apiService,
         IToastService toastService,
         NavigationManager navigationManager,
-        ScopeService scopeService,
         IApiErrorContext apiErrorContext,
         IJSRuntime jsRuntime)
     {
         _apiService = apiService;
         _toastService = toastService;
         _navigationManager = navigationManager;
-        _scopeService = scopeService;
         _apiErrorContext = apiErrorContext;
         _jsRuntime = jsRuntime;
     }
@@ -390,7 +385,6 @@ public sealed class RulesViewModel : IDisposable
     /// <returns>A task representing the async operation.</returns>
     public async Task InitializeAsync()
     {
-        _scopeService.ScopeChanged += this.OnScopeChanged;
         await this.LoadPreferencesAsync();
         await this.LoadDataAsync();
     }
@@ -911,7 +905,6 @@ public sealed class RulesViewModel : IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
-        _scopeService.ScopeChanged -= this.OnScopeChanged;
         _searchDebounce?.Cancel();
         _searchDebounce?.Dispose();
     }
@@ -1211,12 +1204,6 @@ public sealed class RulesViewModel : IDisposable
         {
             // Ignore localStorage errors
         }
-    }
-
-    private async void OnScopeChanged(BudgetScope? scope)
-    {
-        await this.LoadDataAsync();
-        this.NotifyStateChanged();
     }
 
     private void NotifyStateChanged()

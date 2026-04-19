@@ -2,12 +2,9 @@
 
 @using BudgetExperiment.Contracts.Dtos
 
-@implements IDisposable
-
 @inject IReconciliationApiService ReconciliationApi
 @inject IBudgetApiService BudgetApi
 @inject NavigationManager Navigation
-@inject ScopeService ScopeService
 
 <PageTitle>Reconciliation - Budget Experiment</PageTitle>
 
@@ -317,27 +314,13 @@
     /// <inheritdoc/>
     protected override async Task OnInitializedAsync()
     {
-        ScopeService.ScopeChanged += OnScopeChanged;
         await LoadAccountsAsync();
         await LoadDataAsync();
-    }
-
-    /// <inheritdoc/>
-    public void Dispose()
-    {
-        ScopeService.ScopeChanged -= OnScopeChanged;
     }
 
     private void ToggleSettings()
     {
         showSettings = !showSettings;
-    }
-
-    private async void OnScopeChanged(BudgetScope? scope)
-    {
-        await LoadAccountsAsync();
-        await LoadDataAsync();
-        await InvokeAsync(StateHasChanged);
     }
 
     private async Task OnAccountChanged()

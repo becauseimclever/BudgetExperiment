@@ -5,8 +5,6 @@
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Common;
 using BudgetExperiment.Domain.DataHealth;
-using BudgetExperiment.Shared.Budgeting;
-
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -25,7 +23,7 @@ internal sealed class TransactionRepository : ITransactionRepository
     /// Initializes a new instance of the <see cref="TransactionRepository"/> class.
     /// </summary>
     /// <param name="context">The database context.</param>
-    /// <param name="userContext">The user context for scope filtering.</param>
+    /// <param name="userContext">The user context for ownership filtering.</param>
     /// <param name="logger">Logger for diagnostic messages.</param>
     public TransactionRepository(BudgetDbContext context, IUserContext userContext, ILogger<TransactionRepository> logger)
     {
@@ -205,7 +203,7 @@ internal sealed class TransactionRepository : ITransactionRepository
             return MoneyValue.Create(CurrencyDefaults.DefaultCurrency, 0m);
         }
 
-        // Sum all spending (negative amounts represent expenses) with scope filtering
+        // Sum all spending (negative amounts represent expenses) with ownership filtering
         var totalSpending = await this.ApplyScopeFilter(_context.Transactions)
             .Where(t => t.Date >= startDate
                 && t.Date <= endDate
@@ -220,14 +218,12 @@ internal sealed class TransactionRepository : ITransactionRepository
     public async Task<Dictionary<Guid, decimal>> GetSpendingByCategoriesAsync(
         int year,
         int month,
-        BudgetScope scope,
         CancellationToken cancellationToken = default)
     {
         var startDate = new DateOnly(year, month, 1);
         var endDate = startDate.AddMonths(1).AddDays(-1);
-        var effectiveScope = _userContext.CurrentScope ?? scope;
 
-        return await this.ApplyScopeFilter(_context.Transactions, effectiveScope)
+        return await this.ApplyScopeFilter(_context.Transactions)
             .AsNoTracking()
             .Where(t => t.Date >= startDate
                 && t.Date <= endDate
@@ -684,35 +680,18 @@ internal sealed class TransactionRepository : ITransactionRepository
     }
 
     /// <summary>
-    /// Applies budget scope filtering to a query. IMPORTANT: Every public query method
-    /// in this repository MUST call this method to prevent cross-scope data leaks.
-    /// See Feature 065 for the audit that established this rule.
+    /// Applies ownership filtering to a query. IMPORTANT: Every public query method
+    /// in this repository MUST call this method to prevent cross-user data leaks.
     /// </summary>
     private IQueryable<Transaction> ApplyScopeFilter(IQueryable<Transaction> query)
     {
         var userId = _userContext.UserIdAsGuid;
 
-        return _userContext.CurrentScope switch
+        if (userId is null)
         {
-            BudgetScope.Shared => query.Where(t => t.Scope == BudgetScope.Shared),
-            BudgetScope.Personal => query.Where(t => t.Scope == BudgetScope.Personal && t.OwnerUserId == userId),
-            _ => query.Where(t =>
-                t.Scope == BudgetScope.Shared ||
-                (t.Scope == BudgetScope.Personal && t.OwnerUserId == userId)),
-        };
-    }
+            return query.Where(t => t.OwnerUserId == null);
+        }
 
-    private IQueryable<Transaction> ApplyScopeFilter(IQueryable<Transaction> query, BudgetScope scope)
-    {
-        var userId = _userContext.UserIdAsGuid;
-
-        return scope switch
-        {
-            BudgetScope.Shared => query.Where(t => t.Scope == BudgetScope.Shared),
-            BudgetScope.Personal => query.Where(t => t.Scope == BudgetScope.Personal && t.OwnerUserId == userId),
-            _ => query.Where(t =>
-                t.Scope == BudgetScope.Shared ||
-                (t.Scope == BudgetScope.Personal && t.OwnerUserId == userId)),
-        };
+        return query.Where(t => t.OwnerUserId == null || t.OwnerUserId == userId);
     }
 }

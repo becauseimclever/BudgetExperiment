@@ -4,7 +4,6 @@
 
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
-using BudgetExperiment.Shared.Budgeting;
 
 namespace BudgetExperiment.Client.ViewModels;
 
@@ -16,7 +15,6 @@ public sealed class RecurringTransfersViewModel : IDisposable
 {
     private readonly IBudgetApiService _apiService;
     private readonly IToastService _toastService;
-    private readonly ScopeService _scopeService;
     private readonly IChatContextService _chatContextService;
     private readonly IApiErrorContext _apiErrorContext;
 
@@ -25,19 +23,16 @@ public sealed class RecurringTransfersViewModel : IDisposable
     /// </summary>
     /// <param name="apiService">The budget API service.</param>
     /// <param name="toastService">The toast notification service.</param>
-    /// <param name="scopeService">The budget scope service.</param>
     /// <param name="chatContextService">The chat context service.</param>
     /// <param name="apiErrorContext">The API error context for traceId capture.</param>
     public RecurringTransfersViewModel(
         IBudgetApiService apiService,
         IToastService toastService,
-        ScopeService scopeService,
         IChatContextService chatContextService,
         IApiErrorContext apiErrorContext)
     {
         _apiService = apiService;
         _toastService = toastService;
-        _scopeService = scopeService;
         _chatContextService = chatContextService;
         _apiErrorContext = apiErrorContext;
     }
@@ -188,12 +183,11 @@ public sealed class RecurringTransfersViewModel : IDisposable
     }
 
     /// <summary>
-    /// Initializes the ViewModel: subscribes to scope changes, sets chat context, and loads data.
+    /// Initializes the ViewModel: sets chat context and loads data.
     /// </summary>
     /// <returns>A task representing the async operation.</returns>
     public async Task InitializeAsync()
     {
-        _scopeService.ScopeChanged += this.OnScopeChanged;
         _chatContextService.SetPageType("recurring transfers");
         await this.LoadRecurringTransfersAsync();
     }
@@ -452,14 +446,7 @@ public sealed class RecurringTransfersViewModel : IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
-        _scopeService.ScopeChanged -= this.OnScopeChanged;
         _chatContextService.ClearContext();
-    }
-
-    private async void OnScopeChanged(BudgetScope? scope)
-    {
-        await this.LoadRecurringTransfersAsync();
-        this.NotifyStateChanged();
     }
 
     private void NotifyStateChanged()

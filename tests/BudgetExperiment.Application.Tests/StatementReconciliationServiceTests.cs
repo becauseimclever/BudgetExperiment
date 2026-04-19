@@ -37,7 +37,6 @@ public class StatementReconciliationServiceTests
 
         _unitOfWork.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(0);
         _userContext.Setup(u => u.UserIdAsGuid).Returns(Guid.NewGuid());
-        _userContext.Setup(u => u.CurrentScope).Returns(BudgetScope.Shared);
     }
 
     // AC-125b-08: cleared balance = InitialBalance + sum(cleared transactions ≤ statementDate)

@@ -7,10 +7,8 @@ using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
-using BudgetExperiment.Shared.Budgeting;
 
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 
 using Shouldly;
 
@@ -19,11 +17,10 @@ namespace BudgetExperiment.Client.Tests.ViewModels;
 /// <summary>
 /// Unit tests for <see cref="BudgetViewModel"/>.
 /// </summary>
-public sealed class BudgetViewModelTests : IDisposable
+public sealed class BudgetViewModelTests
 {
     private readonly StubBudgetApiService _apiService = new();
     private readonly StubNavigationManager _navigationManager = new();
-    private readonly ScopeService _scopeService;
     private readonly StubApiErrorContext _apiErrorContext = new();
     private readonly BudgetViewModel _sut;
 
@@ -32,18 +29,10 @@ public sealed class BudgetViewModelTests : IDisposable
     /// </summary>
     public BudgetViewModelTests()
     {
-        _scopeService = new ScopeService(new StubJSRuntime());
         _sut = new BudgetViewModel(
             _apiService,
             _navigationManager,
-            _scopeService,
             _apiErrorContext);
-    }
-
-    /// <inheritdoc/>
-    public void Dispose()
-    {
-        _sut.Dispose();
     }
 
     // --- Initialization ---
@@ -637,65 +626,7 @@ public sealed class BudgetViewModelTests : IDisposable
         _navigationManager.LastNavigatedUri.ShouldBe("/categories");
     }
 
-    // --- Scope Change ---
-
-    /// <summary>
-    /// Verifies that scope change triggers budget reload.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
-    public async Task ScopeChange_ReloadsBudget()
-    {
-        await _sut.InitializeAsync();
-        _apiService.BudgetSummary = CreateSummary();
-
-        await _scopeService.SetScopeAsync(BudgetScope.Personal);
-
-        // Allow async void to complete
-        await Task.Delay(50);
-
-        _sut.Summary.ShouldNotBeNull();
-    }
-
-    /// <summary>
-    /// Verifies that scope change notifies state changed.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
-    public async Task ScopeChange_NotifiesStateChanged()
-    {
-        int callCount = 0;
-        _sut.OnStateChanged = () => callCount++;
-        await _sut.InitializeAsync();
-
-        await _scopeService.SetScopeAsync(BudgetScope.Shared);
-
-        // Allow async void to complete
-        await Task.Delay(50);
-
-        callCount.ShouldBeGreaterThan(0);
-    }
-
     // --- Dispose ---
-
-    /// <summary>
-    /// Verifies that Dispose unsubscribes from scope change events.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
-    public async Task Dispose_UnsubscribesFromScopeChanges()
-    {
-        await _sut.InitializeAsync();
-        _sut.Dispose();
-
-        // Changing scope after dispose should not cause issues
-        _apiService.BudgetSummary = CreateSummary();
-        await _scopeService.SetScopeAsync(BudgetScope.Personal);
-        await Task.Delay(50);
-
-        // Summary should remain null since the handler was unsubscribed
-        _sut.Summary.ShouldBeNull();
-    }
 
     // --- OnStateChanged Callback ---
 
@@ -829,19 +760,5 @@ public sealed class BudgetViewModelTests : IDisposable
         {
             this.LastNavigatedUri = uri;
         }
-    }
-
-    /// <summary>
-    /// Minimal stub for IJSRuntime to satisfy ScopeService constructor.
-    /// </summary>
-    private sealed class StubJSRuntime : IJSRuntime
-    {
-        /// <inheritdoc/>
-        /// <returns>A default value.</returns>
-        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) => default;
-
-        /// <inheritdoc/>
-        /// <returns>A default value.</returns>
-        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken, object?[]? args) => default;
     }
 }

@@ -20,7 +20,7 @@ internal sealed class BudgetCategoryRepository : IBudgetCategoryRepository
     /// Initializes a new instance of the <see cref="BudgetCategoryRepository"/> class.
     /// </summary>
     /// <param name="context">The database context.</param>
-    /// <param name="userContext">The user context for scope filtering.</param>
+    /// <param name="userContext">The user context for ownership filtering.</param>
     public BudgetCategoryRepository(BudgetDbContext context, IUserContext userContext)
     {
         _context = context;
@@ -118,18 +118,17 @@ internal sealed class BudgetCategoryRepository : IBudgetCategoryRepository
     }
 
     /// <summary>
-    /// Applies budget scope filtering to a query. IMPORTANT: Every public query method
-    /// in this repository MUST call this method to prevent cross-scope data leaks.
-    /// See Feature 065 for the audit that established this rule.
+    /// Applies ownership filtering to a query. IMPORTANT: Every public query method
+    /// in this repository MUST call this method to prevent cross-user data leaks.
     /// </summary>
     private IQueryable<BudgetCategory> ApplyScopeFilter(IQueryable<BudgetCategory> query)
     {
         var userId = _userContext.UserIdAsGuid;
-        return _userContext.CurrentScope switch
+        if (userId is null)
         {
-            BudgetScope.Shared => query.Where(x => x.Scope == BudgetScope.Shared),
-            BudgetScope.Personal => query.Where(x => x.Scope == BudgetScope.Personal && x.OwnerUserId == userId),
-            _ => query.Where(x => x.Scope == BudgetScope.Shared || (x.Scope == BudgetScope.Personal && x.OwnerUserId == userId)),
-        };
+            return query.Where(x => x.OwnerUserId == null);
+        }
+
+        return query.Where(x => x.OwnerUserId == null || x.OwnerUserId == userId);
     }
 }

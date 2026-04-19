@@ -9,7 +9,6 @@ using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
 
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 
 using Shouldly;
 
@@ -18,12 +17,11 @@ namespace BudgetExperiment.Client.Tests.ViewModels;
 /// <summary>
 /// Unit tests for <see cref="TransactionsViewModel"/>.
 /// </summary>
-public sealed class TransactionsViewModelTests : IDisposable
+public sealed class TransactionsViewModelTests
 {
     private readonly StubBudgetApiService _apiService = new();
     private readonly StubToastService _toastService = new();
     private readonly StubNavigationManager _navigationManager = new();
-    private readonly ScopeService _scopeService;
     private readonly StubApiErrorContext _apiErrorContext = new();
     private readonly TransactionsViewModel _sut;
 
@@ -32,19 +30,11 @@ public sealed class TransactionsViewModelTests : IDisposable
     /// </summary>
     public TransactionsViewModelTests()
     {
-        _scopeService = new ScopeService(new StubJSRuntime());
         _sut = new TransactionsViewModel(
             _apiService,
             _toastService,
             _navigationManager,
-            _scopeService,
             _apiErrorContext);
-    }
-
-    /// <inheritdoc/>
-    public void Dispose()
-    {
-        _sut.Dispose();
     }
 
     // --- Initialization ---
@@ -1357,19 +1347,5 @@ public sealed class TransactionsViewModelTests : IDisposable
         {
             this.LastNavigatedUri = uri;
         }
-    }
-
-    /// <summary>
-    /// Minimal stub for IJSRuntime to satisfy ScopeService constructor.
-    /// </summary>
-    private sealed class StubJSRuntime : IJSRuntime
-    {
-        /// <inheritdoc/>
-        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) =>
-            new(default(TValue)!);
-
-        /// <inheritdoc/>
-        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken, object?[]? args) =>
-            new(default(TValue)!);
     }
 }

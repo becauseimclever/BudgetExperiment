@@ -297,7 +297,6 @@ public class AccountTests
         var account = Account.CreateShared("Household Checking", AccountType.Checking, createdByUserId);
 
         // Assert
-        Assert.Equal(BudgetScope.Shared, account.Scope);
         Assert.Null(account.OwnerUserId);
         Assert.Equal(createdByUserId, account.CreatedByUserId);
     }
@@ -312,7 +311,6 @@ public class AccountTests
         var account = Account.CreatePersonal("My Wallet", AccountType.Cash, ownerUserId);
 
         // Assert
-        Assert.Equal(BudgetScope.Personal, account.Scope);
         Assert.Equal(ownerUserId, account.OwnerUserId);
         Assert.Equal(ownerUserId, account.CreatedByUserId);
     }
@@ -391,7 +389,6 @@ public class AccountTests
             "Test");
 
         // Assert
-        Assert.Equal(BudgetScope.Shared, transaction.Scope);
         Assert.Null(transaction.OwnerUserId);
         Assert.Equal(createdByUserId, transaction.CreatedByUserId);
     }
@@ -410,7 +407,6 @@ public class AccountTests
             "Coffee");
 
         // Assert
-        Assert.Equal(BudgetScope.Personal, transaction.Scope);
         Assert.Equal(ownerUserId, transaction.OwnerUserId);
         Assert.Equal(ownerUserId, transaction.CreatedByUserId);
     }

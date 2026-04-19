@@ -65,19 +65,4 @@ public interface IUserContext
     {
         get;
     }
-
-    /// <summary>
-    /// Gets the current budget scope filter.
-    /// NULL means show all (both Shared and Personal items accessible to this user).
-    /// </summary>
-    BudgetScope? CurrentScope
-    {
-        get;
-    }
-
-    /// <summary>
-    /// Sets the current budget scope filter for this request/session.
-    /// </summary>
-    /// <param name="scope">The scope to filter by, or null for all accessible items.</param>
-    void SetScope(BudgetScope? scope);
 }

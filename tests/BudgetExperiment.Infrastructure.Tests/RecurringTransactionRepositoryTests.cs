@@ -294,38 +294,6 @@ public class RecurringTransactionRepositoryTests
     }
 
     [Fact]
-    public async Task ScopeFilter_SharedScope_Returns_Only_Shared_Transactions()
-    {
-        // Arrange
-        await using var context = _fixture.CreateContext();
-        var userId = FakeUserContext.DefaultUserId;
-
-        var account = Account.Create("Checking", AccountType.Checking);
-        context.Accounts.Add(account);
-        await context.SaveChangesAsync();
-
-        var shared = RecurringTransaction.Create(account.Id, "Shared Rent", MoneyValue.Create("USD", 1500m), RecurrencePatternValue.CreateMonthly(1, 1), new DateOnly(2026, 1, 1));
-        var personal = RecurringTransaction.Create(account.Id, "Personal Sub", MoneyValue.Create("USD", 15m), RecurrencePatternValue.CreateMonthly(1, 1), new DateOnly(2026, 1, 1));
-
-        context.RecurringTransactions.AddRange(shared, personal);
-        await context.SaveChangesAsync();
-
-        context.Entry(personal).Property(e => e.Scope).CurrentValue = BudgetScope.Personal;
-        context.Entry(personal).Property(e => e.OwnerUserId).CurrentValue = userId;
-        await context.SaveChangesAsync();
-
-        // Act
-        await using var verifyContext = _fixture.CreateSharedContext(context);
-        var sharedScopeContext = FakeUserContext.CreateForSharedScope();
-        var repository = new RecurringTransactionRepository(verifyContext, sharedScopeContext);
-        var results = await repository.GetAllAsync();
-
-        // Assert
-        Assert.Single(results);
-        Assert.Equal("Shared Rent", results[0].Description);
-    }
-
-    [Fact]
     public async Task GetExceptionAsync_Returns_Null_For_NonExistent_Date()
     {
         // Arrange

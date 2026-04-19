@@ -24,7 +24,6 @@ public class CustomReportLayoutTests
         Assert.NotEqual(Guid.Empty, layout.Id);
         Assert.Equal("Monthly Summary", layout.Name);
         Assert.Equal("{\"type\":\"bar\"}", layout.LayoutJson);
-        Assert.Equal(BudgetScope.Shared, layout.Scope);
         Assert.Null(layout.OwnerUserId);
         Assert.Equal(ValidUserId, layout.CreatedByUserId);
         Assert.Equal(layout.CreatedAtUtc, layout.UpdatedAtUtc);
@@ -40,7 +39,6 @@ public class CustomReportLayoutTests
         Assert.NotEqual(Guid.Empty, layout.Id);
         Assert.Equal("My Report", layout.Name);
         Assert.Equal("{\"columns\":2}", layout.LayoutJson);
-        Assert.Equal(BudgetScope.Personal, layout.Scope);
         Assert.Equal(ValidUserId, layout.OwnerUserId);
         Assert.Equal(ValidUserId, layout.CreatedByUserId);
     }

@@ -20,7 +20,7 @@ internal sealed class CustomReportLayoutRepository : ICustomReportLayoutReposito
     /// Initializes a new instance of the <see cref="CustomReportLayoutRepository"/> class.
     /// </summary>
     /// <param name="context">The database context.</param>
-    /// <param name="userContext">The user context for scope filtering.</param>
+    /// <param name="userContext">The user context for ownership filtering.</param>
     public CustomReportLayoutRepository(BudgetDbContext context, IUserContext userContext)
     {
         _context = context;
@@ -78,11 +78,11 @@ internal sealed class CustomReportLayoutRepository : ICustomReportLayoutReposito
     private IQueryable<CustomReportLayout> ApplyScopeFilter(IQueryable<CustomReportLayout> query)
     {
         var userId = _userContext.UserIdAsGuid;
-        return _userContext.CurrentScope switch
+        if (userId is null)
         {
-            BudgetScope.Shared => query.Where(l => l.Scope == BudgetScope.Shared),
-            BudgetScope.Personal => query.Where(l => l.Scope == BudgetScope.Personal && l.OwnerUserId == userId),
-            _ => query.Where(l => l.Scope == BudgetScope.Shared || (l.Scope == BudgetScope.Personal && l.OwnerUserId == userId)),
-        };
+            return query.Where(l => l.OwnerUserId == null);
+        }
+
+        return query.Where(l => l.OwnerUserId == null || l.OwnerUserId == userId);
     }
 }

@@ -174,7 +174,6 @@ public sealed class ReconciliationMatchActionHandler : IReconciliationMatchActio
             request.InstanceDate,
             amountVariance,
             dateOffsetDays,
-            recurring.Scope,
             recurring.OwnerUserId);
 
         // Link the transaction

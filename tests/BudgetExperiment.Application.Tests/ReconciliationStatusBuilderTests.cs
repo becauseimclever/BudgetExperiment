@@ -86,7 +86,7 @@ public class ReconciliationStatusBuilderTests
             false);
 
         var match = ReconciliationMatch.Create(
-            transactionId, recurringId, instanceDate, 0.95m, 0m, 0, BudgetScope.Shared, null);
+            transactionId, recurringId, instanceDate, 0.95m, 0m, 0, null);
         match.Accept();
 
         _recurringRepository
@@ -146,7 +146,7 @@ public class ReconciliationStatusBuilderTests
 
         // Suggested match (not accepted)
         var match = ReconciliationMatch.Create(
-            transactionId, recurringId, instanceDate, 0.60m, 0m, 0, BudgetScope.Shared, null);
+            transactionId, recurringId, instanceDate, 0.60m, 0m, 0, null);
 
         _recurringRepository
             .Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))
@@ -290,7 +290,7 @@ public class ReconciliationStatusBuilderTests
             false);
 
         var match = ReconciliationMatch.Create(
-            transactionId, recurringId, instanceDate, 0.95m, 0m, 0, BudgetScope.Shared, null);
+            transactionId, recurringId, instanceDate, 0.95m, 0m, 0, null);
         match.AutoMatch();
 
         _recurringRepository
@@ -376,11 +376,11 @@ public class ReconciliationStatusBuilderTests
 
         // Instance 1: Accepted, Instance 2: Suggested (pending), Instance 3: Missing
         var acceptedMatch = ReconciliationMatch.Create(
-            transactionId1, recurringId1, date1, 0.95m, 0m, 0, BudgetScope.Shared, null);
+            transactionId1, recurringId1, date1, 0.95m, 0m, 0, null);
         acceptedMatch.Accept();
 
         var pendingMatch = ReconciliationMatch.Create(
-            transactionId2, recurringId2, date2, 0.60m, 0m, 0, BudgetScope.Shared, null);
+            transactionId2, recurringId2, date2, 0.60m, 0m, 0, null);
 
         _recurringRepository
             .Setup(r => r.GetActiveAsync(It.IsAny<CancellationToken>()))

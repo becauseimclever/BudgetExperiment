@@ -177,9 +177,6 @@ public sealed class StatementReconciliationService : IStatementReconciliationSer
             ct);
 
         var userId = _userContext.UserIdAsGuid ?? Guid.Empty;
-        var scope = _userContext.CurrentScope ?? BudgetScope.Shared;
-        var ownerUserId = scope == BudgetScope.Personal ? userId : (Guid?)null;
-
         var record = ReconciliationRecord.Create(
             accountId,
             statementBalance.StatementDate,
@@ -187,8 +184,7 @@ public sealed class StatementReconciliationService : IStatementReconciliationSer
             clearedBalance,
             clearedTransactions.Count,
             userId,
-            scope,
-            ownerUserId);
+            ownerUserId: null);
 
         await _reconciliationRecordRepository.AddAsync(record, ct);
 

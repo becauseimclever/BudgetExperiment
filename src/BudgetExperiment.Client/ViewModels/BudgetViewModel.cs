@@ -14,11 +14,10 @@ namespace BudgetExperiment.Client.ViewModels;
 /// ViewModel for the Budget page. Contains all handler logic, state fields,
 /// and computed properties extracted from the Budget.razor @code block.
 /// </summary>
-public sealed class BudgetViewModel : IDisposable
+public sealed class BudgetViewModel
 {
     private readonly IBudgetApiService _apiService;
     private readonly NavigationManager _navigationManager;
-    private readonly ScopeService _scopeService;
     private readonly IApiErrorContext _apiErrorContext;
 
     /// <summary>
@@ -26,17 +25,14 @@ public sealed class BudgetViewModel : IDisposable
     /// </summary>
     /// <param name="apiService">The budget API service.</param>
     /// <param name="navigationManager">The navigation manager.</param>
-    /// <param name="scopeService">The budget scope service.</param>
     /// <param name="apiErrorContext">The API error context for traceId capture.</param>
     public BudgetViewModel(
         IBudgetApiService apiService,
         NavigationManager navigationManager,
-        ScopeService scopeService,
         IApiErrorContext apiErrorContext)
     {
         _apiService = apiService;
         _navigationManager = navigationManager;
-        _scopeService = scopeService;
         _apiErrorContext = apiErrorContext;
     }
 
@@ -159,12 +155,11 @@ public sealed class BudgetViewModel : IDisposable
     public bool IsCreatingNewGoal => this.EditingProgress?.Status == "NoBudgetSet";
 
     /// <summary>
-    /// Initializes the ViewModel: subscribes to scope changes and loads budget data.
+    /// Initializes the ViewModel and loads budget data.
     /// </summary>
     /// <returns>A task representing the async operation.</returns>
     public async Task InitializeAsync()
     {
-        _scopeService.ScopeChanged += this.OnScopeChanged;
         await this.LoadBudgetAsync();
     }
 
@@ -361,18 +356,6 @@ public sealed class BudgetViewModel : IDisposable
     public void NavigateToCategories()
     {
         _navigationManager.NavigateTo("/categories");
-    }
-
-    /// <inheritdoc/>
-    public void Dispose()
-    {
-        _scopeService.ScopeChanged -= this.OnScopeChanged;
-    }
-
-    private async void OnScopeChanged(BudgetScope? scope)
-    {
-        await this.LoadBudgetAsync();
-        this.NotifyStateChanged();
     }
 
     private void NotifyStateChanged()

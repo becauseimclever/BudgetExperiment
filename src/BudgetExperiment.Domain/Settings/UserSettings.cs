@@ -36,11 +36,6 @@ public sealed class UserSettings
     }
 
     /// <summary>
-    /// Gets the user's default budget scope preference.
-    /// </summary>
-    public BudgetScope DefaultScope { get; private set; } = BudgetScope.Shared;
-
-    /// <summary>
     /// Gets a value indicating whether past-due recurring items are automatically realized
     /// without requiring manual confirmation.
     /// </summary>
@@ -141,7 +136,6 @@ public sealed class UserSettings
         {
             Id = Guid.NewGuid(),
             UserId = userId,
-            DefaultScope = BudgetScope.Shared,
             AutoRealizePastDueItems = false,
             PastDueLookbackDays = 30,
             PreferredCurrency = null,
@@ -151,16 +145,6 @@ public sealed class UserSettings
             CreatedAtUtc = now,
             UpdatedAtUtc = now,
         };
-    }
-
-    /// <summary>
-    /// Updates the default scope preference.
-    /// </summary>
-    /// <param name="scope">The new default scope.</param>
-    public void UpdateDefaultScope(BudgetScope scope)
-    {
-        this.DefaultScope = scope;
-        this.UpdatedAtUtc = DateTime.UtcNow;
     }
 
     /// <summary>

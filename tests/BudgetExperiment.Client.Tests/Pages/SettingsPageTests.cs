@@ -38,7 +38,6 @@ public class SettingsPageTests : BunitContext, IAsyncLifetime
         this.Services.AddSingleton<IAiApiService>(_aiApiService);
         this.Services.AddSingleton(new VersionService(new HttpClient()));
         this.Services.AddSingleton<IToastService>(new ToastService());
-        this.Services.AddSingleton<ScopeService>();
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
         this.Services.AddSingleton<IExportDownloadService>(new StubExportDownloadService());

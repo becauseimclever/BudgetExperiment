@@ -30,7 +30,6 @@ public class CustomReportBuilderPageTests : BunitContext, IAsyncLifetime
         this.JSInterop.Mode = JSRuntimeMode.Loose;
         this.Services.AddSingleton<IBudgetApiService>(_apiService);
         this.Services.AddSingleton<IToastService>(new ToastService());
-        this.Services.AddSingleton<ScopeService>();
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
         var featureFlagStub = new StubFeatureFlagClientService();

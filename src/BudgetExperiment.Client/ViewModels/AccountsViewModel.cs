@@ -14,12 +14,11 @@ namespace BudgetExperiment.Client.ViewModels;
 /// ViewModel for the Accounts page. Contains all handler logic, state fields,
 /// and methods extracted from the Accounts.razor @code block.
 /// </summary>
-public sealed class AccountsViewModel : IDisposable
+public sealed class AccountsViewModel
 {
     private readonly IBudgetApiService _apiService;
     private readonly IToastService _toastService;
     private readonly NavigationManager _navigation;
-    private readonly ScopeService _scopeService;
     private readonly IApiErrorContext _apiErrorContext;
 
     /// <summary>
@@ -28,19 +27,16 @@ public sealed class AccountsViewModel : IDisposable
     /// <param name="apiService">The budget API service.</param>
     /// <param name="toastService">The toast notification service.</param>
     /// <param name="navigation">The navigation manager.</param>
-    /// <param name="scopeService">The budget scope service.</param>
     /// <param name="apiErrorContext">The API error context for traceId capture.</param>
     public AccountsViewModel(
         IBudgetApiService apiService,
         IToastService toastService,
         NavigationManager navigation,
-        ScopeService scopeService,
         IApiErrorContext apiErrorContext)
     {
         _apiService = apiService;
         _toastService = toastService;
         _navigation = navigation;
-        _scopeService = scopeService;
         _apiErrorContext = apiErrorContext;
     }
 
@@ -182,12 +178,11 @@ public sealed class AccountsViewModel : IDisposable
     }
 
     /// <summary>
-    /// Initializes the ViewModel: subscribes to scope changes and loads accounts.
+    /// Initializes the ViewModel and loads accounts.
     /// </summary>
     /// <returns>A task representing the async operation.</returns>
     public async Task InitializeAsync()
     {
-        _scopeService.ScopeChanged += this.OnScopeChanged;
         await this.LoadAccountsAsync();
     }
 
@@ -470,18 +465,6 @@ public sealed class AccountsViewModel : IDisposable
     {
         this.ShowDeleteConfirm = false;
         this.DeletingAccount = null;
-        this.NotifyStateChanged();
-    }
-
-    /// <inheritdoc/>
-    public void Dispose()
-    {
-        _scopeService.ScopeChanged -= this.OnScopeChanged;
-    }
-
-    private async void OnScopeChanged(BudgetScope? scope)
-    {
-        await this.LoadAccountsAsync();
         this.NotifyStateChanged();
     }
 

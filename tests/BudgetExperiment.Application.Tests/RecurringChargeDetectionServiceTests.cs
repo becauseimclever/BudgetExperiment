@@ -76,7 +76,6 @@ public class RecurringChargeDetectionServiceTests
         var existingSuggestion = RecurringChargeSuggestion.Create(
             AccountId,
             existingPattern,
-            BudgetScope.Shared,
             TestUserId);
 
         suggestionRepo
@@ -133,7 +132,6 @@ public class RecurringChargeDetectionServiceTests
         var suggestion = RecurringChargeSuggestion.Create(
             AccountId,
             pattern,
-            BudgetScope.Shared,
             TestUserId);
 
         suggestionRepo
@@ -171,7 +169,6 @@ public class RecurringChargeDetectionServiceTests
         var suggestion = RecurringChargeSuggestion.Create(
             AccountId,
             pattern,
-            BudgetScope.Shared,
             TestUserId);
 
         suggestionRepo
@@ -195,7 +192,6 @@ public class RecurringChargeDetectionServiceTests
         var suggestion = RecurringChargeSuggestion.Create(
             AccountId,
             pattern,
-            BudgetScope.Shared,
             TestUserId);
 
         suggestionRepo
@@ -250,7 +246,6 @@ public class RecurringChargeDetectionServiceTests
         var suggestion = RecurringChargeSuggestion.Create(
             AccountId,
             pattern,
-            BudgetScope.Shared,
             TestUserId);
         suggestion.Accept(Guid.NewGuid());
 
@@ -272,7 +267,6 @@ public class RecurringChargeDetectionServiceTests
         var suggestion = RecurringChargeSuggestion.Create(
             AccountId,
             pattern,
-            BudgetScope.Shared,
             TestUserId);
 
         suggestionRepo
@@ -318,7 +312,6 @@ public class RecurringChargeDetectionServiceTests
         var userContext = new Mock<IUserContext>();
 
         userContext.Setup(u => u.UserIdAsGuid).Returns(TestUserId);
-        userContext.Setup(u => u.CurrentScope).Returns((BudgetScope?)null);
 
         var service = new RecurringChargeDetectionService(
             transactionRepo.Object,

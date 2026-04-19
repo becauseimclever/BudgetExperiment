@@ -11,12 +11,11 @@ namespace BudgetExperiment.Client.ViewModels;
 /// ViewModel for the unified Transactions page. Manages filter state, pagination,
 /// sorting, selection, and data loading for the /transactions route.
 /// </summary>
-public sealed class TransactionsViewModel : IDisposable
+public sealed class TransactionsViewModel
 {
     private readonly IBudgetApiService _apiService;
     private readonly IToastService _toastService;
     private readonly Microsoft.AspNetCore.Components.NavigationManager _navigation;
-    private readonly ScopeService _scopeService;
     private readonly IApiErrorContext _apiErrorContext;
 
     /// <summary>
@@ -25,19 +24,16 @@ public sealed class TransactionsViewModel : IDisposable
     /// <param name="apiService">The budget API service.</param>
     /// <param name="toastService">The toast notification service.</param>
     /// <param name="navigation">The navigation manager.</param>
-    /// <param name="scopeService">The budget scope service.</param>
     /// <param name="apiErrorContext">The API error context for traceId capture.</param>
     public TransactionsViewModel(
         IBudgetApiService apiService,
         IToastService toastService,
         Microsoft.AspNetCore.Components.NavigationManager navigation,
-        ScopeService scopeService,
         IApiErrorContext apiErrorContext)
     {
         _apiService = apiService;
         _toastService = toastService;
         _navigation = navigation;
-        _scopeService = scopeService;
         _apiErrorContext = apiErrorContext;
     }
 
@@ -438,12 +434,11 @@ public sealed class TransactionsViewModel : IDisposable
     }
 
     /// <summary>
-    /// Initializes the ViewModel: subscribes to scope changes, loads reference data and transactions.
+    /// Initializes the ViewModel: loads transactions from the API.
     /// </summary>
     /// <returns>A task representing the async operation.</returns>
     public async Task InitializeAsync()
     {
-        _scopeService.ScopeChanged += this.OnScopeChanged;
         await this.LoadAllDataAsync();
     }
 
@@ -928,12 +923,6 @@ public sealed class TransactionsViewModel : IDisposable
         this.Suggestions.Remove(transactionId);
     }
 
-    /// <inheritdoc/>
-    public void Dispose()
-    {
-        _scopeService.ScopeChanged -= this.OnScopeChanged;
-    }
-
     private async Task LoadAllDataAsync()
     {
         this.IsLoading = true;
@@ -970,12 +959,6 @@ public sealed class TransactionsViewModel : IDisposable
     private void ClearSelection()
     {
         this.SelectedTransactionIds.Clear();
-    }
-
-    private async void OnScopeChanged(BudgetScope? scope)
-    {
-        await this.LoadAllDataAsync();
-        this.NotifyStateChanged();
     }
 
     private void NotifyStateChanged()

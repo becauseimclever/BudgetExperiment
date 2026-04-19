@@ -7,9 +7,6 @@ using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
-using BudgetExperiment.Shared.Budgeting;
-
-using Microsoft.JSInterop;
 
 using Shouldly;
 
@@ -22,7 +19,6 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
 {
     private readonly StubBudgetApiService _apiService = new();
     private readonly StubToastService _toastService = new();
-    private readonly ScopeService _scopeService;
     private readonly StubChatContextService _chatContext = new();
     private readonly StubApiErrorContext _apiErrorContext = new();
     private readonly RecurringTransfersViewModel _sut;
@@ -32,11 +28,9 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
     /// </summary>
     public RecurringTransfersViewModelTests()
     {
-        _scopeService = new ScopeService(new StubJSRuntime());
         _sut = new RecurringTransfersViewModel(
             _apiService,
             _toastService,
-            _scopeService,
             _chatContext,
             _apiErrorContext);
     }
@@ -747,45 +741,7 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
         RecurringTransfersViewModel.FormatMoney(money).ShouldBe("USD 1,234.56");
     }
 
-    // --- Scope Change ---
-
-    /// <summary>
-    /// Verifies that scope change reloads recurring transfers.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
-    public async Task ScopeChange_ReloadsRecurringTransfers()
-    {
-        await _sut.InitializeAsync();
-        _apiService.RecurringTransfers.Add(CreateTransfer("New After Scope"));
-
-        await _scopeService.SetScopeAsync(BudgetScope.Personal);
-
-        // Allow the async void handler to complete
-        await Task.Delay(50);
-
-        _sut.RecurringTransfers.Count.ShouldBe(1);
-    }
-
     // --- Dispose ---
-
-    /// <summary>
-    /// Verifies that Dispose unsubscribes from scope changes.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
-    public async Task Dispose_UnsubscribesFromScopeChanges()
-    {
-        await _sut.InitializeAsync();
-        _sut.Dispose();
-
-        // Should not reload after dispose
-        _apiService.RecurringTransfers.Add(CreateTransfer("After Dispose"));
-        await _scopeService.SetScopeAsync(BudgetScope.Shared);
-        await Task.Delay(50);
-
-        _sut.RecurringTransfers.Count.ShouldBe(0);
-    }
 
     /// <summary>
     /// Verifies that Dispose clears the chat context.
@@ -884,19 +840,5 @@ public sealed class RecurringTransfersViewModelTests : IDisposable
         public void Remove(Guid id)
         {
         }
-    }
-
-    /// <summary>
-    /// Minimal stub for IJSRuntime to satisfy ScopeService constructor.
-    /// </summary>
-    private sealed class StubJSRuntime : IJSRuntime
-    {
-        /// <inheritdoc/>
-        /// <returns>A default value.</returns>
-        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) => default;
-
-        /// <inheritdoc/>
-        /// <returns>A default value.</returns>
-        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken, object?[]? args) => default;
     }
 }

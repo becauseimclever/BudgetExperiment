@@ -39,7 +39,6 @@ public class ReconciliationMatchRepositoryTests
             confidenceScore: 0.85m,
             amountVariance: 0m,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
 
         var repo = new ReconciliationMatchRepository(context, FakeUserContext.CreateDefault());
@@ -74,7 +73,6 @@ public class ReconciliationMatchRepositoryTests
             confidenceScore: 0.75m,
             amountVariance: 0m,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
 
         var acceptedMatch = ReconciliationMatch.Create(
@@ -84,7 +82,6 @@ public class ReconciliationMatchRepositoryTests
             confidenceScore: 0.90m,
             amountVariance: -5.00m,
             dateOffsetDays: 1,
-            BudgetScope.Shared,
             ownerUserId: null);
         acceptedMatch.Accept();
 
@@ -117,7 +114,6 @@ public class ReconciliationMatchRepositoryTests
             confidenceScore: 0.85m,
             amountVariance: 0m,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
 
         var febMatch = ReconciliationMatch.Create(
@@ -127,7 +123,6 @@ public class ReconciliationMatchRepositoryTests
             confidenceScore: 0.80m,
             amountVariance: 0m,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
 
         var repo = new ReconciliationMatchRepository(context, FakeUserContext.CreateDefault());
@@ -162,7 +157,6 @@ public class ReconciliationMatchRepositoryTests
             confidenceScore: 0.85m,
             amountVariance: 0m,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
 
         var repo = new ReconciliationMatchRepository(context, FakeUserContext.CreateDefault());
@@ -193,7 +187,6 @@ public class ReconciliationMatchRepositoryTests
             confidenceScore: 0.85m,
             amountVariance: 0m,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
 
         var febMatch = ReconciliationMatch.Create(
@@ -203,7 +196,6 @@ public class ReconciliationMatchRepositoryTests
             confidenceScore: 0.80m,
             amountVariance: 0m,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
 
         var repo = new ReconciliationMatchRepository(context, FakeUserContext.CreateDefault());
@@ -236,7 +228,6 @@ public class ReconciliationMatchRepositoryTests
             confidenceScore: 0.85m,
             amountVariance: 0m,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
 
         var repo = new ReconciliationMatchRepository(context, FakeUserContext.CreateDefault());
@@ -280,7 +271,6 @@ public class ReconciliationMatchRepositoryTests
             confidenceScore: 0.85m,
             amountVariance: 0m,
             dateOffsetDays: 0,
-            BudgetScope.Shared,
             ownerUserId: null);
 
         var repo = new ReconciliationMatchRepository(context, FakeUserContext.CreateDefault());
@@ -296,63 +286,6 @@ public class ReconciliationMatchRepositoryTests
         var verifyRepo = new ReconciliationMatchRepository(verifyContext, FakeUserContext.CreateDefault());
         var retrieved = await verifyRepo.GetByIdAsync(match.Id);
         Assert.Null(retrieved);
-    }
-
-    [Fact]
-    public async Task ScopeFilter_Returns_Shared_And_Personal_Matches_For_User()
-    {
-        // Arrange
-        await using var context = _fixture.CreateContext();
-        var (_, transactionId, recurringId) = await this.CreateTestDataAsync(context);
-        var userId = FakeUserContext.DefaultUserId;
-        var otherUserId = Guid.NewGuid();
-
-        var sharedMatch = ReconciliationMatch.Create(
-            transactionId,
-            recurringId,
-            new DateOnly(2026, 1, 15),
-            confidenceScore: 0.85m,
-            amountVariance: 0m,
-            dateOffsetDays: 0,
-            BudgetScope.Shared,
-            ownerUserId: null);
-
-        var userPersonalMatch = ReconciliationMatch.Create(
-            transactionId,
-            recurringId,
-            new DateOnly(2026, 1, 16),
-            confidenceScore: 0.80m,
-            amountVariance: 0m,
-            dateOffsetDays: 0,
-            BudgetScope.Personal,
-            ownerUserId: userId);
-
-        var otherUserMatch = ReconciliationMatch.Create(
-            transactionId,
-            recurringId,
-            new DateOnly(2026, 1, 17),
-            confidenceScore: 0.75m,
-            amountVariance: 0m,
-            dateOffsetDays: 0,
-            BudgetScope.Personal,
-            ownerUserId: otherUserId);
-
-        var repo = new ReconciliationMatchRepository(context, FakeUserContext.CreateDefault());
-        await repo.AddAsync(sharedMatch);
-        await repo.AddAsync(userPersonalMatch);
-        await repo.AddAsync(otherUserMatch);
-        await context.SaveChangesAsync();
-
-        // Act
-        await using var verifyContext = _fixture.CreateSharedContext(context);
-        var verifyRepo = new ReconciliationMatchRepository(verifyContext, FakeUserContext.CreateDefault());
-        var matches = await verifyRepo.ListAsync(0, 10);
-
-        // Assert - Should see shared and own personal, not other user's personal
-        Assert.Equal(2, matches.Count);
-        Assert.Contains(matches, m => m.Id == sharedMatch.Id);
-        Assert.Contains(matches, m => m.Id == userPersonalMatch.Id);
-        Assert.DoesNotContain(matches, m => m.Id == otherUserMatch.Id);
     }
 
     private async Task<(Guid AccountId, Guid TransactionId, Guid RecurringId)> CreateTestDataAsync(BudgetDbContext context)

@@ -252,7 +252,6 @@ public sealed class ReconciliationService : IReconciliationService
             matchResult.ConfidenceScore,
             matchResult.AmountVariance,
             matchResult.DateOffsetDays,
-            recurring.Scope,
             recurring.OwnerUserId);
 
         var wasAutoMatched = matchResult.ConfidenceScore >= tolerances.AutoMatchThreshold;

@@ -3,7 +3,6 @@
 // </copyright>
 
 using BudgetExperiment.Domain.DataHealth;
-using BudgetExperiment.Shared.Budgeting;
 
 namespace BudgetExperiment.Domain.Repositories;
 
@@ -31,13 +30,11 @@ public interface ITransactionAnalyticsRepository
     /// </summary>
     /// <param name="year">The year.</param>
     /// <param name="month">The month (1-12).</param>
-    /// <param name="scope">The budget scope to apply.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A dictionary of category IDs and total spending amounts.</returns>
     Task<Dictionary<Guid, decimal>> GetSpendingByCategoriesAsync(
         int year,
         int month,
-        BudgetScope scope,
         CancellationToken cancellationToken = default);
 
     /// <summary>

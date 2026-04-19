@@ -46,7 +46,6 @@ public class CustomReportLayoutRepositoryTests : IClassFixture<PostgreSqlFixture
         Assert.Equal(layout.Id, retrieved.Id);
         Assert.Equal("Monthly Spending", retrieved.Name);
         Assert.Equal("{\"type\": \"bar\"}", retrieved.LayoutJson);
-        Assert.Equal(BudgetScope.Shared, retrieved.Scope);
         Assert.Null(retrieved.OwnerUserId);
     }
 
@@ -56,7 +55,7 @@ public class CustomReportLayoutRepositoryTests : IClassFixture<PostgreSqlFixture
         // Arrange
         await using var context = _fixture.CreateContext();
         var userId = FakeUserContext.DefaultUserId;
-        var userContext = FakeUserContext.CreateForPersonalScope(userId);
+        var userContext = new FakeUserContext(userId: userId);
         var repository = new CustomReportLayoutRepository(context, userContext);
         var layout = CustomReportLayout.CreatePersonal("My Private Report", "{\"type\":\"pie\"}", userId);
 
@@ -70,7 +69,6 @@ public class CustomReportLayoutRepositoryTests : IClassFixture<PostgreSqlFixture
         var retrieved = await verifyRepo.GetByIdAsync(layout.Id);
 
         Assert.NotNull(retrieved);
-        Assert.Equal(BudgetScope.Personal, retrieved.Scope);
         Assert.Equal(userId, retrieved.OwnerUserId);
     }
 
@@ -214,56 +212,6 @@ public class CustomReportLayoutRepositoryTests : IClassFixture<PostgreSqlFixture
     }
 
     [Fact]
-    public async Task GetAllAsync_WithPersonalScope_Returns_Only_Current_User_Personal_Layouts()
-    {
-        // Arrange
-        await using var context = _fixture.CreateContext();
-        var userId = FakeUserContext.DefaultUserId;
-        var otherUserId = Guid.NewGuid();
-
-        var sharedLayout = CustomReportLayout.CreateShared("Shared", "{}", userId);
-        var myPersonal = CustomReportLayout.CreatePersonal("My Personal", "{}", userId);
-        var otherPersonal = CustomReportLayout.CreatePersonal("Other Personal", "{}", otherUserId);
-
-        context.CustomReportLayouts.AddRange(sharedLayout, myPersonal, otherPersonal);
-        await context.SaveChangesAsync();
-
-        // Act - personal scope should return only current user's personal layouts
-        await using var verifyContext = _fixture.CreateSharedContext(context);
-        var personalContext = FakeUserContext.CreateForPersonalScope(userId);
-        var repository = new CustomReportLayoutRepository(verifyContext, personalContext);
-        var layouts = await repository.GetAllAsync();
-
-        // Assert
-        Assert.Single(layouts);
-        Assert.Equal("My Personal", layouts[0].Name);
-        Assert.Equal(BudgetScope.Personal, layouts[0].Scope);
-    }
-
-    [Fact]
-    public async Task GetAllAsync_WithSharedScope_Returns_Only_Shared_Layouts()
-    {
-        // Arrange
-        await using var context = _fixture.CreateContext();
-        var userId = FakeUserContext.DefaultUserId;
-
-        var sharedLayout = CustomReportLayout.CreateShared("Shared Report", "{}", userId);
-        var personalLayout = CustomReportLayout.CreatePersonal("Personal Report", "{}", userId);
-
-        context.CustomReportLayouts.AddRange(sharedLayout, personalLayout);
-        await context.SaveChangesAsync();
-
-        // Act
-        await using var verifyContext = _fixture.CreateSharedContext(context);
-        var repository = new CustomReportLayoutRepository(verifyContext, FakeUserContext.CreateForSharedScope());
-        var layouts = await repository.GetAllAsync();
-
-        // Assert - only shared layouts returned
-        Assert.Single(layouts);
-        Assert.Equal("Shared Report", layouts[0].Name);
-    }
-
-    [Fact]
     public async Task GetAllAsync_WithNullScope_Returns_Shared_And_Current_User_Personal_Layouts()
     {
         // Arrange
@@ -280,7 +228,7 @@ public class CustomReportLayoutRepositoryTests : IClassFixture<PostgreSqlFixture
 
         // Act - null scope = all visible (shared + own personal)
         await using var verifyContext = _fixture.CreateSharedContext(context);
-        var allScopeContext = new FakeUserContext(userId: userId, currentScope: null);
+        var allScopeContext = new FakeUserContext(userId: userId);
         var repository = new CustomReportLayoutRepository(verifyContext, allScopeContext);
         var layouts = await repository.GetAllAsync();
 
