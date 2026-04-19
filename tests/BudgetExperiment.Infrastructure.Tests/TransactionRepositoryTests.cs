@@ -998,4 +998,72 @@ public class TransactionRepositoryTests
         Assert.Single(results);
         Assert.Equal("My Trans", results[0].Description);
     }
+
+    [Fact]
+    public async Task GetSpendingByCategoriesAsync_Returns_Spending_Aggregated_By_Category()
+    {
+        // Arrange
+        await using var context = _fixture.CreateContext();
+        var accountRepo = new AccountRepository(context, FakeUserContext.CreateDefault());
+        var categoryRepo = new BudgetCategoryRepository(context, FakeUserContext.CreateDefault());
+
+        var groceries = BudgetCategory.Create("Groceries", CategoryType.Expense);
+        var utilities = BudgetCategory.Create("Utilities", CategoryType.Expense);
+        var income = BudgetCategory.Create("Salary", CategoryType.Income);
+
+        await categoryRepo.AddAsync(groceries);
+        await categoryRepo.AddAsync(utilities);
+        await categoryRepo.AddAsync(income);
+
+        var account = Account.Create("Spending Test", AccountType.Checking);
+
+        // Groceries expenses (negative amounts in domain)
+        var groceryTrans1 = account.AddTransaction(
+            MoneyValue.Create("USD", -50m),
+            new DateOnly(2026, 1, 5),
+            "Grocery Store");
+        groceryTrans1.UpdateCategory(groceries.Id);
+
+        var groceryTrans2 = account.AddTransaction(
+            MoneyValue.Create("USD", -75m),
+            new DateOnly(2026, 1, 15),
+            "Farmer's Market");
+        groceryTrans2.UpdateCategory(groceries.Id);
+
+        // Utilities expenses
+        var utilitiesTrans = account.AddTransaction(
+            MoneyValue.Create("USD", -120m),
+            new DateOnly(2026, 1, 10),
+            "Electric Bill");
+        utilitiesTrans.UpdateCategory(utilities.Id);
+
+        // Income (positive, should be excluded from spending)
+        var incomeTrans = account.AddTransaction(
+            MoneyValue.Create("USD", 3000m),
+            new DateOnly(2026, 1, 1),
+            "Monthly Salary");
+        incomeTrans.UpdateCategory(income.Id);
+
+        // Uncategorized expense (should be excluded)
+        account.AddTransaction(
+            MoneyValue.Create("USD", -25m),
+            new DateOnly(2026, 1, 20),
+            "Unknown Merchant");
+
+        await accountRepo.AddAsync(account);
+        await context.SaveChangesAsync();
+
+        // Act
+        await using var verifyContext = _fixture.CreateSharedContext(context);
+        var transactionRepo = new TransactionRepository(verifyContext, FakeUserContext.CreateDefault(), NullLogger<TransactionRepository>.Instance);
+        var spending = await transactionRepo.GetSpendingByCategoriesAsync(2026, 1, BudgetScope.Shared);
+
+        // Assert
+        Assert.Equal(2, spending.Count);
+        Assert.True(spending.ContainsKey(groceries.Id), "Groceries category should be in results");
+        Assert.True(spending.ContainsKey(utilities.Id), "Utilities category should be in results");
+        Assert.Equal(125m, spending[groceries.Id]); // 50 + 75 (absolute values)
+        Assert.Equal(120m, spending[utilities.Id]);
+        Assert.False(spending.ContainsKey(income.Id), "Income category should be excluded");
+    }
 }

@@ -214,6 +214,38 @@ Domain Tests, Application Tests, Infrastructure Tests, API Tests, Client Tests �
 
 ---
 ## Learnings
+
+### 2026-04-16 — PostgreSQL Integration Test for GetSpendingByCategoriesAsync
+
+**Task:** Write PostgreSQL integration test for `TransactionRepository.GetSpendingByCategoriesAsync` to fill audit gap.
+
+**Method signature (TransactionRepository.cs:220–244):**
+```csharp
+public async Task<Dictionary<Guid, decimal>> GetSpendingByCategoriesAsync(
+    int year,
+    int month,
+    BudgetScope scope,
+    CancellationToken cancellationToken = default)
+```
+
+**Key behaviors proven:**
+- Returns dictionary mapping CategoryId → total spending (absolute value, expenses only)
+- Excludes positive amounts (income, deposits)
+- Excludes uncategorized transactions (null CategoryId)
+- Excludes transfer transactions (TransferId == null filter)
+- Respects scope filtering (applies ApplyScopeFilter)
+- Aggregates multiple transactions per category
+- Month/year filtering works correctly (startDate = month 1st, endDate = month last day)
+
+**Test created:** `TransactionRepositoryTests.GetSpendingByCategoriesAsync_Returns_Spending_Aggregated_By_Category`
+- Uses PostgreSQL Testcontainers fixture with BudgetCategoryRepository and AccountRepository
+- Creates 3 categories: Groceries ($50, $75), Utilities ($120), Salary (Income, +$3000, excluded), Uncategorized (-$25, excluded)
+- Verifies: 2 results, Groceries = 125m, Utilities = 120m, Income absent, Uncategorized absent
+- All 258 infrastructure tests pass post-change
+
+**Convention learned:** Domain Transaction expense amounts are stored as **negative** (e.g., -50m); method uses `Math.Abs()` for aggregation display.
+
+---
 - Added API tests for CalendarController and AccountsController using WebApplicationFactory and Moq, following the TransferDeletionControllerTests pattern. Verified all tests pass. (Feature 149)
 
 ### 2026-04-05 — Feature 120 Slice 1: RED Tests for Domain Event Foundation
