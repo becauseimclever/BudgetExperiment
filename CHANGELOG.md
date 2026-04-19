@@ -2,6 +2,18 @@
 
 All notable changes to Budget Experiment.
 
+## [3.29.0] - 2026-04-19
+
+### Features
+
+- **domain:** Feature 161 Phase 3 — Remove BudgetScope from Domain, Application, Infrastructure, and Client layers: delete `BudgetScope.cs` enum, remove `BudgetScope` property from all domain entities (Account, Transaction, BudgetCategory, BudgetGoal, RecurringTransaction, RecurringTransfer, RecurringChargeSuggestion, ReconciliationRecord, ReconciliationMatch, CustomReportLayout, UserSettings), remove `CurrentScope`/`SetScope` from `IUserContext` and `UserContext`
+- **infrastructure:** All repositories updated to filter by `OwnerUserId` only; added EF Core migration `RemoveBudgetScopeColumns` to drop scope columns from all entity tables
+- **client:** Deleted `ScopeService`, `ScopeOption`; removed scope from all 8 ViewModels and 7 Razor pages; removed `ScopeService` DI registration
+
+### Testing
+
+- Updated all 45 test files to remove BudgetScope references; deleted `ScopeBadgeTests`, `ScopeServiceTests`
+
 ## [3.28.0] - 2026-04-14
 
 ### Features
