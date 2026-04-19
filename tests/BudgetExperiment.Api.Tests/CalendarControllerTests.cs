@@ -328,7 +328,6 @@ public sealed class CalendarControllerTests : IClassFixture<CustomWebApplication
             InitialBalance = initialBalance,
             InitialBalanceCurrency = "USD",
             InitialBalanceDate = initialBalanceDate,
-            Scope = "Shared",
         };
 
         var response = await _client.PostAsJsonAsync("/api/v1/accounts", req);

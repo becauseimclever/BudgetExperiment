@@ -29,7 +29,4 @@ public sealed class AccountCreateDto
     {
         get; set;
     }
-
-    /// <summary>Gets or sets the budget scope ("Shared" or "Personal"). Defaults to "Shared".</summary>
-    public string Scope { get; set; } = "Shared";
 }

@@ -9,12 +9,6 @@ namespace BudgetExperiment.Contracts.Dtos;
 /// </summary>
 public sealed class UserSettingsUpdateDto
 {
-    /// <summary>Gets or sets the default budget scope ("Shared", "Personal", or null for All).</summary>
-    public string? DefaultScope
-    {
-        get; set;
-    }
-
     /// <summary>Gets or sets a value indicating whether past-due items are auto-realized.</summary>
     public bool? AutoRealizePastDueItems
     {

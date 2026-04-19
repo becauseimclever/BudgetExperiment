@@ -521,7 +521,6 @@ public class SettingsPageTests : BunitContext, IAsyncLifetime
         _apiService.UserSettings = new UserSettingsDto
         {
             UserId = Guid.NewGuid(),
-            DefaultScope = "Shared",
             PreferredCurrency = "USD",
             FirstDayOfWeek = DayOfWeek.Sunday,
             IsOnboarded = true,

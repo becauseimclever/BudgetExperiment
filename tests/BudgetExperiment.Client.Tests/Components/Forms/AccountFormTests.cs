@@ -64,38 +64,6 @@ public sealed class AccountFormTests : BunitContext, IAsyncLifetime
     }
 
     /// <summary>
-    /// Verifies that a blank scope is normalized to Shared for compatibility.
-    /// </summary>
-    [Fact]
-    public void Render_BlankScope_DefaultsToShared()
-    {
-        // Arrange
-        var model = new AccountCreateDto { Scope = string.Empty };
-
-        // Act
-        _ = RenderAccountForm(model: model);
-
-        // Assert
-        Assert.Equal("Shared", model.Scope);
-    }
-
-    /// <summary>
-    /// Verifies that a legacy Personal scope is coerced back to Shared.
-    /// </summary>
-    [Fact]
-    public void Render_PersonalScope_DefaultsToShared()
-    {
-        // Arrange
-        var model = new AccountCreateDto { Scope = "Personal" };
-
-        // Act
-        _ = RenderAccountForm(model: model);
-
-        // Assert
-        Assert.Equal("Shared", model.Scope);
-    }
-
-    /// <summary>
     /// Verifies that the account type dropdown has all five options.
     /// </summary>
     [Fact]

@@ -1,6 +1,6 @@
 # Feature 161: BudgetScope Removal
 
-> **Status:** Phase 1 Complete (2026-04-18). Phases 2–4 Pending.
+> **Status:** Phase 2 Complete (2026-04-18). Phases 3–4 Pending.
 
 ## Overview
 
@@ -87,13 +87,13 @@ Kakeibo philosophy is rooted in the household (family) ledger as a single source
 **So that** I don't need to understand or handle scope logic
 
 **Acceptance Criteria:**
-- [ ] `BudgetScopeMiddleware` is removed
-- [ ] `UserContext.BudgetScope` property is removed
-- [ ] All API DTOs (request/response) no longer expose `BudgetScope` field
-- [ ] API endpoints work correctly without scope header
-- [ ] Documentation is updated to reflect no scope header requirement
-- [ ] No breaking changes to endpoints that don't mention scope (transparent removal)
-- [ ] OpenAPI spec auto-updates (scope fields disappear)
+- [x] `BudgetScopeMiddleware` is removed
+- [x] API `UserContext` no longer accepts request-driven scope changes
+- [x] All API DTOs (request/response) no longer expose `BudgetScope` field
+- [x] API endpoints work correctly without scope header
+- [x] Documentation is updated to reflect no scope header requirement
+- [x] No breaking changes to endpoints that don't mention scope (transparent removal)
+- [x] OpenAPI spec auto-updates (scope fields disappear)
 
 #### US-161-003: Simplify IUserContext Interface
 **As a** domain or application developer  
@@ -402,20 +402,20 @@ Kakeibo philosophy is rooted in the household (family) ledger as a single source
 **Goal:** Clean up API contracts; no more scope header or scope DTO fields  
 **Deliverables:**
 - Remove BudgetScopeMiddleware
-- Remove BudgetScope from UserContext
+- Stop using request-scoped BudgetScope in UserContext
 - Remove BudgetScope from all DTOs
 - Update all controllers to not expect or use scope header
 - Update OpenAPI spec (scope fields auto-removed)
-- Service layer still accepts scope; API simply doesn't extract/pass it
+- Service and repository scope internals remain for now; API simply defaults to household/shared behavior
 
 **Acceptance Criteria Phase 2:**
-- [ ] No BudgetScope in API request/response contracts
-- [ ] Middleware no longer runs
-- [ ] UserContext no longer has BudgetScope
-- [ ] All API endpoints work without scope header
-- [ ] OpenAPI spec is clean (no scope references)
-- [ ] API integration tests pass
-- [ ] Scope is still used in repositories (Phase 3 removes it)
+- [x] No BudgetScope in API request/response contracts
+- [x] Middleware no longer runs
+- [x] API UserContext no longer accepts request-driven scope changes
+- [x] All API endpoints work without scope header
+- [x] OpenAPI spec is clean (no scope references)
+- [x] API integration tests pass
+- [x] Scope is still used in repositories (Phase 3 removes it)
 
 **Risk:** Medium — API contracts change; clients must adapt (but default to no scope)
 

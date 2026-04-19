@@ -100,31 +100,4 @@ public sealed class UserController : ControllerBase
         await _service.MarkKakeiboSetupCompleteAsync(cancellationToken);
         return this.NoContent();
     }
-
-    /// <summary>
-    /// Gets the current session's budget scope.
-    /// </summary>
-    /// <returns>The current scope selection.</returns>
-    [HttpGet("scope")]
-    [ProducesResponseType<ScopeDto>(StatusCodes.Status200OK)]
-    public IActionResult GetScope()
-    {
-        var scope = _service.GetCurrentScope();
-        return this.Ok(scope);
-    }
-
-    /// <summary>
-    /// Sets the current session's budget scope.
-    /// This affects which data is visible for the current request/session.
-    /// </summary>
-    /// <param name="dto">The scope selection.</param>
-    /// <returns>The updated scope.</returns>
-    [HttpPut("scope")]
-    [ProducesResponseType<ScopeDto>(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public IActionResult SetScope([FromBody] ScopeDto dto)
-    {
-        _service.SetCurrentScope(dto);
-        return this.Ok(dto);
-    }
 }

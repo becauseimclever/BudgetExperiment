@@ -67,16 +67,6 @@ public sealed class UserSettingsService : IUserSettingsService
 
         var settings = await _repository.GetByUserIdAsync(userId, cancellationToken);
 
-        if (dto.DefaultScope != null)
-        {
-            if (!Enum.TryParse<BudgetScope>(dto.DefaultScope, ignoreCase: true, out var scope))
-            {
-                throw new DomainException($"Invalid scope: {dto.DefaultScope}. Valid values are 'Shared' or 'Personal'.");
-            }
-
-            settings.UpdateDefaultScope(scope);
-        }
-
         if (dto.AutoRealizePastDueItems.HasValue)
         {
             settings.UpdateAutoRealize(dto.AutoRealizePastDueItems.Value);
@@ -141,39 +131,11 @@ public sealed class UserSettingsService : IUserSettingsService
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
-    /// <inheritdoc />
-    public ScopeDto GetCurrentScope()
-    {
-        return new ScopeDto
-        {
-            Scope = _userContext.CurrentScope?.ToString(),
-        };
-    }
-
-    /// <inheritdoc />
-    public void SetCurrentScope(ScopeDto dto)
-    {
-        BudgetScope? scope = null;
-
-        if (!string.IsNullOrWhiteSpace(dto.Scope))
-        {
-            if (!Enum.TryParse<BudgetScope>(dto.Scope, ignoreCase: true, out var parsedScope))
-            {
-                throw new DomainException($"Invalid scope: {dto.Scope}. Valid values are 'Shared', 'Personal', or null for All.");
-            }
-
-            scope = parsedScope;
-        }
-
-        _userContext.SetScope(scope);
-    }
-
     private UserSettingsDto ToDto(UserSettings settings)
     {
         return new UserSettingsDto
         {
             UserId = settings.UserId,
-            DefaultScope = settings.DefaultScope.ToString(),
             AutoRealizePastDueItems = settings.AutoRealizePastDueItems,
             PastDueLookbackDays = settings.PastDueLookbackDays,
             PreferredCurrency = settings.PreferredCurrency,

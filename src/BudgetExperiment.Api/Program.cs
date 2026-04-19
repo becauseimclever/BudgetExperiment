@@ -220,9 +220,6 @@ public partial class Program
         app.UseAuthentication();
         app.UseAuthorization();
 
-        // Budget scope extraction from X-Budget-Scope header
-        app.UseMiddleware<BudgetExperiment.Api.Middleware.BudgetScopeMiddleware>();
-
         // Custom exception handling — must be before MapControllers so it catches controller exceptions
         app.UseMiddleware<BudgetExperiment.Api.Middleware.ExceptionHandlingMiddleware>();
 

@@ -15,9 +15,6 @@ public sealed class UserSettingsDto
         get; set;
     }
 
-    /// <summary>Gets or sets the default budget scope ("Shared", "Personal", or null for All).</summary>
-    public string DefaultScope { get; set; } = "Shared";
-
     /// <summary>Gets or sets a value indicating whether past-due items are auto-realized.</summary>
     public bool AutoRealizePastDueItems
     {

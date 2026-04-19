@@ -59,14 +59,7 @@ public sealed class CustomReportLayoutService : ICustomReportLayoutService
         var userId = _userContext.UserIdAsGuid
             ?? throw new DomainException("User is not authenticated.");
 
-        var scope = ResolveScope(dto.Scope);
-
-        CustomReportLayout layout = scope switch
-        {
-            BudgetScope.Personal => CustomReportLayout.CreatePersonal(dto.Name, dto.LayoutJson, userId),
-            BudgetScope.Shared => CustomReportLayout.CreateShared(dto.Name, dto.LayoutJson, userId),
-            _ => throw new DomainException($"Invalid scope: {scope}"),
-        };
+        var layout = CustomReportLayout.CreateShared(dto.Name, dto.LayoutJson, userId);
 
         await _repository.AddAsync(layout, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
@@ -123,25 +116,9 @@ public sealed class CustomReportLayoutService : ICustomReportLayoutService
             Id = layout.Id,
             Name = layout.Name,
             LayoutJson = layout.LayoutJson,
-            Scope = layout.Scope.ToString(),
             CreatedAtUtc = layout.CreatedAtUtc,
             UpdatedAtUtc = layout.UpdatedAtUtc,
             Version = version,
         };
-    }
-
-    private BudgetScope ResolveScope(string? scope)
-    {
-        if (!string.IsNullOrWhiteSpace(scope))
-        {
-            if (!Enum.TryParse<BudgetScope>(scope, ignoreCase: true, out var parsedScope))
-            {
-                throw new DomainException($"Invalid scope: {scope}. Valid values are 'Shared' or 'Personal'.");
-            }
-
-            return parsedScope;
-        }
-
-        return _userContext.CurrentScope ?? BudgetScope.Shared;
     }
 }

@@ -48,9 +48,6 @@ public sealed class AccountDto
         get; set;
     }
 
-    /// <summary>Gets or sets the budget scope ("Shared" or "Personal").</summary>
-    public string Scope { get; set; } = "Shared";
-
     /// <summary>Gets or sets the concurrency version token for optimistic concurrency.</summary>
     public string? Version
     {

@@ -1052,3 +1052,5 @@ Read every line of:
 
 ---
 
+- 2026-04-18: Feature 161 Phase 2 test surface now proves contracts/routes/OpenAPI are scope-free, but `UserContext.CurrentScope` still survives and any retained `ScopeMessageHandler` must stop sending `X-Budget-Scope`. Also learned that `CustomWebApplicationFactory.ResetDatabase()` wipes feature flags, so feature-gated API tests must reseed flags after a reset.
+- 2026-04-18: Re-reviewing Feature 161 Phase 2 taught the same lesson twice: a reflection test on `typeof(UserContext)` only proves the public surface, not interface removal. Explicit `IUserContext.CurrentScope` / `SetScope()` implementations can survive underneath, so approval requires either the interface itself to be narrowed or tests that inspect `typeof(IUserContext)` and cast-through behavior.

@@ -45,16 +45,4 @@ public interface IUserSettingsService
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A task representing the async operation.</returns>
     Task MarkKakeiboSetupCompleteAsync(CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Gets the current session scope.
-    /// </summary>
-    /// <returns>The scope DTO.</returns>
-    ScopeDto GetCurrentScope();
-
-    /// <summary>
-    /// Sets the current session scope.
-    /// </summary>
-    /// <param name="dto">The scope DTO.</param>
-    void SetCurrentScope(ScopeDto dto);
 }

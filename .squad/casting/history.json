@@ -8,6 +8,9 @@
       "agents": [
         { "name": "Alfred", "role": "Lead" },
         { "name": "Lucius", "role": "Backend Dev" },
+        { "name": "Tim", "role": "Backend Dev" },
+        { "name": "Cassandra", "role": "Backend Dev" },
+        { "name": "Gordon", "role": "Backend Dev" },
         { "name": "Barbara", "role": "Tester" },
         { "name": "Scribe", "role": "Scribe" },
         { "name": "Ralph", "role": "Work Monitor" }

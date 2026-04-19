@@ -16,6 +16,30 @@
       "legacy_named": false,
       "status": "active"
     },
+    "tim": {
+      "persistent_name": "Tim",
+      "universe": "DC Universe",
+      "role": "Backend Dev",
+      "created_at": "2026-04-18T22:08:07Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "cassandra": {
+      "persistent_name": "Cassandra",
+      "universe": "DC Universe",
+      "role": "Backend Dev",
+      "created_at": "2026-04-18T22:08:08Z",
+      "legacy_named": false,
+      "status": "active"
+    },
+    "gordon": {
+      "persistent_name": "Gordon",
+      "universe": "DC Universe",
+      "role": "Backend Dev",
+      "created_at": "2026-04-18T22:08:09Z",
+      "legacy_named": false,
+      "status": "active"
+    },
     "barbara": {
       "persistent_name": "Barbara",
       "universe": "DC Universe",

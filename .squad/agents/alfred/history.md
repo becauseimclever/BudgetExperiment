@@ -564,3 +564,27 @@ Only Phase 1 is complete. The branch has ~25% of the total feature work done.
 **Result:** Doc now truthfully represents architectural state. Phase 1 is shipped, Phases 2–4 are pending. No invented work.
 
 **Lesson:** Documentation is the contract with the team. Updating it post-delivery is critical to keeping the roadmap honest and preventing surprise scope creep ("wait, I thought we removed scope everywhere?").
+
+### Feature 161 Phase 2 Boundary Review (2026-04-18)
+
+**Situation:** Coordinator requested review of Phase 2 (API layer removal) boundary before implementation begins.
+
+**Analysis performed:**
+- Mapped exact surface area: 1 file to delete, 4 files to edit, 1 test file to delete
+- Identified 6 Application services, 13 Domain entities, 8 Infrastructure repositories that reference BudgetScope but must NOT be touched in Phase 2
+- Confirmed ~90+ tests across lower layers reference BudgetScope — these are Phase 3 concerns
+
+**Phase 2 Boundary:**
+- DELETE: `BudgetScopeMiddleware.cs`, `ScopeDto.cs`, `BudgetScopeMiddlewareTests.cs`
+- EDIT: `Program.cs` (remove middleware registration), `UserContext.cs` (remove scope members), `IUserContext.cs` (remove scope contract), `UserController.cs` (remove scope endpoints)
+- DO NOT TOUCH: BudgetScope.cs enum, Domain entities, Application services, Infrastructure repositories
+
+**Guardrails established:**
+1. No cascading refactors — Phase 2 removes intake mechanism only
+2. IUserContext edit is interface-only — services see null (unchanged runtime behavior)
+3. Infrastructure repositories stay unchanged — that's Phase 3
+4. Breaking change acknowledged — scope endpoints removed from API
+
+**Decision written to:** `.squad/decisions/inbox/alfred-161-phase2-boundary.md`
+
+**Lesson:** Phased architectural work requires explicit boundary definition before each phase. "API layer only" needs to be unpacked into precise file lists with clear exclusions, or implementers will drift into adjacent layers and create merge conflicts with future phases.

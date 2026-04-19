@@ -85,6 +85,38 @@ public sealed class UserContextTests
     }
 
     /// <summary>
+    /// CurrentScope is fixed to the household/shared scope when API scope headers are removed.
+    /// </summary>
+    [Fact]
+    public void CurrentScope_ReturnsShared()
+    {
+        // Arrange
+        IUserContext userContext = new UserContext(CreateHttpContextAccessor(authenticated: true));
+
+        // Act
+        var result = userContext.CurrentScope;
+
+        // Assert
+        Assert.Equal(BudgetScope.Shared, result);
+    }
+
+    /// <summary>
+    /// SetScope no longer changes the API user context scope.
+    /// </summary>
+    [Fact]
+    public void SetScope_DoesNotChangeCurrentScope()
+    {
+        // Arrange
+        IUserContext userContext = new UserContext(CreateHttpContextAccessor(authenticated: true));
+
+        // Act
+        userContext.SetScope(BudgetScope.Personal);
+
+        // Assert
+        Assert.Equal(BudgetScope.Shared, userContext.CurrentScope);
+    }
+
+    /// <summary>
     /// Username extracts the 'preferred_username' claim value.
     /// </summary>
     [Fact]

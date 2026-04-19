@@ -220,18 +220,4 @@ public sealed class AuthorizationTests : IClassFixture<AuthEnabledWebApplication
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
-
-    /// <summary>
-    /// Unauthenticated request to /api/v1/user/scope returns 401 Unauthorized.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
-    public async Task GetUserScope_Unauthenticated_Returns_401()
-    {
-        // Act
-        var response = await _unauthenticatedClient.GetAsync("/api/v1/user/scope");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-    }
 }

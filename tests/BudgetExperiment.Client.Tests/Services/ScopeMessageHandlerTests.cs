@@ -16,11 +16,11 @@ namespace BudgetExperiment.Client.Tests.Services;
 public sealed class ScopeMessageHandlerTests
 {
     /// <summary>
-    /// Verifies outgoing requests default to the household/shared header when no scope was chosen.
+    /// Verifies Phase 2 no longer sends a scope header when no scope was chosen.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task SendAsync_WithoutExplicitScope_UsesSharedHeader()
+    public async Task SendAsync_WithoutExplicitScope_DoesNotSendScopeHeader()
     {
         var scopeService = new ScopeService(new StubJSRuntime());
         var innerHandler = new CapturingHandler();
@@ -33,15 +33,15 @@ public sealed class ScopeMessageHandlerTests
 
         await invoker.SendAsync(request, CancellationToken.None);
 
-        Assert.Equal("Shared", innerHandler.LastRequest!.Headers.GetValues(ScopeMessageHandler.ScopeHeaderName).Single());
+        Assert.False(innerHandler.LastRequest!.Headers.Contains(ScopeMessageHandler.ScopeHeaderName));
     }
 
     /// <summary>
-    /// Verifies legacy persisted Personal values are coerced to the shared household header.
+    /// Verifies legacy persisted Personal values do not leak into a removed scope header.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task SendAsync_WithLegacyPersonalScope_UsesSharedHeader()
+    public async Task SendAsync_WithLegacyPersonalScope_DoesNotSendScopeHeader()
     {
         var jsRuntime = new StubJSRuntime();
         jsRuntime.GetItems["budget-experiment-scope"] = "Personal";
@@ -57,7 +57,7 @@ public sealed class ScopeMessageHandlerTests
 
         await invoker.SendAsync(request, CancellationToken.None);
 
-        Assert.Equal("Shared", innerHandler.LastRequest!.Headers.GetValues(ScopeMessageHandler.ScopeHeaderName).Single());
+        Assert.False(innerHandler.LastRequest!.Headers.Contains(ScopeMessageHandler.ScopeHeaderName));
     }
 
     private sealed class CapturingHandler : HttpMessageHandler

@@ -21,9 +21,6 @@ public sealed class CustomReportLayoutDto
     /// <summary>Gets or sets the layout JSON definition.</summary>
     public string LayoutJson { get; set; } = "{}";
 
-    /// <summary>Gets or sets the scope (Shared or Personal).</summary>
-    public string Scope { get; set; } = "Shared";
-
     /// <summary>Gets or sets when the layout was created (UTC).</summary>
     public DateTime CreatedAtUtc
     {

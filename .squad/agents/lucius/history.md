@@ -956,3 +956,7 @@ The CategorySuggestionEndpoints.cs Minimal API pilot (introduced in F-153 by spl
 - ✅ Session log: 2026-04-13T03-43-13Z-feature-160-closeout.md
 - ✅ Decisions merged to decisions.md; inbox cleared
 - ✅ Agent histories updated (this entry)
+### 2026-04-18 — Feature 161 Phase 2 API cleanup
+- Phase 2 can hide scope from the API surface without touching Phase 3 internals by moving `CurrentScope`/`SetScope` to explicit `IUserContext` implementation on `UserContext`.
+- Locking the explicit implementation to `BudgetScope.Shared` preserves current repository behavior while removing the request header and public scope API.
+- Verified validation path: `dotnet build C:\ws\BudgetExperiment\BudgetExperiment.sln`, `dotnet test` for Application.Tests (1125/1125), Api.Tests (693/693), and Client.Tests (2807/2808, 1 skip), all with `Category!=Performance`.

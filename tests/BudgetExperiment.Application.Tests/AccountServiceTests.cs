@@ -18,9 +18,9 @@ public class AccountServiceTests
     private static readonly Guid TestUserId = new("11111111-1111-1111-1111-111111111111");
 
     [Theory]
-    [InlineData("Test", "Checking", "Shared")]
-    [InlineData("Personal Test", "Savings", "Personal")]
-    public async Task CreateAsync_Creates_Account(string name, string type, string scope)
+    [InlineData("Test", "Checking")]
+    [InlineData("Savings Test", "Savings")]
+    public async Task CreateAsync_Creates_SharedAccount(string name, string type)
     {
         // Arrange
         var repo = new Mock<IAccountRepository>();
@@ -29,7 +29,7 @@ public class AccountServiceTests
         uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
         var userContext = CreateMockUserContext();
         var service = new AccountService(repo.Object, uow.Object, userContext.Object);
-        var dto = new AccountCreateDto { Name = name, Type = type, Scope = scope };
+        var dto = new AccountCreateDto { Name = name, Type = type };
 
         // Act
         var result = await service.CreateAsync(dto);
@@ -38,6 +38,11 @@ public class AccountServiceTests
         Assert.Equal(name, result.Name);
         Assert.Equal(type, result.Type);
         Assert.NotEqual(Guid.Empty, result.Id);
+        repo.Verify(
+            r => r.AddAsync(
+                It.Is<Account>(account => account.Scope == BudgetScope.Shared),
+                default),
+            Times.Once);
         uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
     }
 
@@ -117,7 +122,6 @@ public class AccountServiceTests
             InitialBalance = 1500.00m,
             InitialBalanceCurrency = "USD",
             InitialBalanceDate = new DateOnly(2026, 1, 1),
-            Scope = "Shared",
         };
 
         // Act
@@ -145,7 +149,6 @@ public class AccountServiceTests
             Name = "Default Date Test",
             Type = "Savings",
             InitialBalance = 100.00m,
-            Scope = "Shared",
         };
 
         // Act
@@ -240,18 +243,18 @@ public class AccountServiceTests
     }
 
     [Fact]
-    public async Task CreateAsync_With_Invalid_Scope_Throws()
+    public async Task CreateAsync_With_Invalid_Type_Throws()
     {
         // Arrange
         var repo = new Mock<IAccountRepository>();
         var uow = new Mock<IUnitOfWork>();
         var userContext = CreateMockUserContext();
         var service = new AccountService(repo.Object, uow.Object, userContext.Object);
-        var dto = new AccountCreateDto { Name = "Test", Type = "Checking", Scope = "InvalidScope" };
+        var dto = new AccountCreateDto { Name = "Test", Type = "InvalidType" };
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<DomainException>(() => service.CreateAsync(dto));
-        Assert.Contains("Invalid scope", ex.Message);
+        Assert.Contains("Invalid account type", ex.Message);
     }
 
     private static Mock<IUserContext> CreateMockUserContext()

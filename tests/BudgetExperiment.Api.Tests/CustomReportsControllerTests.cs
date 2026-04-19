@@ -35,7 +35,7 @@ public sealed class CustomReportsControllerTests : IClassFixture<CustomWebApplic
     public async Task GetById_Returns_ETag_Header()
     {
         // Arrange
-        var createDto = new CustomReportLayoutCreateDto { Name = "ETag Report", LayoutJson = "{\"type\":\"bar\"}", Scope = "Shared" };
+        var createDto = new CustomReportLayoutCreateDto { Name = "ETag Report", LayoutJson = "{\"type\":\"bar\"}" };
         var createResponse = await _client.PostAsJsonAsync("/api/v1/custom-reports", createDto);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
         var created = await createResponse.Content.ReadFromJsonAsync<CustomReportLayoutDto>();
@@ -57,7 +57,7 @@ public sealed class CustomReportsControllerTests : IClassFixture<CustomWebApplic
     public async Task Update_With_Valid_IfMatch_Succeeds()
     {
         // Arrange
-        var createDto = new CustomReportLayoutCreateDto { Name = "IfMatch Valid Report", LayoutJson = "{\"type\":\"bar\"}", Scope = "Shared" };
+        var createDto = new CustomReportLayoutCreateDto { Name = "IfMatch Valid Report", LayoutJson = "{\"type\":\"bar\"}" };
         var createResponse = await _client.PostAsJsonAsync("/api/v1/custom-reports", createDto);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
         var created = await createResponse.Content.ReadFromJsonAsync<CustomReportLayoutDto>();
@@ -90,7 +90,7 @@ public sealed class CustomReportsControllerTests : IClassFixture<CustomWebApplic
     public async Task Update_With_Stale_IfMatch_Returns_409()
     {
         // Arrange
-        var createDto = new CustomReportLayoutCreateDto { Name = "Stale IfMatch Report", LayoutJson = "{\"type\":\"bar\"}", Scope = "Shared" };
+        var createDto = new CustomReportLayoutCreateDto { Name = "Stale IfMatch Report", LayoutJson = "{\"type\":\"bar\"}" };
         var createResponse = await _client.PostAsJsonAsync("/api/v1/custom-reports", createDto);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
         var created = await createResponse.Content.ReadFromJsonAsync<CustomReportLayoutDto>();
@@ -118,7 +118,7 @@ public sealed class CustomReportsControllerTests : IClassFixture<CustomWebApplic
     public async Task Update_Without_IfMatch_Succeeds_BackwardCompatible()
     {
         // Arrange
-        var createDto = new CustomReportLayoutCreateDto { Name = "No IfMatch Report", LayoutJson = "{\"type\":\"bar\"}", Scope = "Shared" };
+        var createDto = new CustomReportLayoutCreateDto { Name = "No IfMatch Report", LayoutJson = "{\"type\":\"bar\"}" };
         var createResponse = await _client.PostAsJsonAsync("/api/v1/custom-reports", createDto);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
         var created = await createResponse.Content.ReadFromJsonAsync<CustomReportLayoutDto>();

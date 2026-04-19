@@ -14,6 +14,9 @@
 |------|------|---------|--------|
 | Alfred | Lead | `.squad/agents/alfred/charter.md` | 🏗️ Active |
 | Lucius | Backend Dev | `.squad/agents/lucius/charter.md` | 🔧 Active |
+| Tim | Backend Dev | `.squad/agents/tim/charter.md` | 🔧 Active |
+| Cassandra | Backend Dev | `.squad/agents/cassandra/charter.md` | 🔧 Active |
+| Gordon | Backend Dev | `.squad/agents/gordon/charter.md` | 🔧 Active |
 | Barbara | Tester | `.squad/agents/barbara/charter.md` | 🧪 Active |
 | Vic | Independent Auditor | `.squad/agents/vic/charter.md` | 🔍 Active |
 | Scribe | Scribe | `.squad/agents/scribe/charter.md` | 📋 Silent |

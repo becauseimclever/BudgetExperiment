@@ -57,19 +57,21 @@ public class CustomReportLayoutServiceTests
         {
             Name = "My Report",
             LayoutJson = "{ \"charts\": [] }",
-            Scope = "Personal",
         };
 
         var result = await service.CreateAsync(dto);
 
         result.Name.ShouldBe("My Report");
-        result.Scope.ShouldBe("Personal");
-        _repository.Verify(r => r.AddAsync(It.IsAny<CustomReportLayout>(), It.IsAny<CancellationToken>()), Times.Once);
+        _repository.Verify(
+            r => r.AddAsync(
+                It.Is<CustomReportLayout>(layout => layout.Scope == BudgetScope.Shared),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public async Task CreateAsync_SharedScope_CreatesSharedLayout()
+    public async Task CreateAsync_CreatesSharedLayout()
     {
         var userId = Guid.NewGuid();
         _userContext.Setup(u => u.UserIdAsGuid).Returns(userId);
@@ -79,70 +81,16 @@ public class CustomReportLayoutServiceTests
         {
             Name = "Team Report",
             LayoutJson = "{ \"charts\": [] }",
-            Scope = "Shared",
         };
 
         var result = await service.CreateAsync(dto);
 
-        result.Scope.ShouldBe("Shared");
-    }
-
-    [Fact]
-    public async Task CreateAsync_InvalidScope_ThrowsDomainException()
-    {
-        var userId = Guid.NewGuid();
-        _userContext.Setup(u => u.UserIdAsGuid).Returns(userId);
-
-        var service = CreateService();
-        var dto = new CustomReportLayoutCreateDto
-        {
-            Name = "Test",
-            LayoutJson = "{}",
-            Scope = "InvalidScope",
-        };
-
-        await Should.ThrowAsync<DomainException>(
-            () => service.CreateAsync(dto));
-    }
-
-    [Fact]
-    public async Task CreateAsync_NullScope_DefaultsToUserCurrentScope()
-    {
-        var userId = Guid.NewGuid();
-        _userContext.Setup(u => u.UserIdAsGuid).Returns(userId);
-        _userContext.Setup(u => u.CurrentScope).Returns(BudgetScope.Personal);
-
-        var service = CreateService();
-        var dto = new CustomReportLayoutCreateDto
-        {
-            Name = "Default Scope Report",
-            LayoutJson = "{}",
-            Scope = null,
-        };
-
-        var result = await service.CreateAsync(dto);
-
-        result.Scope.ShouldBe("Personal");
-    }
-
-    [Fact]
-    public async Task CreateAsync_NullScopeAndNoCurrentScope_DefaultsToShared()
-    {
-        var userId = Guid.NewGuid();
-        _userContext.Setup(u => u.UserIdAsGuid).Returns(userId);
-        _userContext.Setup(u => u.CurrentScope).Returns((BudgetScope?)null);
-
-        var service = CreateService();
-        var dto = new CustomReportLayoutCreateDto
-        {
-            Name = "Default Report",
-            LayoutJson = "{}",
-            Scope = null,
-        };
-
-        var result = await service.CreateAsync(dto);
-
-        result.Scope.ShouldBe("Shared");
+        result.Name.ShouldBe("Team Report");
+        _repository.Verify(
+            r => r.AddAsync(
+                It.Is<CustomReportLayout>(layout => layout.Scope == BudgetScope.Shared),
+                It.IsAny<CancellationToken>()),
+            Times.Exactly(1));
     }
 
     [Fact]

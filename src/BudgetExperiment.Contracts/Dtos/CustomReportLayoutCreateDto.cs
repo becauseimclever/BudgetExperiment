@@ -14,10 +14,4 @@ public sealed class CustomReportLayoutCreateDto
 
     /// <summary>Gets or sets the layout JSON definition.</summary>
     public string LayoutJson { get; set; } = "{}";
-
-    /// <summary>Gets or sets the optional scope override (Shared or Personal).</summary>
-    public string? Scope
-    {
-        get; set;
-    }
 }

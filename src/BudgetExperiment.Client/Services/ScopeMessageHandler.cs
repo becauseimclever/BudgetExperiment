@@ -5,7 +5,7 @@
 namespace BudgetExperiment.Client.Services;
 
 /// <summary>
-/// HTTP message handler that adds the X-Budget-Scope header to outgoing requests.
+/// HTTP message handler that strips the removed X-Budget-Scope header from outgoing requests.
 /// </summary>
 public sealed class ScopeMessageHandler : DelegatingHandler
 {
@@ -14,15 +14,13 @@ public sealed class ScopeMessageHandler : DelegatingHandler
     /// </summary>
     public const string ScopeHeaderName = "X-Budget-Scope";
 
-    private readonly ScopeService _scopeService;
-
     /// <summary>
     /// Initializes a new instance of the <see cref="ScopeMessageHandler"/> class.
     /// </summary>
     /// <param name="scopeService">The scope service.</param>
     public ScopeMessageHandler(ScopeService scopeService)
     {
-        _scopeService = scopeService;
+        _ = scopeService;
     }
 
     /// <inheritdoc/>
@@ -30,18 +28,7 @@ public sealed class ScopeMessageHandler : DelegatingHandler
         HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
-        var scope = _scopeService.CurrentScope;
-        var headerValue = scope switch
-        {
-            BudgetScope.Shared => "Shared",
-            BudgetScope.Personal => "Personal",
-            _ => "All",
-        };
-
-        // Remove any existing header and add the current scope
         request.Headers.Remove(ScopeHeaderName);
-        request.Headers.Add(ScopeHeaderName, headerValue);
-
         return await base.SendAsync(request, cancellationToken);
     }
 }

@@ -7,7 +7,8 @@ How to decide who handles what.
 | Work Type | Route To | Examples |
 |-----------|----------|----------|
 | Architecture, layer boundaries, SOLID compliance | Alfred 🏗️ | Layer violations, design decisions, code quality review, scope/priorities |
-| Backend code (.NET, API, Domain, Application, Infrastructure) | Lucius 🔧 | EF Core, repositories, services, API endpoints, DI wiring, domain models |
+| Backend code (.NET, API, Domain, Application, Infrastructure) | Lucius 🔧 + Tim 🔧 + Cassandra 🔧 + Gordon 🔧 | EF Core, repositories, services, API endpoints, DI wiring, domain models |
+| Rejected backend revisions / independent backend pass | Tim 🔧 + Cassandra 🔧 + Gordon 🔧 | Backend revision after reviewer rejection, lockout-safe reimplementation, parallel backend follow-up |
 | Test coverage, test quality, missing tests | Barbara 🧪 | Writing tests, finding gaps, reviewing test usefulness, xUnit/Shouldly patterns |
 | Full code review | Alfred 🏗️ + Lucius 🔧 + Barbara 🧪 | PR reviews, branch reviews, quality audits |
 | Independent audit, principle compliance review | Vic 🔍 | SOLID/Clean Code drift, financial accuracy, client-impact analysis, "does the code match the architecture?" |

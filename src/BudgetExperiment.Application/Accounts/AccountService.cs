@@ -75,23 +75,13 @@ public sealed class AccountService : IAccountService
             throw new DomainException($"Invalid account type: {dto.Type}");
         }
 
-        if (!Enum.TryParse<BudgetScope>(dto.Scope, ignoreCase: true, out var scope))
-        {
-            throw new DomainException($"Invalid scope: {dto.Scope}. Valid values are 'Shared' or 'Personal'.");
-        }
-
         var userId = _userContext.UserIdAsGuid
             ?? throw new DomainException("User is not authenticated.");
 
         var initialBalance = MoneyValue.Create(dto.InitialBalanceCurrency, dto.InitialBalance);
         var initialBalanceDate = dto.InitialBalanceDate ?? DateOnly.FromDateTime(DateTime.UtcNow);
 
-        Account account = scope switch
-        {
-            BudgetScope.Shared => Account.CreateShared(dto.Name, accountType, userId, initialBalance, initialBalanceDate),
-            BudgetScope.Personal => Account.CreatePersonal(dto.Name, accountType, userId, initialBalance, initialBalanceDate),
-            _ => throw new DomainException($"Invalid scope: {scope}"),
-        };
+        var account = Account.CreateShared(dto.Name, accountType, userId, initialBalance, initialBalanceDate);
 
         await _repository.AddAsync(account, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

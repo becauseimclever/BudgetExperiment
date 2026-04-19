@@ -39,7 +39,6 @@ public static class AccountMapper
             InitialBalanceDate = account.InitialBalanceDate,
             CreatedAtUtc = account.CreatedAtUtc,
             UpdatedAtUtc = account.UpdatedAtUtc,
-            Scope = account.Scope.ToString(),
             Version = version,
             Transactions = account.Transactions.Select(ToDto).ToList(),
         };

@@ -90,7 +90,6 @@ public sealed class DataHealthControllerTests : IClassFixture<CustomWebApplicati
             Name = $"Test Account {Guid.NewGuid():N}",
             InitialBalance = 0m,
             InitialBalanceCurrency = "USD",
-            Scope = "Shared",
         };
         var resp = await _client.PostAsJsonAsync("/api/v1/accounts", req);
         resp.EnsureSuccessStatusCode();

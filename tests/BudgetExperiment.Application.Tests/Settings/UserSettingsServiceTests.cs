@@ -103,7 +103,6 @@ public sealed class UserSettingsServiceTests
 
         // Assert
         Assert.Equal(userId, result.UserId);
-        Assert.Equal("Shared", result.DefaultScope);
         Assert.False(result.IsOnboarded);
         Assert.Equal(30, result.PastDueLookbackDays);
     }
@@ -123,51 +122,6 @@ public sealed class UserSettingsServiceTests
     }
 
     // --- UpdateCurrentUserSettingsAsync ---
-
-    /// <summary>
-    /// Updates the default scope when a valid scope string is provided.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
-    public async Task UpdateCurrentUserSettingsAsync_ValidScope_UpdatesScope()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var settings = UserSettings.CreateDefault(userId);
-
-        _userContext.Setup(x => x.UserIdAsGuid).Returns(userId);
-        _repository.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(settings);
-        _repository.Setup(r => r.SaveAsync(settings, default)).Returns(Task.CompletedTask);
-        _uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
-
-        var dto = new UserSettingsUpdateDto { DefaultScope = "Personal" };
-
-        // Act
-        var result = await _service.UpdateCurrentUserSettingsAsync(dto);
-
-        // Assert
-        Assert.Equal("Personal", result.DefaultScope);
-    }
-
-    /// <summary>
-    /// Throws when an invalid scope string is provided.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
-    public async Task UpdateCurrentUserSettingsAsync_InvalidScope_ThrowsDomainException()
-    {
-        // Arrange
-        var userId = Guid.NewGuid();
-        var settings = UserSettings.CreateDefault(userId);
-
-        _userContext.Setup(x => x.UserIdAsGuid).Returns(userId);
-        _repository.Setup(r => r.GetByUserIdAsync(userId, default)).ReturnsAsync(settings);
-
-        var dto = new UserSettingsUpdateDto { DefaultScope = "InvalidScopeValue" };
-
-        // Act & Assert
-        await Assert.ThrowsAsync<DomainException>(() => _service.UpdateCurrentUserSettingsAsync(dto));
-    }
 
     /// <summary>
     /// Updates the AutoRealizePastDueItems flag when provided.
@@ -254,7 +208,7 @@ public sealed class UserSettingsServiceTests
         // Arrange
         _userContext.Setup(x => x.UserIdAsGuid).Returns((Guid?)null);
 
-        var dto = new UserSettingsUpdateDto { DefaultScope = "Personal" };
+        var dto = new UserSettingsUpdateDto { PreferredCurrency = "USD" };
 
         // Act & Assert
         await Assert.ThrowsAsync<DomainException>(() => _service.UpdateCurrentUserSettingsAsync(dto));
@@ -297,102 +251,5 @@ public sealed class UserSettingsServiceTests
 
         // Act & Assert
         await Assert.ThrowsAsync<DomainException>(() => _service.CompleteOnboardingAsync());
-    }
-
-    // --- GetCurrentScope ---
-
-    /// <summary>
-    /// Returns the current scope from the user context.
-    /// </summary>
-    [Fact]
-    public void GetCurrentScope_SharedScope_ReturnsSharedString()
-    {
-        // Arrange
-        _userContext.Setup(x => x.CurrentScope).Returns(BudgetScope.Shared);
-
-        // Act
-        var result = _service.GetCurrentScope();
-
-        // Assert
-        Assert.Equal("Shared", result.Scope);
-    }
-
-    /// <summary>
-    /// Returns null scope when the user context has no scope set.
-    /// </summary>
-    [Fact]
-    public void GetCurrentScope_NullScope_ReturnsNullString()
-    {
-        // Arrange
-        _userContext.Setup(x => x.CurrentScope).Returns((BudgetScope?)null);
-
-        // Act
-        var result = _service.GetCurrentScope();
-
-        // Assert
-        Assert.Null(result.Scope);
-    }
-
-    // --- SetCurrentScope ---
-
-    /// <summary>
-    /// Sets the scope on the user context for a valid scope string.
-    /// </summary>
-    [Fact]
-    public void SetCurrentScope_ValidScope_CallsSetScopeOnContext()
-    {
-        // Arrange
-        var dto = new ScopeDto { Scope = "Personal" };
-
-        // Act
-        _service.SetCurrentScope(dto);
-
-        // Assert
-        _userContext.Verify(x => x.SetScope(BudgetScope.Personal), Times.Once);
-    }
-
-    /// <summary>
-    /// Sets the scope to null when the scope string is null.
-    /// </summary>
-    [Fact]
-    public void SetCurrentScope_NullScope_SetsNullOnContext()
-    {
-        // Arrange
-        var dto = new ScopeDto { Scope = null };
-
-        // Act
-        _service.SetCurrentScope(dto);
-
-        // Assert
-        _userContext.Verify(x => x.SetScope(null), Times.Once);
-    }
-
-    /// <summary>
-    /// Sets the scope to null when the scope string is empty or whitespace.
-    /// </summary>
-    [Fact]
-    public void SetCurrentScope_WhitespaceScope_SetsNullOnContext()
-    {
-        // Arrange
-        var dto = new ScopeDto { Scope = "   " };
-
-        // Act
-        _service.SetCurrentScope(dto);
-
-        // Assert
-        _userContext.Verify(x => x.SetScope(null), Times.Once);
-    }
-
-    /// <summary>
-    /// Throws when an invalid scope string is provided.
-    /// </summary>
-    [Fact]
-    public void SetCurrentScope_InvalidScope_ThrowsDomainException()
-    {
-        // Arrange
-        var dto = new ScopeDto { Scope = "InvalidScopeValue" };
-
-        // Act & Assert
-        Assert.Throws<DomainException>(() => _service.SetCurrentScope(dto));
     }
 }

@@ -99,7 +99,6 @@
     protected override void OnParametersSet()
     {
         Model.InitialBalanceDate ??= DateOnly.FromDateTime(DateTime.Today);
-        Model.Scope = "Shared";
     }
 
     private async Task HandleSubmit()

@@ -170,7 +170,6 @@ public sealed class StatementReconciliationControllerTests : IClassFixture<Custo
             Name = $"Test Account {Guid.NewGuid():N}",
             InitialBalance = initialBalance,
             InitialBalanceCurrency = "USD",
-            Scope = "Shared",
         };
         var resp = await _client.PostAsJsonAsync("/api/v1/accounts", req);
         resp.EnsureSuccessStatusCode();

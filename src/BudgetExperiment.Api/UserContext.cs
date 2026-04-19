@@ -15,7 +15,6 @@ namespace BudgetExperiment.Api;
 public sealed class UserContext : IUserContext
 {
     private readonly IHttpContextAccessor httpContextAccessor;
-    private BudgetScope? currentScope;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UserContext"/> class.
@@ -48,14 +47,14 @@ public sealed class UserContext : IUserContext
     public bool IsAuthenticated => httpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated ?? false;
 
     /// <inheritdoc/>
-    public BudgetScope? CurrentScope => currentScope;
+    BudgetScope? IUserContext.CurrentScope => BudgetScope.Shared;
 
     private ClaimsPrincipal? User => httpContextAccessor.HttpContext?.User;
 
     /// <inheritdoc/>
-    public void SetScope(BudgetScope? scope)
+    void IUserContext.SetScope(BudgetScope? scope)
     {
-        currentScope = scope;
+        _ = scope;
     }
 
     /// <summary>

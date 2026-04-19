@@ -4,6 +4,7 @@
 
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 
 using BudgetExperiment.Contracts.Dtos;
 
@@ -61,11 +62,10 @@ public sealed class UserControllerTests : IClassFixture<CustomWebApplicationFact
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var settings = await response.Content.ReadFromJsonAsync<UserSettingsDto>();
-        Assert.NotNull(settings);
-        Assert.Equal(CustomWebApplicationFactory.TestUserId, settings.UserId);
-        Assert.Equal("Shared", settings.DefaultScope);
-        Assert.Equal(30, settings.PastDueLookbackDays);
+        using var payload = await ReadJsonAsync(response);
+        Assert.Equal(CustomWebApplicationFactory.TestUserId, payload.RootElement.GetProperty("userId").GetGuid());
+        Assert.Equal(30, payload.RootElement.GetProperty("pastDueLookbackDays").GetInt32());
+        Assert.False(payload.RootElement.TryGetProperty("defaultScope", out _));
     }
 
     /// <summary>
@@ -90,49 +90,25 @@ public sealed class UserControllerTests : IClassFixture<CustomWebApplicationFact
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var settings = await response.Content.ReadFromJsonAsync<UserSettingsDto>();
-        Assert.NotNull(settings);
-        Assert.True(settings.AutoRealizePastDueItems);
-        Assert.Equal(60, settings.PastDueLookbackDays);
-        Assert.Equal("EUR", settings.PreferredCurrency);
+        using var payload = await ReadJsonAsync(response);
+        Assert.True(payload.RootElement.GetProperty("autoRealizePastDueItems").GetBoolean());
+        Assert.Equal(60, payload.RootElement.GetProperty("pastDueLookbackDays").GetInt32());
+        Assert.Equal("EUR", payload.RootElement.GetProperty("preferredCurrency").GetString());
+        Assert.False(payload.RootElement.TryGetProperty("defaultScope", out _));
     }
 
     /// <summary>
-    /// GET /api/v1/user/scope returns 200 OK with current scope.
+    /// GET /api/v1/user/scope returns 404 because the scope endpoint was removed.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task GetScope_Returns_200_WithScope()
+    public async Task GetScope_Returns_404()
     {
         // Act
         var response = await _client.GetAsync("/api/v1/user/scope");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var scope = await response.Content.ReadFromJsonAsync<ScopeDto>();
-        Assert.NotNull(scope);
-
-        // Default scope is null (all)
-    }
-
-    /// <summary>
-    /// PUT /api/v1/user/scope sets the scope and returns 200 OK.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
-    public async Task SetScope_Returns_200_WithScope()
-    {
-        // Arrange
-        var scopeDto = new ScopeDto { Scope = "Personal" };
-
-        // Act
-        var response = await _client.PutAsJsonAsync("/api/v1/user/scope", scopeDto);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var scope = await response.Content.ReadFromJsonAsync<ScopeDto>();
-        Assert.NotNull(scope);
-        Assert.Equal("Personal", scope.Scope);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     /// <summary>
@@ -199,19 +175,38 @@ public sealed class UserControllerTests : IClassFixture<CustomWebApplicationFact
     }
 
     /// <summary>
-    /// PUT /api/v1/user/scope with invalid scope returns 400 Bad Request.
+    /// PUT /api/v1/user/scope returns 404 because the scope endpoint was removed.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task SetScope_WithInvalidScope_Returns_400()
+    public async Task SetScope_Returns_404()
     {
-        // Arrange
-        var scopeDto = new ScopeDto { Scope = "InvalidScope" };
-
         // Act
-        var response = await _client.PutAsJsonAsync("/api/v1/user/scope", scopeDto);
+        var response = await _client.PutAsJsonAsync("/api/v1/user/scope", new { Scope = "Shared" });
 
         // Assert
-        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    /// <summary>
+    /// GET /api/v1/user/settings omits the legacy defaultScope field in Phase 2.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetSettings_DoesNotSerialize_DefaultScope()
+    {
+        // Act
+        var response = await _client.GetAsync("/api/v1/user/settings");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var payload = await ReadJsonAsync(response);
+        Assert.False(payload.RootElement.TryGetProperty("defaultScope", out _));
+    }
+
+    private static async Task<JsonDocument> ReadJsonAsync(HttpResponseMessage response)
+    {
+        var json = await response.Content.ReadAsStringAsync();
+        return JsonDocument.Parse(json);
     }
 }
