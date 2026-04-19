@@ -1,0 +1,51 @@
+@using BudgetExperiment.Contracts.Dtos
+
+@if (Summary != null)
+{
+    <div class="kakeibo-summary">
+        @if (!string.IsNullOrWhiteSpace(Title))
+        {
+            <h3>@Title</h3>
+        }
+        <div class="kakeibo-summary-grid">
+            <div class="kakeibo-summary-card kakeibo-essentials">
+                <span class="kakeibo-label">Essentials</span>
+                <span class="kakeibo-value">
+                    <MoneyDisplay Amount="@Summary.Essentials" CurrencyCode="@CurrencyCode" />
+                </span>
+            </div>
+            <div class="kakeibo-summary-card kakeibo-wants">
+                <span class="kakeibo-label">Wants</span>
+                <span class="kakeibo-value">
+                    <MoneyDisplay Amount="@Summary.Wants" CurrencyCode="@CurrencyCode" />
+                </span>
+            </div>
+            <div class="kakeibo-summary-card kakeibo-culture">
+                <span class="kakeibo-label">Culture</span>
+                <span class="kakeibo-value">
+                    <MoneyDisplay Amount="@Summary.Culture" CurrencyCode="@CurrencyCode" />
+                </span>
+            </div>
+            <div class="kakeibo-summary-card kakeibo-unexpected">
+                <span class="kakeibo-label">Unexpected</span>
+                <span class="kakeibo-value">
+                    <MoneyDisplay Amount="@Summary.Unexpected" CurrencyCode="@CurrencyCode" />
+                </span>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>Gets or sets the Kakeibo summary data.</summary>
+    [Parameter]
+    public KakeiboGroupedSummaryDto? Summary { get; set; }
+
+    /// <summary>Gets or sets the currency code for display.</summary>
+    [Parameter]
+    public string CurrencyCode { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the title displayed above the summary.</summary>
+    [Parameter]
+    public string Title { get; set; } = "Kakeibo Summary";
+}

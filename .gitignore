@@ -443,8 +443,8 @@ budgetexperiment-image.tar
 # Test results & coverage
 TestResults/
 
-# NBomber performance test reports
-**/reports/
+# NBomber performance test reports (only under the Performance test project)
+tests/BudgetExperiment.Performance.Tests/**/reports/
 
 # JetBrains Rider
 .idea/

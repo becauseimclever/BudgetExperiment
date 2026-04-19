@@ -1,0 +1,201 @@
+@page "/reports/kaizen-dashboard"
+
+@using BudgetExperiment.Contracts.Dtos
+@using BudgetExperiment.Client.Services
+
+@inject IBudgetApiService ApiService
+@inject IFeatureFlagClientService FeatureFlags
+@inject CultureService Culture
+
+<PageTitle>Kaizen Dashboard - Budget Experiment</PageTitle>
+
+@if (!FeatureFlags.IsEnabled("Kaizen:Dashboard"))
+{
+    <div class="page-container">
+        <PageHeader Title="Kaizen Dashboard" />
+        <div class="empty-state">
+            <Icon Name="lock" Size="48" />
+            <p>Feature not available.</p>
+            <p class="empty-state-hint">The Kaizen Dashboard feature is not currently enabled.</p>
+        </div>
+    </div>
+}
+else
+{
+    <div class="page-container">
+        <PageHeader Title="Kaizen Dashboard">
+            <Actions>
+                <a href="/reports" class="btn-back-calendar">
+                    <Icon Name="arrow-left" Size="16" />
+                    Reports
+                </a>
+            </Actions>
+        </PageHeader>
+
+        <p class="page-subtitle">12-week spending trend by Kakeibo category with micro-goal outcomes</p>
+
+        @if (isLoading)
+        {
+            <LoadingSpinner Message="Loading Kaizen dashboard..." />
+        }
+        else if (errorMessage is not null)
+        {
+            <div class="alert alert-error">@errorMessage</div>
+        }
+        else if (dashboard is null || dashboard.Weeks.Count == 0)
+        {
+            <div class="empty-state">
+                <Icon Name="bar-chart" Size="48" />
+                <p>No spending data available for the past 12 weeks.</p>
+            </div>
+        }
+        else
+        {
+            <div class="kaizen-dashboard">
+                <div class="kaizen-legend">
+                    <span class="legend-item legend-essentials">&#9632; Essentials</span>
+                    <span class="legend-item legend-wants">&#9632; Wants</span>
+                    <span class="legend-item legend-culture">&#9632; Culture</span>
+                    <span class="legend-item legend-unexpected">&#9632; Unexpected</span>
+                </div>
+
+                <div class="kaizen-bars-container">
+                    @foreach (var week in dashboard.Weeks)
+                    {
+                        var total = week.Essentials + week.Wants + week.Culture + week.Unexpected;
+                        var essentialsPct = total > 0 ? (double)(week.Essentials / total * 100) : 0;
+                        var wantsPct = total > 0 ? (double)(week.Wants / total * 100) : 0;
+                        var culturePct = total > 0 ? (double)(week.Culture / total * 100) : 0;
+                        var unexpectedPct = total > 0 ? (double)(week.Unexpected / total * 100) : 0;
+                        var essentialsText = week.Essentials.FormatCurrency(Culture.CurrentCulture);
+                        var wantsText = week.Wants.FormatCurrency(Culture.CurrentCulture);
+                        var cultureText = week.Culture.FormatCurrency(Culture.CurrentCulture);
+                        var unexpectedText = week.Unexpected.FormatCurrency(Culture.CurrentCulture);
+                        var totalText = total.FormatCurrency(Culture.CurrentCulture);
+                        var tooltipText = $"{week.WeekLabel} — Essentials: {essentialsText}, Wants: {wantsText}, Culture: {cultureText}, Unexpected: {unexpectedText}";
+
+                        <div class="kaizen-week-col">
+                            @if (week.KaizenGoalDescription is not null)
+                            {
+                                <div class="kaizen-goal-badge @(week.KaizenGoalAchieved == true ? "goal-achieved" : "goal-missed")"
+                                     title="@week.KaizenGoalDescription">
+                                    @(week.KaizenGoalAchieved == true ? "✓" : "✗")
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="kaizen-goal-badge goal-none">&nbsp;</div>
+                            }
+
+                            <div class="kaizen-stacked-bar" title="@tooltipText">
+                                @if (essentialsPct > 0)
+                                {
+                                    <div class="bar-segment bar-essentials" style="height: @(essentialsPct.ToString("F1"))%"></div>
+                                }
+                                @if (wantsPct > 0)
+                                {
+                                    <div class="bar-segment bar-wants" style="height: @(wantsPct.ToString("F1"))%"></div>
+                                }
+                                @if (culturePct > 0)
+                                {
+                                    <div class="bar-segment bar-culture" style="height: @(culturePct.ToString("F1"))%"></div>
+                                }
+                                @if (unexpectedPct > 0)
+                                {
+                                    <div class="bar-segment bar-unexpected" style="height: @(unexpectedPct.ToString("F1"))%"></div>
+                                }
+                                @if (total == 0)
+                                {
+                                    <div class="bar-empty"></div>
+                                }
+                            </div>
+
+                            <div class="kaizen-week-label">@week.WeekLabel</div>
+                            <div class="kaizen-week-total">@totalText</div>
+                        </div>
+                    }
+                </div>
+
+                <div class="kaizen-table-section">
+                    <h3>Weekly Breakdown</h3>
+                    <table class="kaizen-data-table">
+                        <thead>
+                            <tr>
+                                <th>Week</th>
+                                <th class="text-right">Essentials</th>
+                                <th class="text-right">Wants</th>
+                                <th class="text-right">Culture</th>
+                                <th class="text-right">Unexpected</th>
+                                <th class="text-center">Goal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var week in dashboard.Weeks)
+                            {
+                                <tr>
+                                    <td>@week.WeekLabel</td>
+                                    <td class="text-right">@week.Essentials.FormatCurrency(Culture.CurrentCulture)</td>
+                                    <td class="text-right">@week.Wants.FormatCurrency(Culture.CurrentCulture)</td>
+                                    <td class="text-right">@week.Culture.FormatCurrency(Culture.CurrentCulture)</td>
+                                    <td class="text-right">@week.Unexpected.FormatCurrency(Culture.CurrentCulture)</td>
+                                    <td class="text-center">
+                                        @if (week.KaizenGoalDescription is not null)
+                                        {
+                                            <span class="goal-indicator @(week.KaizenGoalAchieved == true ? "goal-achieved" : "goal-missed")"
+                                                  title="@week.KaizenGoalDescription">
+                                                @(week.KaizenGoalAchieved == true ? "✓" : "✗")
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">—</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private KaizenDashboardDto? dashboard;
+    private string? errorMessage;
+    private bool isLoading = true;
+
+    /// <inheritdoc />
+    protected override async Task OnInitializedAsync()
+    {
+        if (!FeatureFlags.IsEnabled("Kaizen:Dashboard"))
+        {
+            isLoading = false;
+            return;
+        }
+
+        await LoadDashboardAsync();
+    }
+
+    private async Task LoadDashboardAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            dashboard = await ApiService.GetKaizenDashboardAsync(weeks: 12);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load Kaizen Dashboard: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+}
