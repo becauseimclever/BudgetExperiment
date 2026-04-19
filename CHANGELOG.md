@@ -2,6 +2,40 @@
 
 All notable changes to Budget Experiment.
 
+## [3.28.0] - 2026-04-14
+
+### Features
+
+- **api:** Feature 161 Phase 2 — Remove BudgetScope from API layer: delete `BudgetScopeMiddleware`, hardcode `UserContext.BudgetScope` to `Shared`, remove scope from all DTOs (`AccountDto`, `AccountCreateDto`, `UserSettingsDto`, `UserSettingsUpdateDto`, `CustomReportLayoutDto`, `CustomReportLayoutCreateDto`), stop reading scope from request headers in controllers
+- **client:** Feature 161 Phase 1 — Remove ScopeSwitcher UI component; `ScopeMessageHandler` no longer sends scope header to API
+
+### Testing
+
+- **api:** New `Feature161Phase2ApiContractTests` — integration tests confirming endpoints work without scope header and no scope fields appear in DTOs
+- **client:** New `ScopeMessageHandlerTests` — confirms scope header is never sent to the API
+- **infrastructure:** New PostgreSQL integration test for `TransactionRepository.GetSpendingByCategoriesAsync`
+
+### Chores
+
+- **deps:** Bump Scalar.AspNetCore from 2.13.2 to 2.13.22
+- **deps:** Bump OpenTelemetry.Extensions.Hosting and OpenTelemetry.Exporter.OpenTelemetryProtocol from 1.15.0 to 1.15.2
+- **deps:** Bump Microsoft.Playwright from 1.58.0 to 1.59.0
+- **deps:** Bump testing group packages (xUnit, coverlet, NSubstitute)
+- **deps:** Bump GitHub Actions: actions/checkout v6, actions/setup-dotnet v5, actions/github-script v9, dorny/test-reporter v3, softprops/action-gh-release v3
+- **deps:** Pin patched `System.Security.Cryptography.Xml`
+
+## [3.27.0] - 2026-04-07
+
+### Chores
+
+- **squad:** Merge audit report publication decisions
+
+## [3.26.0] - 2026-04-07
+
+### Chores
+
+- **squad:** Merge audit report publication decisions
+
 ## [3.25.0] - 2026-03-23
 
 ### Features
