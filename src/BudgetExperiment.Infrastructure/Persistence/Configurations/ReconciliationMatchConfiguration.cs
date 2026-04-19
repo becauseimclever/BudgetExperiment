@@ -57,10 +57,6 @@ internal sealed class ReconciliationMatchConfiguration : IEntityTypeConfiguratio
 
         builder.Property(m => m.ResolvedAtUtc);
 
-        builder.Property(m => m.Scope)
-            .HasConversion<int>()
-            .IsRequired();
-
         builder.Property(m => m.OwnerUserId);
 
         builder.Property(m => m.Source)
@@ -87,7 +83,7 @@ internal sealed class ReconciliationMatchConfiguration : IEntityTypeConfiguratio
 
         builder.HasIndex(m => m.Status);
 
-        builder.HasIndex(m => new { m.Scope, m.OwnerUserId });
+        builder.HasIndex(m => m.OwnerUserId);
 
         // Unique constraint: one match suggestion per transaction + recurring instance combination
         builder.HasIndex(m => new { m.ImportedTransactionId, m.RecurringTransactionId, m.RecurringInstanceDate })

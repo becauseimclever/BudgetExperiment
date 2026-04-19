@@ -64,7 +64,7 @@ public class CustomReportLayoutServiceTests
         result.Name.ShouldBe("My Report");
         _repository.Verify(
             r => r.AddAsync(
-                It.Is<CustomReportLayout>(layout => layout.Scope == BudgetScope.Shared),
+                It.IsAny<CustomReportLayout>(),
                 It.IsAny<CancellationToken>()),
             Times.Once);
         _unitOfWork.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -88,7 +88,7 @@ public class CustomReportLayoutServiceTests
         result.Name.ShouldBe("Team Report");
         _repository.Verify(
             r => r.AddAsync(
-                It.Is<CustomReportLayout>(layout => layout.Scope == BudgetScope.Shared),
+                It.IsAny<CustomReportLayout>(),
                 It.IsAny<CancellationToken>()),
             Times.Exactly(1));
     }

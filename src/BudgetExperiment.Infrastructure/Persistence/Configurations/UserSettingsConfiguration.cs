@@ -27,11 +27,6 @@ internal sealed class UserSettingsConfiguration : IEntityTypeConfiguration<UserS
         builder.Property(u => u.UserId)
             .IsRequired();
 
-        builder.Property(u => u.DefaultScope)
-            .IsRequired()
-            .HasConversion<string>()
-            .HasMaxLength(20);
-
         builder.Property(u => u.AutoRealizePastDueItems)
             .IsRequired();
 

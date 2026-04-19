@@ -72,15 +72,7 @@ public sealed class Account
     }
 
     /// <summary>
-    /// Gets the budget scope (Shared or Personal).
-    /// </summary>
-    public BudgetScope Scope
-    {
-        get; private set;
-    }
-
-    /// <summary>
-    /// Gets the owner user ID. NULL for Shared scope, user ID for Personal scope.
+    /// Gets the owner user ID. Null for shared items, user ID for user-owned items.
     /// </summary>
     public Guid? OwnerUserId
     {
@@ -141,7 +133,7 @@ public sealed class Account
     /// <param name="createdByUserId">The user ID of who is creating this account.</param>
     /// <param name="initialBalance">Optional initial balance (defaults to zero USD).</param>
     /// <param name="initialBalanceDate">Optional date for initial balance (defaults to today).</param>
-    /// <returns>A new <see cref="Account"/> instance with Shared scope.</returns>
+    /// <returns>A new <see cref="Account"/> instance.</returns>
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
     public static Account CreateShared(
         string name,
@@ -168,7 +160,6 @@ public sealed class Account
             Type = type,
             InitialBalance = initialBalance ?? MoneyValue.Zero("USD"),
             InitialBalanceDate = initialBalanceDate ?? DateOnly.FromDateTime(now),
-            Scope = BudgetScope.Shared,
             OwnerUserId = null,
             CreatedByUserId = createdByUserId,
             CreatedAtUtc = now,
@@ -184,7 +175,7 @@ public sealed class Account
     /// <param name="ownerUserId">The user ID who owns this personal account.</param>
     /// <param name="initialBalance">Optional initial balance (defaults to zero USD).</param>
     /// <param name="initialBalanceDate">Optional date for initial balance (defaults to today).</param>
-    /// <returns>A new <see cref="Account"/> instance with Personal scope.</returns>
+    /// <returns>A new <see cref="Account"/> instance.</returns>
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
     public static Account CreatePersonal(
         string name,
@@ -211,7 +202,6 @@ public sealed class Account
             Type = type,
             InitialBalance = initialBalance ?? MoneyValue.Zero("USD"),
             InitialBalanceDate = initialBalanceDate ?? DateOnly.FromDateTime(now),
-            Scope = BudgetScope.Personal,
             OwnerUserId = ownerUserId,
             CreatedByUserId = ownerUserId,
             CreatedAtUtc = now,
@@ -289,7 +279,7 @@ public sealed class Account
         }
 
         var transaction = TransactionFactory.Create(this.Id, amount, date, description, categoryId);
-        transaction.SetScope(this.Scope, this.OwnerUserId, this.CreatedByUserId);
+        transaction.SetOwnership(this.OwnerUserId, this.CreatedByUserId);
         _transactions.Add(transaction);
         this.UpdatedAtUtc = DateTime.UtcNow;
         return transaction;

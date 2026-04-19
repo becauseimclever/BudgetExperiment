@@ -31,7 +31,7 @@ public class RecurringChargeSuggestionRepositoryTests : IClassFixture<PostgreSql
         var repository = new RecurringChargeSuggestionRepository(context);
         var accountId = Guid.NewGuid();
         var userId = FakeUserContext.DefaultUserId;
-        var suggestion = RecurringChargeSuggestion.Create(accountId, CreateTestPattern("netflix", 15.99m), BudgetScope.Shared, userId);
+        var suggestion = RecurringChargeSuggestion.Create(accountId, CreateTestPattern("netflix", 15.99m), userId);
 
         // Act
         await repository.AddAsync(suggestion);
@@ -74,9 +74,9 @@ public class RecurringChargeSuggestionRepositoryTests : IClassFixture<PostgreSql
         var accountId = Guid.NewGuid();
         var userId = FakeUserContext.DefaultUserId;
 
-        var lowConfidence = RecurringChargeSuggestion.Create(accountId, CreateTestPattern("spotify", 9.99m, confidence: 0.60m), BudgetScope.Shared, userId);
-        var highConfidence = RecurringChargeSuggestion.Create(accountId, CreateTestPattern("netflix", 15.99m, confidence: 0.95m), BudgetScope.Shared, userId);
-        var midConfidence = RecurringChargeSuggestion.Create(accountId, CreateTestPattern("hulu", 12.99m, confidence: 0.75m), BudgetScope.Shared, userId);
+        var lowConfidence = RecurringChargeSuggestion.Create(accountId, CreateTestPattern("spotify", 9.99m, confidence: 0.60m), userId);
+        var highConfidence = RecurringChargeSuggestion.Create(accountId, CreateTestPattern("netflix", 15.99m, confidence: 0.95m), userId);
+        var midConfidence = RecurringChargeSuggestion.Create(accountId, CreateTestPattern("hulu", 12.99m, confidence: 0.75m), userId);
 
         await repository.AddAsync(lowConfidence);
         await repository.AddAsync(highConfidence);
@@ -106,7 +106,7 @@ public class RecurringChargeSuggestionRepositoryTests : IClassFixture<PostgreSql
         Assert.Equal(0, initial);
 
         var userId = FakeUserContext.DefaultUserId;
-        await repository.AddAsync(RecurringChargeSuggestion.Create(Guid.NewGuid(), CreateTestPattern("netflix", 15.99m), BudgetScope.Shared, userId));
+        await repository.AddAsync(RecurringChargeSuggestion.Create(Guid.NewGuid(), CreateTestPattern("netflix", 15.99m), userId));
         await context.SaveChangesAsync();
 
         // Act
@@ -123,7 +123,7 @@ public class RecurringChargeSuggestionRepositoryTests : IClassFixture<PostgreSql
         await using var context = _fixture.CreateContext();
         var repository = new RecurringChargeSuggestionRepository(context);
         var userId = FakeUserContext.DefaultUserId;
-        var suggestion = RecurringChargeSuggestion.Create(Guid.NewGuid(), CreateTestPattern("netflix", 15.99m), BudgetScope.Shared, userId);
+        var suggestion = RecurringChargeSuggestion.Create(Guid.NewGuid(), CreateTestPattern("netflix", 15.99m), userId);
         await repository.AddAsync(suggestion);
         await context.SaveChangesAsync();
 
@@ -149,9 +149,9 @@ public class RecurringChargeSuggestionRepositoryTests : IClassFixture<PostgreSql
 
         var suggestions = new[]
         {
-            RecurringChargeSuggestion.Create(accountId, CreateTestPattern("netflix", 15.99m), BudgetScope.Shared, userId),
-            RecurringChargeSuggestion.Create(accountId, CreateTestPattern("spotify", 9.99m), BudgetScope.Shared, userId),
-            RecurringChargeSuggestion.Create(accountId, CreateTestPattern("hulu", 12.99m), BudgetScope.Shared, userId),
+            RecurringChargeSuggestion.Create(accountId, CreateTestPattern("netflix", 15.99m), userId),
+            RecurringChargeSuggestion.Create(accountId, CreateTestPattern("spotify", 9.99m), userId),
+            RecurringChargeSuggestion.Create(accountId, CreateTestPattern("hulu", 12.99m), userId),
         };
 
         // Act
@@ -174,8 +174,8 @@ public class RecurringChargeSuggestionRepositoryTests : IClassFixture<PostgreSql
         var accountId = Guid.NewGuid();
         var userId = FakeUserContext.DefaultUserId;
 
-        var pending = RecurringChargeSuggestion.Create(accountId, CreateTestPattern("netflix", 15.99m), BudgetScope.Shared, userId);
-        var toAccept = RecurringChargeSuggestion.Create(accountId, CreateTestPattern("spotify", 9.99m), BudgetScope.Shared, userId);
+        var pending = RecurringChargeSuggestion.Create(accountId, CreateTestPattern("netflix", 15.99m), userId);
+        var toAccept = RecurringChargeSuggestion.Create(accountId, CreateTestPattern("spotify", 9.99m), userId);
         toAccept.Accept(Guid.NewGuid());
 
         await repository.AddAsync(pending);
@@ -205,8 +205,8 @@ public class RecurringChargeSuggestionRepositoryTests : IClassFixture<PostgreSql
         var accountB = Guid.NewGuid();
         var userId = FakeUserContext.DefaultUserId;
 
-        await repository.AddAsync(RecurringChargeSuggestion.Create(accountA, CreateTestPattern("netflix", 15.99m), BudgetScope.Shared, userId));
-        await repository.AddAsync(RecurringChargeSuggestion.Create(accountB, CreateTestPattern("spotify", 9.99m), BudgetScope.Shared, userId));
+        await repository.AddAsync(RecurringChargeSuggestion.Create(accountA, CreateTestPattern("netflix", 15.99m), userId));
+        await repository.AddAsync(RecurringChargeSuggestion.Create(accountB, CreateTestPattern("spotify", 9.99m), userId));
         await context.SaveChangesAsync();
 
         // Act
@@ -228,9 +228,9 @@ public class RecurringChargeSuggestionRepositoryTests : IClassFixture<PostgreSql
         var accountId = Guid.NewGuid();
         var userId = FakeUserContext.DefaultUserId;
 
-        var pending1 = RecurringChargeSuggestion.Create(accountId, CreateTestPattern("netflix", 15.99m), BudgetScope.Shared, userId);
-        var pending2 = RecurringChargeSuggestion.Create(accountId, CreateTestPattern("spotify", 9.99m), BudgetScope.Shared, userId);
-        var dismissed = RecurringChargeSuggestion.Create(accountId, CreateTestPattern("hulu", 12.99m), BudgetScope.Shared, userId);
+        var pending1 = RecurringChargeSuggestion.Create(accountId, CreateTestPattern("netflix", 15.99m), userId);
+        var pending2 = RecurringChargeSuggestion.Create(accountId, CreateTestPattern("spotify", 9.99m), userId);
+        var dismissed = RecurringChargeSuggestion.Create(accountId, CreateTestPattern("hulu", 12.99m), userId);
         dismissed.Dismiss();
 
         await repository.AddRangeAsync(new[] { pending1, pending2, dismissed });
@@ -255,7 +255,7 @@ public class RecurringChargeSuggestionRepositoryTests : IClassFixture<PostgreSql
         var repository = new RecurringChargeSuggestionRepository(context);
         var accountId = Guid.NewGuid();
         var userId = FakeUserContext.DefaultUserId;
-        var suggestion = RecurringChargeSuggestion.Create(accountId, CreateTestPattern("netflix", 15.99m), BudgetScope.Shared, userId);
+        var suggestion = RecurringChargeSuggestion.Create(accountId, CreateTestPattern("netflix", 15.99m), userId);
 
         await repository.AddAsync(suggestion);
         await context.SaveChangesAsync();
@@ -278,7 +278,7 @@ public class RecurringChargeSuggestionRepositoryTests : IClassFixture<PostgreSql
         var repository = new RecurringChargeSuggestionRepository(context);
         var accountId = Guid.NewGuid();
         var userId = FakeUserContext.DefaultUserId;
-        var suggestion = RecurringChargeSuggestion.Create(accountId, CreateTestPattern("netflix", 15.99m), BudgetScope.Shared, userId);
+        var suggestion = RecurringChargeSuggestion.Create(accountId, CreateTestPattern("netflix", 15.99m), userId);
         suggestion.Accept(Guid.NewGuid());
 
         await repository.AddAsync(suggestion);

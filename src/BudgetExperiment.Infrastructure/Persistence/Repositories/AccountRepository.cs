@@ -20,7 +20,7 @@ internal sealed class AccountRepository : IAccountRepository, IAccountTransactio
     /// Initializes a new instance of the <see cref="AccountRepository"/> class.
     /// </summary>
     /// <param name="context">The database context.</param>
-    /// <param name="userContext">The user context for scope filtering.</param>
+    /// <param name="userContext">The user context for ownership filtering.</param>
     public AccountRepository(BudgetDbContext context, IUserContext userContext)
     {
         _context = context;
@@ -117,21 +117,18 @@ internal sealed class AccountRepository : IAccountRepository, IAccountTransactio
     }
 
     /// <summary>
-    /// Applies budget scope filtering to a query. IMPORTANT: Every public query method
-    /// in this repository MUST call this method to prevent cross-scope data leaks.
-    /// See Feature 065 for the audit that established this rule.
+    /// Applies ownership filtering to a query. IMPORTANT: Every public query method
+    /// in this repository MUST call this method to prevent cross-user data leaks.
     /// </summary>
     private IQueryable<Account> ApplyScopeFilter(IQueryable<Account> query)
     {
         var userId = _userContext.UserIdAsGuid;
 
-        return _userContext.CurrentScope switch
+        if (userId is null)
         {
-            BudgetScope.Shared => query.Where(a => a.Scope == BudgetScope.Shared),
-            BudgetScope.Personal => query.Where(a => a.Scope == BudgetScope.Personal && a.OwnerUserId == userId),
-            _ => query.Where(a =>
-                a.Scope == BudgetScope.Shared ||
-                (a.Scope == BudgetScope.Personal && a.OwnerUserId == userId)),
-        };
+            return query.Where(a => a.OwnerUserId == null);
+        }
+
+        return query.Where(a => a.OwnerUserId == null || a.OwnerUserId == userId);
     }
 }

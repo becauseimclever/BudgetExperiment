@@ -20,7 +20,7 @@ public class RecurringChargeSuggestionTests
 
         // Act
         var suggestion = RecurringChargeSuggestion.Create(
-            TestAccountId, pattern, BudgetScope.Shared, TestUserId);
+            TestAccountId, pattern, TestUserId);
 
         // Assert
         Assert.NotEqual(Guid.Empty, suggestion.Id);
@@ -34,7 +34,6 @@ public class RecurringChargeSuggestionTests
         Assert.Equal(6, suggestion.MatchingTransactionCount);
         Assert.Equal(SuggestionStatus.Pending, suggestion.Status);
         Assert.Null(suggestion.AcceptedRecurringTransactionId);
-        Assert.Equal(BudgetScope.Shared, suggestion.Scope);
         Assert.Equal(TestUserId, suggestion.CreatedByUserId);
         Assert.NotEqual(default, suggestion.CreatedAtUtc);
         Assert.NotEqual(default, suggestion.UpdatedAtUtc);
@@ -46,7 +45,7 @@ public class RecurringChargeSuggestionTests
         var pattern = CreateTestPattern();
 
         var ex = Assert.Throws<DomainException>(() =>
-            RecurringChargeSuggestion.Create(Guid.Empty, pattern, BudgetScope.Shared, TestUserId));
+            RecurringChargeSuggestion.Create(Guid.Empty, pattern, TestUserId));
 
         Assert.Equal("Account ID is required.", ex.Message);
     }
@@ -55,7 +54,7 @@ public class RecurringChargeSuggestionTests
     public void Create_WithNullPattern_Throws()
     {
         var ex = Assert.Throws<DomainException>(() =>
-            RecurringChargeSuggestion.Create(TestAccountId, null!, BudgetScope.Shared, TestUserId));
+            RecurringChargeSuggestion.Create(TestAccountId, null!, TestUserId));
 
         Assert.Equal("Detected pattern is required.", ex.Message);
     }
@@ -66,7 +65,7 @@ public class RecurringChargeSuggestionTests
         var pattern = CreateTestPattern();
 
         var ex = Assert.Throws<DomainException>(() =>
-            RecurringChargeSuggestion.Create(TestAccountId, pattern, BudgetScope.Shared, Guid.Empty));
+            RecurringChargeSuggestion.Create(TestAccountId, pattern, Guid.Empty));
 
         Assert.Equal("Created by user ID is required.", ex.Message);
     }
@@ -77,7 +76,7 @@ public class RecurringChargeSuggestionTests
         var pattern = CreateTestPattern(confidence: 1.5m);
 
         var ex = Assert.Throws<DomainException>(() =>
-            RecurringChargeSuggestion.Create(TestAccountId, pattern, BudgetScope.Shared, TestUserId));
+            RecurringChargeSuggestion.Create(TestAccountId, pattern, TestUserId));
 
         Assert.Equal("Confidence must be between 0.0 and 1.0.", ex.Message);
     }
@@ -243,7 +242,6 @@ public class RecurringChargeSuggestionTests
         return RecurringChargeSuggestion.Create(
             TestAccountId,
             CreateTestPattern(),
-            BudgetScope.Shared,
             TestUserId);
     }
 }

@@ -22,7 +22,6 @@ public sealed class RulesViewModelTests : IDisposable
 {
     private readonly StubBudgetApiService _apiService = new();
     private readonly StubToastService _toastService = new();
-    private readonly ScopeService _scopeService;
     private readonly StubNavigationManager _navigationManager = new();
     private readonly StubApiErrorContext _apiErrorContext = new();
     private readonly RulesViewModel _sut;
@@ -32,12 +31,10 @@ public sealed class RulesViewModelTests : IDisposable
     /// </summary>
     public RulesViewModelTests()
     {
-        _scopeService = new ScopeService(new StubJSRuntime());
         _sut = new RulesViewModel(
             _apiService,
             _toastService,
             _navigationManager,
-            _scopeService,
             _apiErrorContext,
             new StubJSRuntime());
     }
@@ -1121,48 +1118,6 @@ public sealed class RulesViewModelTests : IDisposable
         _sut.NewRule.MatchType.ShouldBe("Regex");
     }
 
-    // --- Scope Change ---
-
-    /// <summary>
-    /// Verifies that scope change triggers data reload.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
-    public async Task ScopeChanged_ReloadsData()
-    {
-        await _sut.InitializeAsync();
-        _sut.Rules.Count.ShouldBe(0);
-
-        _apiService.Rules.Add(CreateRule("New Rule", "PATTERN", "Contains"));
-        await _scopeService.SetScopeAsync(BudgetExperiment.Shared.Budgeting.BudgetScope.Personal);
-
-        // Allow async event handler to complete
-        await Task.Delay(50);
-
-        _sut.Rules.Count.ShouldBe(1);
-    }
-
-    // --- Dispose ---
-
-    /// <summary>
-    /// Verifies that Dispose unsubscribes from scope change events.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
-    public async Task Dispose_UnsubscribesFromScopeChanged()
-    {
-        await _sut.InitializeAsync();
-        _sut.Dispose();
-
-        // After dispose, changing scope should not trigger a reload
-        _apiService.Rules.Add(CreateRule("New Rule", "PATTERN", "Contains"));
-        await _scopeService.SetScopeAsync(BudgetExperiment.Shared.Budgeting.BudgetScope.Personal);
-        await Task.Delay(50);
-
-        // Rules list should still be empty (from initial load) since dispose unsubscribed
-        _sut.Rules.Count.ShouldBe(0);
-    }
-
     // --- OnStateChanged callback ---
 
     /// <summary>
@@ -2219,7 +2174,6 @@ public sealed class RulesViewModelTests : IDisposable
             _apiService,
             _toastService,
             _navigationManager,
-            _scopeService,
             _apiErrorContext,
             jsRuntime);
 
@@ -2242,7 +2196,6 @@ public sealed class RulesViewModelTests : IDisposable
             _apiService,
             _toastService,
             _navigationManager,
-            _scopeService,
             _apiErrorContext,
             jsRuntime);
 
@@ -2265,7 +2218,6 @@ public sealed class RulesViewModelTests : IDisposable
             _apiService,
             _toastService,
             _navigationManager,
-            _scopeService,
             _apiErrorContext,
             jsRuntime);
 

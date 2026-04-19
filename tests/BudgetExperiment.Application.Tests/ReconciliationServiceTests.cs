@@ -320,7 +320,6 @@ public class ReconciliationServiceTests
             0.85m,
             0m,
             0,
-            BudgetScope.Shared,
             null);
         typeof(ReconciliationMatch).GetProperty(nameof(ReconciliationMatch.Id))!
             .SetValue(match, matchId);
@@ -380,7 +379,6 @@ public class ReconciliationServiceTests
             0.75m,
             0m,
             0,
-            BudgetScope.Shared,
             null);
         typeof(ReconciliationMatch).GetProperty(nameof(ReconciliationMatch.Id))!
             .SetValue(match, matchId);
@@ -416,7 +414,6 @@ public class ReconciliationServiceTests
             0.75m,
             0m,
             0,
-            BudgetScope.Shared,
             null);
 
         var transaction = CreateTestTransaction(transactionId, accountId, "Netflix", -15.99m, instanceDate);
@@ -830,7 +827,6 @@ public class ReconciliationServiceTests
             0.85m,
             0m,
             0,
-            BudgetScope.Shared,
             null);
         typeof(ReconciliationMatch).GetProperty(nameof(ReconciliationMatch.Id))!.SetValue(match, id);
         return match;

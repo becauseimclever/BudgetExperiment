@@ -24,7 +24,6 @@ public sealed class TransactionListService : ITransactionListService
     private readonly IRecurringTransferInstanceProjector _recurringTransferInstanceProjector;
     private readonly ICurrencyProvider _currencyProvider;
     private readonly IServiceScopeFactory? _scopeFactory;
-    private readonly IUserContext? _userContext;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TransactionListService"/> class.
@@ -38,7 +37,6 @@ public sealed class TransactionListService : ITransactionListService
     /// <param name="recurringTransferInstanceProjector">The recurring transfer instance projector.</param>
     /// <param name="currencyProvider">The currency provider.</param>
     /// <param name="scopeFactory">The scope factory for parallel query scopes.</param>
-    /// <param name="userContext">The current user context.</param>
     public TransactionListService(
         ITransactionRepository transactionRepository,
         IRecurringTransactionRepository recurringRepository,
@@ -48,8 +46,7 @@ public sealed class TransactionListService : ITransactionListService
         IRecurringInstanceProjector recurringInstanceProjector,
         IRecurringTransferInstanceProjector recurringTransferInstanceProjector,
         ICurrencyProvider currencyProvider,
-        IServiceScopeFactory? scopeFactory = null,
-        IUserContext? userContext = null)
+        IServiceScopeFactory? scopeFactory = null)
     {
         _transactionRepository = transactionRepository;
         _recurringRepository = recurringRepository;
@@ -60,7 +57,6 @@ public sealed class TransactionListService : ITransactionListService
         _recurringTransferInstanceProjector = recurringTransferInstanceProjector;
         _currencyProvider = currencyProvider;
         _scopeFactory = scopeFactory;
-        _userContext = userContext;
     }
 
     /// <inheritdoc/>
@@ -344,7 +340,7 @@ public sealed class TransactionListService : ITransactionListService
         Func<IServiceProvider, CancellationToken, Task<T>> action,
         CancellationToken cancellationToken)
     {
-        if (_scopeFactory is null || _userContext is null)
+        if (_scopeFactory is null)
         {
             var provider = new FallbackServiceProvider(
                 _transactionRepository,
@@ -360,8 +356,6 @@ public sealed class TransactionListService : ITransactionListService
         }
 
         using var scope = _scopeFactory.CreateScope();
-        var scopedUserContext = scope.ServiceProvider.GetRequiredService<IUserContext>();
-        scopedUserContext.SetScope(_userContext.CurrentScope);
         var scopedTask = action(scope.ServiceProvider, cancellationToken);
         return scopedTask is null
             ? default!

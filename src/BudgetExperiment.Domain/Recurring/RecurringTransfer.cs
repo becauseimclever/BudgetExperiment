@@ -115,15 +115,7 @@ public sealed class RecurringTransfer
     }
 
     /// <summary>
-    /// Gets the budget scope (Shared or Personal).
-    /// </summary>
-    public BudgetScope Scope
-    {
-        get; private set;
-    }
-
-    /// <summary>
-    /// Gets the owner user ID. NULL for Shared scope, user ID for Personal scope.
+    /// Gets the owner user ID. Null for shared items, user ID for user-owned items.
     /// </summary>
     public Guid? OwnerUserId
     {

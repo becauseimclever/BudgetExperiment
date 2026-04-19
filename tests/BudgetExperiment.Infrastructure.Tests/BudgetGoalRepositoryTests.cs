@@ -158,36 +158,4 @@ public class BudgetGoalRepositoryTests
         Assert.Equal(12, results[2].Month);
         Assert.Equal(2025, results[2].Year);
     }
-
-    [Fact]
-    public async Task ScopeFilter_SharedScope_Returns_Only_Shared_Goals()
-    {
-        // Arrange
-        await using var context = _fixture.CreateContext();
-        var userId = FakeUserContext.DefaultUserId;
-
-        var category = BudgetCategory.Create("Mixed", CategoryType.Expense);
-        context.BudgetCategories.Add(category);
-        await context.SaveChangesAsync();
-
-        var sharedGoal = BudgetGoal.Create(category.Id, 2026, 3, MoneyValue.Create("USD", 100m));
-        var personalGoal = BudgetGoal.Create(category.Id, 2026, 4, MoneyValue.Create("USD", 200m));
-
-        context.BudgetGoals.AddRange(sharedGoal, personalGoal);
-        await context.SaveChangesAsync();
-
-        context.Entry(personalGoal).Property(e => e.Scope).CurrentValue = BudgetScope.Personal;
-        context.Entry(personalGoal).Property(e => e.OwnerUserId).CurrentValue = userId;
-        await context.SaveChangesAsync();
-
-        // Act
-        await using var verifyContext = _fixture.CreateSharedContext(context);
-        var sharedContext = FakeUserContext.CreateForSharedScope();
-        var repository = new BudgetGoalRepository(verifyContext, sharedContext);
-        var results = await repository.GetByCategoryAsync(category.Id);
-
-        // Assert
-        Assert.Single(results);
-        Assert.Equal(3, results[0].Month);
-    }
 }

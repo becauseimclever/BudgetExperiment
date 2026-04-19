@@ -6,8 +6,6 @@ using System.Net;
 
 using BudgetExperiment.Client.Services;
 
-using Microsoft.JSInterop;
-
 namespace BudgetExperiment.Client.Tests.Services;
 
 /// <summary>
@@ -16,20 +14,20 @@ namespace BudgetExperiment.Client.Tests.Services;
 public sealed class ScopeMessageHandlerTests
 {
     /// <summary>
-    /// Verifies Phase 2 no longer sends a scope header when no scope was chosen.
+    /// Verifies the handler removes any X-Budget-Scope header from requests.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task SendAsync_WithoutExplicitScope_DoesNotSendScopeHeader()
+    public async Task SendAsync_RemovesScopeHeaderFromRequest()
     {
-        var scopeService = new ScopeService(new StubJSRuntime());
         var innerHandler = new CapturingHandler();
-        using var sut = new ScopeMessageHandler(scopeService)
+        using var sut = new ScopeMessageHandler
         {
             InnerHandler = innerHandler,
         };
         using var invoker = new HttpMessageInvoker(sut);
         using var request = new HttpRequestMessage(HttpMethod.Get, "https://example.test/api/v1/accounts");
+        request.Headers.TryAddWithoutValidation(ScopeMessageHandler.ScopeHeaderName, "Shared");
 
         await invoker.SendAsync(request, CancellationToken.None);
 
@@ -37,18 +35,14 @@ public sealed class ScopeMessageHandlerTests
     }
 
     /// <summary>
-    /// Verifies legacy persisted Personal values do not leak into a removed scope header.
+    /// Verifies the handler forwards requests without a scope header unchanged.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task SendAsync_WithLegacyPersonalScope_DoesNotSendScopeHeader()
+    public async Task SendAsync_WithoutScopeHeader_ForwardsRequest()
     {
-        var jsRuntime = new StubJSRuntime();
-        jsRuntime.GetItems["budget-experiment-scope"] = "Personal";
-        var scopeService = new ScopeService(jsRuntime);
-        await scopeService.InitializeAsync();
         var innerHandler = new CapturingHandler();
-        using var sut = new ScopeMessageHandler(scopeService)
+        using var sut = new ScopeMessageHandler
         {
             InnerHandler = innerHandler,
         };
@@ -57,7 +51,8 @@ public sealed class ScopeMessageHandlerTests
 
         await invoker.SendAsync(request, CancellationToken.None);
 
-        Assert.False(innerHandler.LastRequest!.Headers.Contains(ScopeMessageHandler.ScopeHeaderName));
+        Assert.NotNull(innerHandler.LastRequest);
+        Assert.False(innerHandler.LastRequest.Headers.Contains(ScopeMessageHandler.ScopeHeaderName));
     }
 
     private sealed class CapturingHandler : HttpMessageHandler
@@ -68,32 +63,6 @@ public sealed class ScopeMessageHandlerTests
         {
             LastRequest = request;
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
-        }
-    }
-
-    private sealed class StubJSRuntime : IJSRuntime
-    {
-        public Dictionary<string, string?> GetItems { get; } = [];
-
-        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args)
-        {
-            return InvokeAsync<TValue>(identifier, CancellationToken.None, args);
-        }
-
-        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken, object?[]? args)
-        {
-            if (identifier == "localStorage.getItem" && args?.Length > 0)
-            {
-                var key = args[0]?.ToString()!;
-                if (GetItems.TryGetValue(key, out var value))
-                {
-                    return new ValueTask<TValue>((TValue)(object?)value!);
-                }
-
-                return new ValueTask<TValue>(default(TValue)!);
-            }
-
-            return new ValueTask<TValue>(default(TValue)!);
         }
     }
 }

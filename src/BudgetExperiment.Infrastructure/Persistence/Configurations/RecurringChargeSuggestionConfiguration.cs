@@ -78,11 +78,6 @@ internal sealed class RecurringChargeSuggestionConfiguration : IEntityTypeConfig
 
         builder.Property(s => s.AcceptedRecurringTransactionId);
 
-        builder.Property(s => s.Scope)
-            .IsRequired()
-            .HasConversion<string>()
-            .HasMaxLength(20);
-
         builder.Property(s => s.OwnerUserId);
 
         builder.Property(s => s.CreatedByUserId)

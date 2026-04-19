@@ -40,7 +40,7 @@ public class AccountServiceTests
         Assert.NotEqual(Guid.Empty, result.Id);
         repo.Verify(
             r => r.AddAsync(
-                It.Is<Account>(account => account.Scope == BudgetScope.Shared),
+                It.IsAny<Account>(),
                 default),
             Times.Once);
         uow.Verify(u => u.SaveChangesAsync(default), Times.Once);

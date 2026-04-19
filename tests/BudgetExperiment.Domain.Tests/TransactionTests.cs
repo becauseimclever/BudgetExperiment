@@ -589,7 +589,6 @@ public class TransactionTests
             "Test");
 
         // Assert - Default values before scope is set by parent aggregate
-        Assert.Equal(BudgetScope.Shared, transaction.Scope);
         Assert.Null(transaction.OwnerUserId);
         Assert.Equal(Guid.Empty, transaction.CreatedByUserId);
     }

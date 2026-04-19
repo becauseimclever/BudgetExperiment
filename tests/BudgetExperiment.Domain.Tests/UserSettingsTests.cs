@@ -21,7 +21,6 @@ public class UserSettingsTests
         // Assert
         Assert.NotEqual(Guid.Empty, settings.Id);
         Assert.Equal(userId, settings.UserId);
-        Assert.Equal(BudgetScope.Shared, settings.DefaultScope);
         Assert.False(settings.AutoRealizePastDueItems);
         Assert.Equal(30, settings.PastDueLookbackDays);
         Assert.Null(settings.PreferredCurrency);
@@ -38,19 +37,6 @@ public class UserSettingsTests
         // Act & Assert
         var ex = Assert.Throws<DomainException>(() => UserSettings.CreateDefault(Guid.Empty));
         Assert.Contains("user", ex.Message, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public void UpdateDefaultScope_Changes_Scope()
-    {
-        // Arrange
-        var settings = UserSettings.CreateDefault(Guid.NewGuid());
-
-        // Act
-        settings.UpdateDefaultScope(BudgetScope.Personal);
-
-        // Assert
-        Assert.Equal(BudgetScope.Personal, settings.DefaultScope);
     }
 
     [Fact]

@@ -32,7 +32,6 @@ public class LocationReportPageTests : BunitContext, IAsyncLifetime
         stubApiService = new StubBudgetApiService();
 
         this.Services.AddSingleton<IBudgetApiService>(stubApiService);
-        this.Services.AddSingleton(new ScopeService(this.JSInterop.JSRuntime));
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
         this.Services.AddSingleton<IToastService, ToastService>();

@@ -39,7 +39,6 @@ public class UserSettingsRepositoryTests : IClassFixture<PostgreSqlFixture>
         // Assert
         Assert.NotNull(settings);
         Assert.Equal(userId, settings.UserId);
-        Assert.Equal(BudgetScope.Shared, settings.DefaultScope);
         Assert.False(settings.AutoRealizePastDueItems);
         Assert.Equal(30, settings.PastDueLookbackDays);
         Assert.False(settings.IsOnboarded);
@@ -118,7 +117,6 @@ public class UserSettingsRepositoryTests : IClassFixture<PostgreSqlFixture>
         await context.SaveChangesAsync();
 
         // Act - modify and save
-        settings.UpdateDefaultScope(BudgetScope.Personal);
         settings.UpdateAutoRealize(true);
         settings.UpdatePastDueLookbackDays(45);
         settings.UpdatePreferredCurrency("EUR");
@@ -132,7 +130,6 @@ public class UserSettingsRepositoryTests : IClassFixture<PostgreSqlFixture>
         var verifyRepo = new UserSettingsRepository(verifyContext);
         var retrieved = await verifyRepo.GetByUserIdAsync(userId);
 
-        Assert.Equal(BudgetScope.Personal, retrieved.DefaultScope);
         Assert.True(retrieved.AutoRealizePastDueItems);
         Assert.Equal(45, retrieved.PastDueLookbackDays);
         Assert.Equal("EUR", retrieved.PreferredCurrency);

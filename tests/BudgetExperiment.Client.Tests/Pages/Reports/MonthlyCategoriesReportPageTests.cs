@@ -31,7 +31,6 @@ public class MonthlyCategoriesReportPageTests : BunitContext, IAsyncLifetime
         this.Services.AddSingleton<IBudgetApiService>(_apiService);
         this.Services.AddSingleton<IToastService>(new ToastService());
         this.Services.AddSingleton<IExportDownloadService>(new StubExportDownloadService());
-        this.Services.AddSingleton<ScopeService>();
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
         this.Services.AddSingleton<IFeatureFlagClientService>(new StubFeatureFlagClientService());

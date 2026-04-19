@@ -8,8 +8,6 @@ using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
 
-using Microsoft.JSInterop;
-
 using Shouldly;
 
 namespace BudgetExperiment.Client.Tests.ViewModels;
@@ -21,7 +19,6 @@ public sealed class CategoriesViewModelTests : IDisposable
 {
     private readonly StubBudgetApiService _apiService = new();
     private readonly StubToastService _toastService = new();
-    private readonly ScopeService _scopeService;
     private readonly StubChatContextService _chatContext = new();
     private readonly StubApiErrorContext _apiErrorContext = new();
     private readonly CategoriesViewModel _sut;
@@ -31,11 +28,9 @@ public sealed class CategoriesViewModelTests : IDisposable
     /// </summary>
     public CategoriesViewModelTests()
     {
-        _scopeService = new ScopeService(new StubJSRuntime());
         _sut = new CategoriesViewModel(
             _apiService,
             _toastService,
-            _scopeService,
             _chatContext,
             _apiErrorContext);
     }
@@ -708,46 +703,7 @@ public sealed class CategoriesViewModelTests : IDisposable
         _sut.ErrorMessage!.ShouldContain("Failed to deactivate category");
     }
 
-    // --- Scope Change ---
-
-    /// <summary>
-    /// Verifies that scope change triggers a reload of categories.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
-    public async Task ScopeChange_ReloadsCategories()
-    {
-        await _sut.InitializeAsync();
-        _apiService.Categories.Add(CreateCategory("New After Scope", "Expense"));
-
-        await _scopeService.SetScopeAsync(BudgetScope.Personal);
-
-        // Allow the async void handler to complete
-        await Task.Delay(50);
-
-        _sut.Categories.Count.ShouldBe(1);
-        _sut.Categories[0].Name.ShouldBe("New After Scope");
-    }
-
     // --- Dispose ---
-
-    /// <summary>
-    /// Verifies that Dispose unsubscribes from scope change events.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
-    public async Task Dispose_UnsubscribesFromScopeChanged()
-    {
-        await _sut.InitializeAsync();
-        _sut.Dispose();
-
-        // After dispose, scope change should not reload
-        _apiService.Categories.Add(CreateCategory("Should Not Load", "Expense"));
-        await _scopeService.SetScopeAsync(BudgetScope.Shared);
-        await Task.Delay(50);
-
-        _sut.Categories.Count.ShouldBe(0);
-    }
 
     /// <summary>
     /// Verifies that Dispose clears the chat context.
@@ -843,19 +799,5 @@ public sealed class CategoriesViewModelTests : IDisposable
         public void Remove(Guid id)
         {
         }
-    }
-
-    /// <summary>
-    /// Minimal stub for IJSRuntime to satisfy ScopeService constructor.
-    /// </summary>
-    private sealed class StubJSRuntime : IJSRuntime
-    {
-        /// <inheritdoc/>
-        /// <returns>A default value.</returns>
-        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) => default;
-
-        /// <inheritdoc/>
-        /// <returns>A default value.</returns>
-        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken, object?[]? args) => default;
     }
 }

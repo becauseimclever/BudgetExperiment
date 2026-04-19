@@ -12,3 +12,9 @@
 
 - Feature 161 Phase 2 must stay at the API/contracts/user-context layer; Application and Infrastructure drift belongs to Phase 3.
 - Multiple rejected revision authors remain locked out of the artifact; the next revision must come from a different backend implementer again.
+- Feature 161 Phase 3 Client cleanup: `ScopeService` was registered as a singleton; all 8 ViewModels injected it. Deleting the service requires removing the DI param from constructors, dropping `IDisposable` entirely where it was the only disposable resource, and removing `ViewModel.Dispose()` calls in Razor page `@code` blocks.
+- Three ViewModels (Accounts, Budget, Transactions) had `IDisposable` solely for the scope unsubscription — removing IDisposable also required updating Razor pages that called `ViewModel.Dispose()` directly.
+- `ScopeMessageHandler` had a stub constructor taking `ScopeService` (already discarded with `_ = scopeService`); removing ScopeService required dropping that constructor entirely — the handler still strips the `X-Budget-Scope` header defensively.
+- `BudgetScope` in ViewModel files without an explicit `using BudgetExperiment.Shared.Budgeting;` was covered by `GlobalUsings.cs`; files with the explicit using needed it removed.
+- Razor pages in `Pages/Reports/` had `@implements IDisposable` solely for scope event unsubscription — all four report pages had their `Dispose()` method and `@implements IDisposable` removed entirely.
+- Calendar.razor kept `@implements IDisposable` because `ChatContext.ClearContext()` remains in `Dispose()`.

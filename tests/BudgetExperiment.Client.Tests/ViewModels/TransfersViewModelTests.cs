@@ -6,9 +6,6 @@ using BudgetExperiment.Client.Services;
 using BudgetExperiment.Client.Tests.TestHelpers;
 using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
-using BudgetExperiment.Shared.Budgeting;
-
-using Microsoft.JSInterop;
 
 using Shouldly;
 
@@ -20,7 +17,6 @@ namespace BudgetExperiment.Client.Tests.ViewModels;
 public sealed class TransfersViewModelTests : IDisposable
 {
     private readonly StubBudgetApiService _apiService = new();
-    private readonly ScopeService _scopeService;
     private readonly StubChatContextService _chatContext = new();
     private readonly StubApiErrorContext _apiErrorContext = new();
     private readonly TransfersViewModel _sut;
@@ -30,10 +26,8 @@ public sealed class TransfersViewModelTests : IDisposable
     /// </summary>
     public TransfersViewModelTests()
     {
-        _scopeService = new ScopeService(new StubJSRuntime());
         _sut = new TransfersViewModel(
             _apiService,
-            _scopeService,
             _chatContext,
             _apiErrorContext);
     }
@@ -516,48 +510,6 @@ public sealed class TransfersViewModelTests : IDisposable
         _sut.ErrorMessage!.ShouldContain("Failed to delete transfer");
     }
 
-    // --- Scope changes ---
-
-    /// <summary>
-    /// Verifies that scope change triggers a reload of data.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
-    public async Task ScopeChange_ReloadsTransfers()
-    {
-        await _sut.InitializeAsync();
-        _sut.Transfers.Count.ShouldBe(0);
-
-        _apiService.Transfers.Add(CreateTransfer("After scope change"));
-
-        // Trigger scope change
-        await _scopeService.SetScopeAsync(BudgetScope.Personal);
-
-        // Allow async void handler to complete
-        await Task.Delay(50);
-
-        _sut.Transfers.Count.ShouldBe(1);
-    }
-
-    // --- Dispose ---
-
-    /// <summary>
-    /// Verifies that Dispose unsubscribes from scope change events.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
-    public async Task Dispose_UnsubscribesFromScopeChanged()
-    {
-        await _sut.InitializeAsync();
-        _sut.Dispose();
-
-        _apiService.Transfers.Add(CreateTransfer("Should not load"));
-        await _scopeService.SetScopeAsync(BudgetScope.Personal);
-        await Task.Delay(50);
-
-        _sut.Transfers.Count.ShouldBe(0);
-    }
-
     /// <summary>
     /// Verifies that Dispose clears the chat context.
     /// </summary>
@@ -607,19 +559,5 @@ public sealed class TransfersViewModelTests : IDisposable
             Amount = 500.00m,
             Description = description,
         };
-    }
-
-    /// <summary>
-    /// Minimal stub for IJSRuntime to satisfy ScopeService constructor.
-    /// </summary>
-    private sealed class StubJSRuntime : IJSRuntime
-    {
-        /// <inheritdoc/>
-        /// <returns>A default value.</returns>
-        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) => default;
-
-        /// <inheritdoc/>
-        /// <returns>A default value.</returns>
-        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken, object?[]? args) => default;
     }
 }

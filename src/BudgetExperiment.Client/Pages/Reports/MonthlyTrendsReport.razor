@@ -2,11 +2,8 @@
 
 @using BudgetExperiment.Client.Components.Charts
 
-@implements IDisposable
-
 @inject IBudgetApiService ApiService
 @inject NavigationManager Navigation
-@inject ScopeService ScopeService
 @inject IFeatureFlagClientService FeatureFlags
 @inject IJSRuntime JSRuntime
 
@@ -198,7 +195,6 @@
     /// <inheritdoc/>
     protected override async Task OnInitializedAsync()
     {
-        ScopeService.ScopeChanged += HandleScopeChanged;
         await LoadGroupByPreferenceAsync();
 
         // Load categories and report in parallel
@@ -207,12 +203,6 @@
 
         categories = await categoriesTask;
         await reportTask;
-    }
-
-    private async void HandleScopeChanged(BudgetScope? scope)
-    {
-        await LoadReportAsync();
-        await InvokeAsync(StateHasChanged);
     }
 
     private async Task LoadReportAsync()
@@ -430,11 +420,5 @@
     private void DismissError()
     {
         errorMessage = null;
-    }
-
-    /// <inheritdoc/>
-    public void Dispose()
-    {
-        ScopeService.ScopeChanged -= HandleScopeChanged;
     }
 }

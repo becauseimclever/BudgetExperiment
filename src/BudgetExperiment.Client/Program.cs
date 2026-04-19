@@ -86,9 +86,6 @@ else
     });
 }
 
-// Register ScopeService as singleton so it persists across the app lifetime
-builder.Services.AddSingleton<ScopeService>();
-
 // Register the ScopeMessageHandler as transient (DelegatingHandler instances should be transient)
 builder.Services.AddTransient<ScopeMessageHandler>();
 

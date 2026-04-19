@@ -26,7 +26,6 @@ public sealed class CalendarGridService : ICalendarGridService
     private readonly IAutoRealizeService _autoRealizeService;
     private readonly ICurrencyProvider _currencyProvider;
     private readonly IServiceScopeFactory? _scopeFactory;
-    private readonly IUserContext? _userContext;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CalendarGridService"/> class.
@@ -40,7 +39,6 @@ public sealed class CalendarGridService : ICalendarGridService
     /// <param name="autoRealizeService">The auto-realize service.</param>
     /// <param name="currencyProvider">The currency provider.</param>
     /// <param name="scopeFactory">The scope factory for parallel query scopes.</param>
-    /// <param name="userContext">The current user context.</param>
     public CalendarGridService(
         ITransactionRepository transactionRepository,
         IRecurringTransactionRepository recurringRepository,
@@ -50,8 +48,7 @@ public sealed class CalendarGridService : ICalendarGridService
         IRecurringTransferInstanceProjector recurringTransferInstanceProjector,
         IAutoRealizeService autoRealizeService,
         ICurrencyProvider currencyProvider,
-        IServiceScopeFactory? scopeFactory = null,
-        IUserContext? userContext = null)
+        IServiceScopeFactory? scopeFactory = null)
     {
         _transactionRepository = transactionRepository;
         _recurringRepository = recurringRepository;
@@ -62,7 +59,6 @@ public sealed class CalendarGridService : ICalendarGridService
         _autoRealizeService = autoRealizeService;
         _currencyProvider = currencyProvider;
         _scopeFactory = scopeFactory;
-        _userContext = userContext;
     }
 
     /// <inheritdoc/>
@@ -268,7 +264,7 @@ public sealed class CalendarGridService : ICalendarGridService
         Func<IServiceProvider, CancellationToken, Task<T>> action,
         CancellationToken cancellationToken)
     {
-        if (_scopeFactory is null || _userContext is null)
+        if (_scopeFactory is null)
         {
             var provider = new FallbackServiceProvider(
                 _transactionRepository,
@@ -283,8 +279,6 @@ public sealed class CalendarGridService : ICalendarGridService
         }
 
         using var scope = _scopeFactory.CreateScope();
-        var scopedUserContext = scope.ServiceProvider.GetRequiredService<IUserContext>();
-        scopedUserContext.SetScope(_userContext.CurrentScope);
         var scopedTask = action(scope.ServiceProvider, cancellationToken);
         return scopedTask is null
             ? default!

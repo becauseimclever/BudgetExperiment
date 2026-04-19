@@ -20,7 +20,7 @@ internal sealed class ReconciliationRecordRepository : IReconciliationRecordRepo
     /// Initializes a new instance of the <see cref="ReconciliationRecordRepository"/> class.
     /// </summary>
     /// <param name="context">The database context.</param>
-    /// <param name="userContext">The user context for scope filtering.</param>
+    /// <param name="userContext">The user context for ownership filtering.</param>
     public ReconciliationRecordRepository(BudgetDbContext context, IUserContext userContext)
     {
         _context = context;
@@ -90,13 +90,11 @@ internal sealed class ReconciliationRecordRepository : IReconciliationRecordRepo
     {
         var userId = _userContext.UserIdAsGuid;
 
-        return _userContext.CurrentScope switch
+        if (userId is null)
         {
-            BudgetScope.Shared => query.Where(r => r.Scope == BudgetScope.Shared),
-            BudgetScope.Personal => query.Where(r => r.Scope == BudgetScope.Personal && r.OwnerUserId == userId),
-            _ => query.Where(r =>
-                r.Scope == BudgetScope.Shared ||
-                (r.Scope == BudgetScope.Personal && r.OwnerUserId == userId)),
-        };
+            return query.Where(r => r.OwnerUserId == null);
+        }
+
+        return query.Where(r => r.OwnerUserId == null || r.OwnerUserId == userId);
     }
 }

@@ -27,7 +27,6 @@ public class ReconciliationRecordTests
                 clearedBalance,
                 5,
                 Guid.NewGuid(),
-                BudgetScope.Shared,
                 null));
 
         Assert.Equal(DomainExceptionType.Validation, ex.ExceptionType);
@@ -51,7 +50,6 @@ public class ReconciliationRecordTests
             balance,
             10,
             userId,
-            BudgetScope.Shared,
             null);
 
         // Assert
@@ -62,7 +60,6 @@ public class ReconciliationRecordTests
         Assert.Equal(balance, record.ClearedBalance);
         Assert.Equal(10, record.TransactionCount);
         Assert.Equal(userId, record.CompletedByUserId);
-        Assert.Equal(BudgetScope.Shared, record.Scope);
         Assert.Null(record.OwnerUserId);
         Assert.True(record.CompletedAtUtc <= DateTime.UtcNow);
     }

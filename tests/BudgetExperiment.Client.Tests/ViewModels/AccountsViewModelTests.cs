@@ -9,7 +9,6 @@ using BudgetExperiment.Client.ViewModels;
 using BudgetExperiment.Contracts.Dtos;
 
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 
 using Shouldly;
 
@@ -18,12 +17,11 @@ namespace BudgetExperiment.Client.Tests.ViewModels;
 /// <summary>
 /// Unit tests for <see cref="AccountsViewModel"/>.
 /// </summary>
-public sealed class AccountsViewModelTests : IDisposable
+public sealed class AccountsViewModelTests
 {
     private readonly StubBudgetApiService _apiService = new();
     private readonly StubToastService _toastService = new();
     private readonly StubNavigationManager _navigationManager = new();
-    private readonly ScopeService _scopeService;
     private readonly StubApiErrorContext _apiErrorContext = new();
     private readonly AccountsViewModel _sut;
 
@@ -32,19 +30,11 @@ public sealed class AccountsViewModelTests : IDisposable
     /// </summary>
     public AccountsViewModelTests()
     {
-        _scopeService = new ScopeService(new StubJSRuntime());
         _sut = new AccountsViewModel(
             _apiService,
             _toastService,
             _navigationManager,
-            _scopeService,
             _apiErrorContext);
-    }
-
-    /// <inheritdoc/>
-    public void Dispose()
-    {
-        _sut.Dispose();
     }
 
     // --- Initialization ---
@@ -719,48 +709,6 @@ public sealed class AccountsViewModelTests : IDisposable
         notified.ShouldBeTrue();
     }
 
-    // --- Scope Change ---
-
-    /// <summary>
-    /// Verifies that scope change reloads accounts.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
-    public async Task ScopeChanged_ReloadsAccounts()
-    {
-        await _sut.InitializeAsync();
-        _sut.Accounts.Count.ShouldBe(0);
-
-        _apiService.Accounts.Add(CreateAccount("Added After Scope Change"));
-
-        // Trigger scope change
-        await _scopeService.SetScopeAsync(BudgetExperiment.Shared.Budgeting.BudgetScope.Personal);
-
-        // Allow the async void handler to complete
-        await Task.Delay(50);
-
-        _sut.Accounts.Count.ShouldBe(1);
-    }
-
-    // --- Dispose ---
-
-    /// <summary>
-    /// Verifies that Dispose unsubscribes from scope change events.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
-    public async Task Dispose_UnsubscribesFromScopeChange()
-    {
-        await _sut.InitializeAsync();
-        _sut.Dispose();
-
-        _apiService.Accounts.Add(CreateAccount("Should Not Load"));
-        await _scopeService.SetScopeAsync(BudgetExperiment.Shared.Budgeting.BudgetScope.Personal);
-        await Task.Delay(50);
-
-        _sut.Accounts.Count.ShouldBe(0);
-    }
-
     // --- OnStateChanged ---
 
     /// <summary>
@@ -873,19 +821,5 @@ public sealed class AccountsViewModelTests : IDisposable
         {
             this.LastNavigatedUri = uri;
         }
-    }
-
-    /// <summary>
-    /// Minimal stub for IJSRuntime to satisfy ScopeService constructor.
-    /// </summary>
-    private sealed class StubJSRuntime : IJSRuntime
-    {
-        /// <inheritdoc/>
-        /// <returns>A default value.</returns>
-        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, object?[]? args) => default;
-
-        /// <inheritdoc/>
-        /// <returns>A default value.</returns>
-        public ValueTask<TValue> InvokeAsync<TValue>(string identifier, CancellationToken cancellationToken, object?[]? args) => default;
     }
 }

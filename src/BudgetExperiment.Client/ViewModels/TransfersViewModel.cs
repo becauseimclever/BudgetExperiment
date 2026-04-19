@@ -4,7 +4,6 @@
 
 using BudgetExperiment.Client.Services;
 using BudgetExperiment.Contracts.Dtos;
-using BudgetExperiment.Shared.Budgeting;
 
 namespace BudgetExperiment.Client.ViewModels;
 
@@ -15,7 +14,6 @@ namespace BudgetExperiment.Client.ViewModels;
 public sealed class TransfersViewModel : IDisposable
 {
     private readonly IBudgetApiService _apiService;
-    private readonly ScopeService _scopeService;
     private readonly IChatContextService _chatContextService;
     private readonly IApiErrorContext _apiErrorContext;
 
@@ -23,17 +21,14 @@ public sealed class TransfersViewModel : IDisposable
     /// Initializes a new instance of the <see cref="TransfersViewModel"/> class.
     /// </summary>
     /// <param name="apiService">The budget API service.</param>
-    /// <param name="scopeService">The budget scope service.</param>
     /// <param name="chatContextService">The chat context service.</param>
     /// <param name="apiErrorContext">The API error context for trace ID tracking.</param>
     public TransfersViewModel(
         IBudgetApiService apiService,
-        ScopeService scopeService,
         IChatContextService chatContextService,
         IApiErrorContext apiErrorContext)
     {
         _apiService = apiService;
-        _scopeService = scopeService;
         _chatContextService = chatContextService;
         _apiErrorContext = apiErrorContext;
     }
@@ -138,12 +133,11 @@ public sealed class TransfersViewModel : IDisposable
     }
 
     /// <summary>
-    /// Initializes the ViewModel: subscribes to scope changes, sets chat context, and loads data.
+    /// Initializes the ViewModel: sets chat context and loads data.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
     public async Task InitializeAsync()
     {
-        _scopeService.ScopeChanged += this.OnScopeChanged;
         _chatContextService.SetPageType("transfers");
         await this.LoadDataAsync();
     }
@@ -353,14 +347,7 @@ public sealed class TransfersViewModel : IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
-        _scopeService.ScopeChanged -= this.OnScopeChanged;
         _chatContextService.ClearContext();
-    }
-
-    private async void OnScopeChanged(BudgetScope? scope)
-    {
-        await this.LoadDataAsync();
-        this.NotifyStateChanged();
     }
 
     private void NotifyStateChanged()

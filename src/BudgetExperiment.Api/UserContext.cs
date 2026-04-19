@@ -46,16 +46,7 @@ public sealed class UserContext : IUserContext
     /// <inheritdoc/>
     public bool IsAuthenticated => httpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated ?? false;
 
-    /// <inheritdoc/>
-    BudgetScope? IUserContext.CurrentScope => BudgetScope.Shared;
-
     private ClaimsPrincipal? User => httpContextAccessor.HttpContext?.User;
-
-    /// <inheritdoc/>
-    void IUserContext.SetScope(BudgetScope? scope)
-    {
-        _ = scope;
-    }
 
     /// <summary>
     /// Parses a user ID string as a GUID, handling both standard GUID format

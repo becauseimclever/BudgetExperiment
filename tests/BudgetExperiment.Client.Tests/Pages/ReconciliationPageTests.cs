@@ -33,7 +33,6 @@ public class ReconciliationPageTests : BunitContext, IAsyncLifetime
         this.Services.AddSingleton<IBudgetApiService>(_apiService);
         this.Services.AddSingleton<IReconciliationApiService>(_reconciliationApiService);
         this.Services.AddSingleton<IToastService>(new ToastService());
-        this.Services.AddSingleton<ScopeService>();
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();
         this.Services.AddSingleton<IExportDownloadService>(new StubExportDownloadService());

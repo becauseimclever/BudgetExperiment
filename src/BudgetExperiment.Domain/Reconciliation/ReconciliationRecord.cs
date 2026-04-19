@@ -60,13 +60,7 @@ public sealed class ReconciliationRecord
         get; private set;
     }
 
-    /// <summary>Gets the budget scope of the reconciliation.</summary>
-    public BudgetScope Scope
-    {
-        get; private set;
-    }
-
-    /// <summary>Gets the owner user ID (null for shared scope).</summary>
+    /// <summary>Gets the owner user ID (null for shared items).</summary>
     public Guid? OwnerUserId
     {
         get; private set;
@@ -81,8 +75,7 @@ public sealed class ReconciliationRecord
     /// <param name="clearedBalance">The computed cleared balance.</param>
     /// <param name="transactionCount">Number of transactions being locked.</param>
     /// <param name="completedByUserId">Identifier of the user completing the reconciliation.</param>
-    /// <param name="scope">The budget scope.</param>
-    /// <param name="ownerUserId">The owner user ID (null for shared scope).</param>
+    /// <param name="ownerUserId">The owner user ID (null for shared items).</param>
     /// <returns>A new <see cref="ReconciliationRecord"/> instance.</returns>
     /// <exception cref="DomainException">Thrown when statement balance does not match cleared balance.</exception>
     public static ReconciliationRecord Create(
@@ -92,7 +85,6 @@ public sealed class ReconciliationRecord
         MoneyValue clearedBalance,
         int transactionCount,
         Guid completedByUserId,
-        BudgetScope scope,
         Guid? ownerUserId)
     {
         if (statementBalance != clearedBalance)
@@ -112,7 +104,6 @@ public sealed class ReconciliationRecord
             TransactionCount = transactionCount,
             CompletedAtUtc = DateTime.UtcNow,
             CompletedByUserId = completedByUserId,
-            Scope = scope,
             OwnerUserId = ownerUserId,
         };
     }

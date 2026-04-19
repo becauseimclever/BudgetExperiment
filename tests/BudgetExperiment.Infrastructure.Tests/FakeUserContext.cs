@@ -2,8 +2,6 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
-using BudgetExperiment.Domain;
-
 namespace BudgetExperiment.Infrastructure.Tests;
 
 /// <summary>
@@ -20,12 +18,10 @@ internal sealed class FakeUserContext : IUserContext
     /// Initializes a new instance of the <see cref="FakeUserContext"/> class.
     /// </summary>
     /// <param name="userId">The user ID to use. Defaults to a fixed test GUID.</param>
-    /// <param name="currentScope">The current scope filter. Defaults to null (show all).</param>
-    public FakeUserContext(Guid? userId = null, BudgetScope? currentScope = null)
+    public FakeUserContext(Guid? userId = null)
     {
         this.UserIdAsGuid = userId ?? DefaultUserId;
         this.UserId = this.UserIdAsGuid.Value.ToString();
-        this.CurrentScope = currentScope;
     }
 
     /// <inheritdoc />
@@ -55,35 +51,9 @@ internal sealed class FakeUserContext : IUserContext
     /// <inheritdoc />
     public string? AvatarUrl => null;
 
-    /// <inheritdoc />
-    public BudgetScope? CurrentScope
-    {
-        get; private set;
-    }
-
     /// <summary>
-    /// Creates a FakeUserContext with the default user ID and null scope (show all).
+    /// Creates a FakeUserContext with the default user ID.
     /// </summary>
     /// <returns>A new FakeUserContext instance.</returns>
     public static FakeUserContext CreateDefault() => new();
-
-    /// <summary>
-    /// Creates a FakeUserContext configured to filter for shared scope only.
-    /// </summary>
-    /// <returns>A new FakeUserContext instance.</returns>
-    public static FakeUserContext CreateForSharedScope() => new(currentScope: BudgetScope.Shared);
-
-    /// <summary>
-    /// Creates a FakeUserContext configured to filter for personal scope for the given user.
-    /// </summary>
-    /// <param name="userId">The user ID for the personal scope.</param>
-    /// <returns>A new FakeUserContext instance.</returns>
-    public static FakeUserContext CreateForPersonalScope(Guid? userId = null) =>
-        new(userId: userId ?? DefaultUserId, currentScope: BudgetScope.Personal);
-
-    /// <inheritdoc />
-    public void SetScope(BudgetScope? scope)
-    {
-        this.CurrentScope = scope;
-    }
 }

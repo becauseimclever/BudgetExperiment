@@ -38,17 +38,11 @@ internal sealed class CustomReportLayoutConfiguration : IEntityTypeConfiguration
         builder.Property(l => l.UpdatedAtUtc)
             .IsRequired();
 
-        builder.Property(l => l.Scope)
-            .IsRequired()
-            .HasConversion<string>()
-            .HasMaxLength(20);
-
         builder.Property(l => l.OwnerUserId);
 
         builder.Property(l => l.CreatedByUserId)
             .IsRequired();
 
-        builder.HasIndex(l => l.Scope);
         builder.HasIndex(l => l.OwnerUserId);
         builder.HasIndex(l => l.CreatedByUserId);
 

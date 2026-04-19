@@ -127,15 +127,7 @@ public sealed class RecurringChargeSuggestion
     }
 
     /// <summary>
-    /// Gets the budget scope (Shared or Personal).
-    /// </summary>
-    public BudgetScope Scope
-    {
-        get; private set;
-    }
-
-    /// <summary>
-    /// Gets the owner user ID. Null for shared scope.
+    /// Gets the owner user ID. Null for shared items.
     /// </summary>
     public Guid? OwnerUserId
     {
@@ -171,15 +163,13 @@ public sealed class RecurringChargeSuggestion
     /// </summary>
     /// <param name="accountId">The account identifier.</param>
     /// <param name="pattern">The detected pattern to create a suggestion from.</param>
-    /// <param name="scope">The budget scope.</param>
     /// <param name="createdByUserId">The user who triggered detection.</param>
-    /// <param name="ownerUserId">The owner user ID (null for shared scope).</param>
+    /// <param name="ownerUserId">The owner user ID (null for shared items).</param>
     /// <returns>A new <see cref="RecurringChargeSuggestion"/> instance.</returns>
     /// <exception cref="DomainException">Thrown when validation fails.</exception>
     public static RecurringChargeSuggestion Create(
         Guid accountId,
         DetectedPattern pattern,
-        BudgetScope scope,
         Guid createdByUserId,
         Guid? ownerUserId = null)
     {
@@ -225,7 +215,6 @@ public sealed class RecurringChargeSuggestion
             CategoryId = pattern.MostUsedCategoryId,
             Status = SuggestionStatus.Pending,
             AcceptedRecurringTransactionId = null,
-            Scope = scope,
             OwnerUserId = ownerUserId,
             CreatedByUserId = createdByUserId,
             CreatedAtUtc = now,

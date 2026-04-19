@@ -32,7 +32,6 @@ public class CategoriesPageTests : BunitContext, IAsyncLifetime
         this.JSInterop.Mode = JSRuntimeMode.Loose;
         this.Services.AddSingleton<IBudgetApiService>(_apiService);
         this.Services.AddSingleton<IToastService>(new ToastService());
-        this.Services.AddSingleton<ScopeService>();
         this.Services.AddSingleton<IChatContextService>(new StubChatContextService());
         this.Services.AddSingleton<ThemeService>();
         this.Services.AddSingleton<CultureService>();

@@ -898,6 +898,11 @@ The CategorySuggestionEndpoints.cs Minimal API pilot (introduced in F-153 by spl
 - Docker/Testcontainers validation is now confirmed locally; the earlier blocker was environmental only.
 - Worktree remains otherwise dirty; no unrelated files were touched.
 
+### 2026-04-19 — Feature 161 Phase 3 scope removal
+- Removed BudgetScope from Domain/Application/Infrastructure/API and switched repository filtering to OwnerUserId/null ownership checks.
+- Added RemoveBudgetScopeColumns migration to drop Scope/DefaultScope columns and update ownership indexes (Down re-adds nullable int columns defaulted to 1).
+- Solution build now fails in tests still referencing BudgetScope/CurrentScope/SetScope; Barbara/Gordon updates required.
+
 ## Session Update: Scribe Orchestration (2026-04-12T20:32:43Z)
 
 **Merged from inbox to team decisions ledger:**

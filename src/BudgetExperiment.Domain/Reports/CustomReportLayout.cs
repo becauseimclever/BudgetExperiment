@@ -59,15 +59,7 @@ public sealed class CustomReportLayout
     }
 
     /// <summary>
-    /// Gets the budget scope (Shared or Personal).
-    /// </summary>
-    public BudgetScope Scope
-    {
-        get; private set;
-    }
-
-    /// <summary>
-    /// Gets the owner user ID. NULL for Shared scope, user ID for Personal scope.
+    /// Gets the owner user ID. Null for shared items, user ID for user-owned items.
     /// </summary>
     public Guid? OwnerUserId
     {
@@ -102,7 +94,6 @@ public sealed class CustomReportLayout
             Id = Guid.NewGuid(),
             Name = ValidateName(name),
             LayoutJson = NormalizeLayoutJson(layoutJson),
-            Scope = BudgetScope.Shared,
             OwnerUserId = null,
             CreatedByUserId = createdByUserId,
             CreatedAtUtc = now,
@@ -130,7 +121,6 @@ public sealed class CustomReportLayout
             Id = Guid.NewGuid(),
             Name = ValidateName(name),
             LayoutJson = NormalizeLayoutJson(layoutJson),
-            Scope = BudgetScope.Personal,
             OwnerUserId = ownerUserId,
             CreatedByUserId = ownerUserId,
             CreatedAtUtc = now,

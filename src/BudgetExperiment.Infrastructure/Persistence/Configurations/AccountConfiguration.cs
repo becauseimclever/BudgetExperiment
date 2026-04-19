@@ -56,12 +56,7 @@ internal sealed class AccountConfiguration : IEntityTypeConfiguration<Account>
         builder.Property(a => a.UpdatedAtUtc)
             .IsRequired();
 
-        // Scope properties for multi-user support
-        builder.Property(a => a.Scope)
-            .IsRequired()
-            .HasConversion<string>()
-            .HasMaxLength(20);
-
+        // Ownership properties for multi-user support
         builder.Property(a => a.OwnerUserId);
 
         builder.Property(a => a.CreatedByUserId)
@@ -81,8 +76,7 @@ internal sealed class AccountConfiguration : IEntityTypeConfiguration<Account>
         builder.HasIndex(a => a.Name);
         builder.HasIndex(a => a.Type);
 
-        // Indexes for scope filtering
-        builder.HasIndex(a => a.Scope);
+        // Indexes for ownership filtering
         builder.HasIndex(a => a.OwnerUserId);
     }
 }

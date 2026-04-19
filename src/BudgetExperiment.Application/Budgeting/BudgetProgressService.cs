@@ -6,7 +6,6 @@ using BudgetExperiment.Contracts.Dtos;
 using BudgetExperiment.Domain;
 using BudgetExperiment.Domain.Identity;
 using BudgetExperiment.Domain.Settings;
-using BudgetExperiment.Shared.Budgeting;
 
 namespace BudgetExperiment.Application.Budgeting;
 
@@ -19,7 +18,6 @@ public sealed class BudgetProgressService : IBudgetProgressService
     private readonly IBudgetCategoryRepository _categoryRepository;
     private readonly ITransactionRepository _transactionRepository;
     private readonly ICurrencyProvider _currencyProvider;
-    private readonly IUserContext _userContext;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BudgetProgressService"/> class.
@@ -40,7 +38,7 @@ public sealed class BudgetProgressService : IBudgetProgressService
         _categoryRepository = categoryRepository;
         _transactionRepository = transactionRepository;
         _currencyProvider = currencyProvider;
-        _userContext = userContext;
+        _ = userContext;
     }
 
     /// <inheritdoc/>
@@ -91,11 +89,9 @@ public sealed class BudgetProgressService : IBudgetProgressService
 
         // Create a lookup of goals by category ID
         var goalByCategoryId = goals.ToDictionary(g => g.CategoryId);
-        var scope = _userContext.CurrentScope ?? BudgetScope.Shared;
         var groupedSpendingTask = _transactionRepository.GetSpendingByCategoriesAsync(
             year,
             month,
-            scope,
             cancellationToken);
         var usedGroupedQuery = groupedSpendingTask is not null;
         var spendingByCategory = groupedSpendingTask is null
