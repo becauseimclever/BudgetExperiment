@@ -97,7 +97,7 @@ jobs:
         if: always()
         with:
           name: test-results
-          path: ./TestResults/**/*.trx
+          path: TestResults/
           retention-days: 7
 
       - name: Upload coverage report
@@ -113,7 +113,7 @@ jobs:
         if: always()
         with:
           name: Test Results
-          path: ./TestResults/**/*.trx
+          path: TestResults/
           reporter: dotnet-trx
 
   # Placeholder for E2E / performance tests (Feature 059 Phase 4).
@@ -157,5 +157,5 @@ jobs:
   #       if: always()
   #       with:
 #         name: performance-results
-#         path: ./TestResults/**/*.trx
+#         path: TestResults/
 #         retention-days: 30
