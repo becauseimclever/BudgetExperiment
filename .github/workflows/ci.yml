@@ -113,9 +113,9 @@ jobs:
         if: always()
         with:
           name: Test Results
-          path: TestResults/
+          path: TestResults/**/*.trx
           reporter: dotnet-trx
-
+          fail-on-empty: false
   # Placeholder for E2E / performance tests (Feature 059 Phase 4).
   # Requires a running environment (demo or ephemeral) and Playwright browsers.
   # Uncomment and configure when ready.
