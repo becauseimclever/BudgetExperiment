@@ -83,6 +83,71 @@ public sealed class DataHealthControllerTests : IClassFixture<CustomWebApplicati
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
+    /// <summary>
+    /// GET /api/v1/datahealth/outliers returns 200.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetOutliersAsync_Returns_200()
+    {
+        // Act
+        var response = await _client.GetAsync("/api/v1/datahealth/outliers");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var outliers = await response.Content.ReadFromJsonAsync<IReadOnlyList<AmountOutlierDto>>();
+        Assert.NotNull(outliers);
+    }
+
+    /// <summary>
+    /// GET /api/v1/datahealth/date-gaps returns 200.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetDateGapsAsync_Returns_200()
+    {
+        // Act
+        var response = await _client.GetAsync("/api/v1/datahealth/date-gaps");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var gaps = await response.Content.ReadFromJsonAsync<IReadOnlyList<DateGapDto>>();
+        Assert.NotNull(gaps);
+    }
+
+    /// <summary>
+    /// GET /api/v1/datahealth/uncategorized returns 200.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetUncategorizedAsync_Returns_200()
+    {
+        // Act
+        var response = await _client.GetAsync("/api/v1/datahealth/uncategorized");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var summary = await response.Content.ReadFromJsonAsync<UncategorizedSummaryDto>();
+        Assert.NotNull(summary);
+    }
+
+    /// <summary>
+    /// POST /api/v1/datahealth/dismiss-outlier/{transactionId} returns 204.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task DismissOutlierAsync_Returns_204()
+    {
+        // Arrange - using a valid GUID even if transaction doesn't exist (service handles gracefully)
+        var transactionId = Guid.NewGuid();
+
+        // Act
+        var response = await _client.PostAsync($"/api/v1/datahealth/dismiss-outlier/{transactionId}", null);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
     private async Task<AccountDto> CreateTestAccountAsync()
     {
         var req = new AccountCreateDto

@@ -76,6 +76,31 @@ public class BudgetProgressServiceTests
     }
 
     [Fact]
+    public async Task GetProgressAsync_Returns_Null_When_Category_Not_Found()
+    {
+        // Arrange
+        var categoryId = Guid.NewGuid();
+        var goal = BudgetGoal.Create(categoryId, 2026, 1, MoneyValue.Create("USD", 500m));
+        var goalRepo = new Mock<IBudgetGoalRepository>();
+        goalRepo.Setup(r => r.GetByCategoryAndMonthAsync(categoryId, 2026, 1, default)).ReturnsAsync(goal);
+        var categoryRepo = new Mock<IBudgetCategoryRepository>();
+        categoryRepo.Setup(r => r.GetByIdAsync(categoryId, default)).ReturnsAsync((BudgetCategory?)null);
+        var transactionRepo = new Mock<ITransactionRepository>();
+        var service = new BudgetProgressService(
+            goalRepo.Object,
+            categoryRepo.Object,
+            transactionRepo.Object,
+            DefaultCurrencyProvider.Object,
+            DefaultUserContext.Object);
+
+        // Act
+        var result = await service.GetProgressAsync(categoryId, 2026, 1);
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    [Fact]
     public async Task GetProgressAsync_Returns_Warning_Status_When_Over_80_Percent()
     {
         // Arrange

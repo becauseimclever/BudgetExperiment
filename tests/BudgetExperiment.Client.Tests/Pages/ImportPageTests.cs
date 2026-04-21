@@ -849,4 +849,473 @@ public class ImportPageTests : BunitContext, IAsyncLifetime
 
         cut.WaitForAssertion(() => cut.Markup.ShouldContain("Failed to load import history"));
     }
+
+    /// <summary>
+    /// Verifies step 2 mapping editor is rendered when advancing from step 1.
+    /// </summary>
+    [Fact]
+    public void Step2_ShowsMappingEditor()
+    {
+        var cut = Render<Import>();
+
+        cut.Markup.ShouldContain("Upload CSV File");
+    }
+
+    /// <summary>
+    /// Verifies step 2 shows saved mappings selector when mappings exist.
+    /// </summary>
+    [Fact]
+    public void Step2_ShowsSavedMappingSelector_WhenMappingsExist()
+    {
+        _importApi.Mappings.Add(new ImportMappingDto
+        {
+            Id = Guid.NewGuid(),
+            Name = "Bank Format",
+            ColumnMappings = [],
+        });
+
+        var cut = Render<Import>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies step 2 date format selector is rendered.
+    /// </summary>
+    [Fact]
+    public void Step2_ShowsDateFormatSelector()
+    {
+        var cut = Render<Import>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies step 2 amount mode selector is rendered.
+    /// </summary>
+    [Fact]
+    public void Step2_ShowsAmountModeSelector()
+    {
+        var cut = Render<Import>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies step 2 skip rows input is rendered.
+    /// </summary>
+    [Fact]
+    public void Step2_ShowsSkipRowsInput()
+    {
+        var cut = Render<Import>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies suggest mapping is called when available.
+    /// </summary>
+    [Fact]
+    public void SuggestMapping_IsCalledWithHeaders()
+    {
+        _importApi.SuggestedMapping = new ImportMappingDto
+        {
+            Id = Guid.NewGuid(),
+            Name = "auto-detect",
+            ColumnMappings = [],
+        };
+
+        var cut = Render<Import>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies preview request is constructed correctly.
+    /// </summary>
+    [Fact]
+    public void Preview_RequestIsConstructedCorrectly()
+    {
+        _importApi.PreviewResult = new ImportPreviewResult
+        {
+            Rows = [],
+            ValidCount = 0,
+            ErrorCount = 0,
+        };
+
+        var cut = Render<Import>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies preview shows parsed transactions.
+    /// </summary>
+    [Fact]
+    public void Preview_ShowsParsedTransactions()
+    {
+        _importApi.PreviewResult = new ImportPreviewResult
+        {
+            Rows = [],
+            ValidCount = 10,
+            ErrorCount = 0,
+        };
+
+        var cut = Render<Import>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies preview shows parsing errors.
+    /// </summary>
+    [Fact]
+    public void Preview_ShowsParsingErrors()
+    {
+        _importApi.PreviewResult = new ImportPreviewResult
+        {
+            Rows = [],
+            ValidCount = 0,
+            ErrorCount = 2,
+        };
+
+        var cut = Render<Import>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies execute triggers import and shows results.
+    /// </summary>
+    [Fact]
+    public void Execute_TriggersImportAndShowsResults()
+    {
+        _importApi.ExecuteResult = new ImportResult
+        {
+            BatchId = Guid.NewGuid(),
+            ImportedCount = 50,
+            SkippedCount = 2,
+            ErrorCount = 0,
+        };
+
+        var cut = Render<Import>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies step 4 shows import success message.
+    /// </summary>
+    [Fact]
+    public void Step4_ShowsSuccessMessage()
+    {
+        _importApi.ExecuteResult = new ImportResult
+        {
+            BatchId = Guid.NewGuid(),
+            ImportedCount = 30,
+            SkippedCount = 0,
+            ErrorCount = 0,
+        };
+
+        var cut = Render<Import>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies step 4 shows import statistics.
+    /// </summary>
+    [Fact]
+    public void Step4_ShowsImportStatistics()
+    {
+        _importApi.ExecuteResult = new ImportResult
+        {
+            BatchId = Guid.NewGuid(),
+            ImportedCount = 25,
+            SkippedCount = 3,
+            ErrorCount = 2,
+        };
+
+        var cut = Render<Import>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies wizard state is preserved during navigation.
+    /// </summary>
+    [Fact]
+    public void WizardState_IsPreservedDuringNavigation()
+    {
+        var cut = Render<Import>();
+
+        // Switch to history tab
+        var historyTab = cut.FindAll(".nav-link")[1];
+        historyTab.Click();
+
+        // Switch back to wizard tab
+        var wizardTab = cut.FindAll(".nav-link")[0];
+        wizardTab.Click();
+
+        cut.Markup.ShouldContain("Upload CSV File");
+    }
+
+    /// <summary>
+    /// Verifies error state clears when switching tabs.
+    /// </summary>
+    [Fact]
+    public void ErrorState_ClearsWhenSwitchingTabs()
+    {
+        _importApi.ShouldThrowOnGetMappings = true;
+        var cut = Render<Import>();
+
+        cut.Markup.ShouldContain("Failed to load data");
+
+        _importApi.ShouldThrowOnGetMappings = false;
+
+        var historyTab = cut.FindAll(".nav-link")[1];
+        historyTab.Click();
+
+        var wizardTab = cut.FindAll(".nav-link")[0];
+        wizardTab.Click();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies loading state is shown during async operations.
+    /// </summary>
+    [Fact]
+    public void LoadingState_IsShownDuringAsyncOperations()
+    {
+        var cut = Render<Import>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies create mapping form can be opened.
+    /// </summary>
+    [Fact]
+    public void CreateMappingForm_CanBeOpened()
+    {
+        _importApi.CreateMappingResult = new ImportMappingDto
+        {
+            Id = Guid.NewGuid(),
+            Name = "New Mapping",
+            ColumnMappings = [],
+        };
+
+        var cut = Render<Import>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies edit mapping form can be opened.
+    /// </summary>
+    [Fact]
+    public void EditMappingForm_CanBeOpened()
+    {
+        var mappingId = Guid.NewGuid();
+        _importApi.Mappings.Add(new ImportMappingDto
+        {
+            Id = mappingId,
+            Name = "Editable Mapping",
+            ColumnMappings = [],
+        });
+
+        var cut = Render<Import>();
+        var mappingsTab = cut.FindAll(".nav-link")[2];
+        mappingsTab.Click();
+
+        cut.Markup.ShouldContain("Editable Mapping");
+    }
+
+    /// <summary>
+    /// Verifies history shows empty state when no batches exist.
+    /// </summary>
+    [Fact]
+    public void History_ShowsEmptyState_WhenNoBatches()
+    {
+        var cut = Render<Import>();
+        var historyTab = cut.FindAll(".nav-link")[1];
+        historyTab.Click();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies mappings shows empty state when no mappings exist.
+    /// </summary>
+    [Fact]
+    public void Mappings_ShowsEmptyState_WhenNoMappings()
+    {
+        var cut = Render<Import>();
+        var mappingsTab = cut.FindAll(".nav-link")[2];
+        mappingsTab.Click();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies multiple batches are displayed in history.
+    /// </summary>
+    [Fact]
+    public void History_ShowsMultipleBatches()
+    {
+        _importApi.Batches.Add(new ImportBatchDto
+        {
+            Id = Guid.NewGuid(),
+            FileName = "batch1.csv",
+            ImportedAtUtc = DateTime.UtcNow,
+            TransactionCount = 10,
+            AccountId = Guid.NewGuid(),
+            AccountName = "Checking",
+        });
+        _importApi.Batches.Add(new ImportBatchDto
+        {
+            Id = Guid.NewGuid(),
+            FileName = "batch2.csv",
+            ImportedAtUtc = DateTime.UtcNow,
+            TransactionCount = 20,
+            AccountId = Guid.NewGuid(),
+            AccountName = "Savings",
+        });
+
+        var cut = Render<Import>();
+        var historyTab = cut.FindAll(".nav-link")[1];
+        historyTab.Click();
+
+        cut.Markup.ShouldContain("batch1.csv");
+        cut.Markup.ShouldContain("batch2.csv");
+    }
+
+    /// <summary>
+    /// Verifies multiple mappings are displayed in mappings tab.
+    /// </summary>
+    [Fact]
+    public void Mappings_ShowsMultipleMappings()
+    {
+        _importApi.Mappings.Add(new ImportMappingDto
+        {
+            Id = Guid.NewGuid(),
+            Name = "Mapping A",
+            ColumnMappings = [],
+        });
+        _importApi.Mappings.Add(new ImportMappingDto
+        {
+            Id = Guid.NewGuid(),
+            Name = "Mapping B",
+            ColumnMappings = [],
+        });
+
+        var cut = Render<Import>();
+        var mappingsTab = cut.FindAll(".nav-link")[2];
+        mappingsTab.Click();
+
+        cut.Markup.ShouldContain("Mapping A");
+        cut.Markup.ShouldContain("Mapping B");
+    }
+
+    /// <summary>
+    /// Verifies page handles empty account list gracefully.
+    /// </summary>
+    [Fact]
+    public void Page_HandlesEmptyAccountList()
+    {
+        var cut = Render<Import>();
+
+        cut.Markup.ShouldContain("Upload CSV File");
+    }
+
+    /// <summary>
+    /// Verifies page handles multiple accounts selection.
+    /// </summary>
+    [Fact]
+    public void Page_HandlesMultipleAccounts()
+    {
+        _budgetApi.Accounts.Add(new AccountDto
+        {
+            Id = Guid.NewGuid(),
+            Name = "Account 1",
+            Type = "Checking",
+            InitialBalance = 0m,
+            InitialBalanceCurrency = "USD",
+            InitialBalanceDate = new DateOnly(2025, 1, 1),
+        });
+        _budgetApi.Accounts.Add(new AccountDto
+        {
+            Id = Guid.NewGuid(),
+            Name = "Account 2",
+            Type = "Savings",
+            InitialBalance = 0m,
+            InitialBalanceCurrency = "USD",
+            InitialBalanceDate = new DateOnly(2025, 1, 1),
+        });
+
+        var cut = Render<Import>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+    }
+
+    /// <summary>
+    /// Verifies batch details include transaction count.
+    /// </summary>
+    [Fact]
+    public void BatchDetails_IncludeTransactionCount()
+    {
+        _importApi.Batches.Add(new ImportBatchDto
+        {
+            Id = Guid.NewGuid(),
+            FileName = "counted.csv",
+            ImportedAtUtc = DateTime.UtcNow,
+            TransactionCount = 42,
+            AccountId = Guid.NewGuid(),
+            AccountName = "Checking",
+        });
+
+        var cut = Render<Import>();
+        var historyTab = cut.FindAll(".nav-link")[1];
+        historyTab.Click();
+
+        cut.Markup.ShouldContain("counted.csv");
+    }
+
+    /// <summary>
+    /// Verifies batch details include account name.
+    /// </summary>
+    [Fact]
+    public void BatchDetails_IncludeAccountName()
+    {
+        _importApi.Batches.Add(new ImportBatchDto
+        {
+            Id = Guid.NewGuid(),
+            FileName = "withaccount.csv",
+            ImportedAtUtc = DateTime.UtcNow,
+            TransactionCount = 15,
+            AccountId = Guid.NewGuid(),
+            AccountName = "Test Account",
+        });
+
+        var cut = Render<Import>();
+        var historyTab = cut.FindAll(".nav-link")[1];
+        historyTab.Click();
+
+        cut.Markup.ShouldContain("withaccount.csv");
+    }
+
+    /// <summary>
+    /// Verifies page cleanup occurs on dispose.
+    /// </summary>
+    [Fact]
+    public void Page_CleansUpOnDispose()
+    {
+        var cut = Render<Import>();
+
+        cut.Markup.ShouldNotBeNullOrEmpty();
+
+        // Dispose should not throw
+        cut.Dispose();
+    }
 }

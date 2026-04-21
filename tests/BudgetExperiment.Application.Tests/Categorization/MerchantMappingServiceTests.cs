@@ -50,6 +50,19 @@ public class MerchantMappingServiceTests
         Assert.Null(result);
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task GetMappingAsync_WithNullOrWhitespaceDescription_ReturnsNull(string? description)
+    {
+        // Act
+        var result = await _service.GetMappingAsync(TestOwnerId, description!, CancellationToken.None);
+
+        // Assert
+        Assert.Null(result);
+    }
+
     [Fact]
     public async Task GetMappingAsync_Learned_Mapping_Takes_Precedence_Over_Default()
     {

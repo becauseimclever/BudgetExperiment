@@ -356,6 +356,41 @@ public sealed class ImportControllerTests : IClassFixture<CustomWebApplicationFa
     }
 
     /// <summary>
+    /// DELETE /api/v1/import/batches/{id} returns 200 with deleted count on success.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task DeleteBatch_Returns_200_WithDeletedCount()
+    {
+        // Arrange - create account and import
+        var accountRequest = new AccountCreateDto { Name = "Delete Test Account", Type = "Checking" };
+        var accountResponse = await _client.PostAsJsonAsync("/api/v1/accounts", accountRequest);
+        var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
+
+        var executeRequest = new ImportExecuteRequest
+        {
+            AccountId = account!.Id,
+            FileName = "delete-test.csv",
+            Transactions = new List<ImportTransactionData>
+            {
+                new ImportTransactionData { Date = DateOnly.FromDateTime(DateTime.UtcNow), Description = "Test", Amount = -10.00m },
+            },
+        };
+
+        var executeResponse = await _client.PostAsJsonAsync("/api/v1/import/execute", executeRequest);
+        var importResult = await executeResponse.Content.ReadFromJsonAsync<ImportResult>();
+
+        // Act - delete the batch
+        var deleteResponse = await _client.DeleteAsync($"/api/v1/import/batches/{importResult!.BatchId}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, deleteResponse.StatusCode);
+        var deleteResult = await deleteResponse.Content.ReadFromJsonAsync<DeleteBatchResult>();
+        Assert.NotNull(deleteResult);
+        Assert.Equal(1, deleteResult.DeletedCount);
+    }
+
+    /// <summary>
     /// POST /api/v1/import/parse endpoint has been removed (Slice 4 — server-side parsing eliminated).
     /// Endpoint returns 404 (Not Found) or 405 (Method Not Allowed) depending on routing.
     /// </summary>
