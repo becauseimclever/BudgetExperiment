@@ -86,9 +86,6 @@ else
     });
 }
 
-// Register the ScopeMessageHandler as transient (DelegatingHandler instances should be transient)
-builder.Services.AddTransient<ScopeMessageHandler>();
-
 // Register ApiErrorContext (scoped) and ProblemDetailsHandler for traceId extraction from ProblemDetails
 builder.Services.AddScoped<IApiErrorContext, ApiErrorContext>();
 builder.Services.AddTransient<ProblemDetailsHandler>();
@@ -99,8 +96,7 @@ if (isAuthOff)
     builder.Services.AddHttpClient(
         "BudgetApi",
         client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
-        .AddHttpMessageHandler<ProblemDetailsHandler>()
-        .AddHttpMessageHandler<ScopeMessageHandler>();
+        .AddHttpMessageHandler<ProblemDetailsHandler>();
 }
 else
 {
@@ -108,14 +104,12 @@ else
     builder.Services.AddTransient<TokenRefreshHandler>();
 
     // Configure HttpClient with authorization message handler to include auth token
-    // and scope message handler to include X-Budget-Scope header
     builder.Services.AddHttpClient(
         "BudgetApi",
         client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
         .AddHttpMessageHandler<ProblemDetailsHandler>()
         .AddHttpMessageHandler<TokenRefreshHandler>()
-        .AddHttpMessageHandler<BaseAddressAuthorizationMessageHandler>()
-        .AddHttpMessageHandler<ScopeMessageHandler>();
+        .AddHttpMessageHandler<BaseAddressAuthorizationMessageHandler>();
 }
 
 // Provide scoped HttpClient for injection (uses BudgetApi named client)
