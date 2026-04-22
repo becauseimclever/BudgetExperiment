@@ -7,6 +7,14 @@ namespace BudgetExperiment.Domain.Common;
 public sealed record MoneyValue
 {
     /// <summary>Initializes a new instance of the <see cref="MoneyValue"/> class.</summary>
+    /// <remarks>Parameterless constructor for EF Core materialization.</remarks>
+    private MoneyValue()
+    {
+        this.Currency = string.Empty;
+        this.Amount = 0m;
+    }
+
+    /// <summary>Initializes a new instance of the <see cref="MoneyValue"/> class.</summary>
     /// <param name="currency">Currency code.</param>
     /// <param name="amount">Amount.</param>
     private MoneyValue(string currency, decimal amount)

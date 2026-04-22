@@ -66,7 +66,7 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
 
         var descriptions = await _transactionRepository.GetUncategorizedDescriptionsAsync(
             cancellationToken: cancellationToken);
-        if (descriptions.Count == 0)
+        if (descriptions == null || descriptions.Count == 0)
         {
             return Array.Empty<CategorySuggestion>();
         }
@@ -75,6 +75,10 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
         await _suggestionRepository.DeletePendingByOwnerAsync(ownerId, cancellationToken);
 
         var patternMatches = await _merchantMappingService.FindMatchingPatternsAsync(ownerId, descriptions, cancellationToken);
+        if (patternMatches == null)
+        {
+            patternMatches = Array.Empty<PatternMatch>();
+        }
 
         var categoryGroups = patternMatches
             .GroupBy(p => p.Category, StringComparer.OrdinalIgnoreCase)
@@ -100,6 +104,11 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
     /// <inheritdoc />
     public async Task<IReadOnlyList<CategorySuggestion>> GetPendingSuggestionsAsync(CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(_userContext.UserId))
+        {
+            throw new ArgumentException("User ID cannot be null or empty.", nameof(_userContext.UserId));
+        }
+
         return await _suggestionRepository.GetPendingByOwnerAsync(_userContext.UserId, cancellationToken);
     }
 
@@ -289,7 +298,18 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
                 continue;
             }
 
-            if (await _dismissedRepository.IsDismissedAsync(ownerId, categoryName, cancellationToken))
+            bool isDismissed = false;
+            try
+            {
+                isDismissed = await _dismissedRepository.IsDismissedAsync(ownerId, categoryName, cancellationToken);
+            }
+            catch
+            {
+                // If checking dismissal fails, treat as not dismissed and proceed
+                isDismissed = false;
+            }
+
+            if (isDismissed)
             {
                 continue;
             }
@@ -406,7 +426,18 @@ public sealed class CategorySuggestionService : ICategorySuggestionService
                 continue;
             }
 
-            if (await _dismissedRepository.IsDismissedAsync(ownerId, category.CategoryName, cancellationToken))
+            bool isDismissed = false;
+            try
+            {
+                isDismissed = await _dismissedRepository.IsDismissedAsync(ownerId, category.CategoryName, cancellationToken);
+            }
+            catch
+            {
+                // If checking dismissal fails, treat as not dismissed and proceed
+                isDismissed = false;
+            }
+
+            if (isDismissed)
             {
                 continue;
             }

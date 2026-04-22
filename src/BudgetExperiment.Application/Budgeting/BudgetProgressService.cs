@@ -149,7 +149,8 @@ public sealed class BudgetProgressService : IBudgetProgressService
         var categoriesNoBudgetSet = categoryProgress.Count(p => p.Status == nameof(BudgetStatus.NoBudgetSet));
 
         // Calculate overall percent used
-        var overallPercentUsed = totalBudgeted.Amount > 0
+        // Handle both positive and negative budgets (e.g., for income tracking)
+        var overallPercentUsed = totalBudgeted.Amount != 0
             ? Math.Round((totalSpent.Amount / totalBudgeted.Amount) * 100m, 0, MidpointRounding.AwayFromZero)
             : 0m;
 

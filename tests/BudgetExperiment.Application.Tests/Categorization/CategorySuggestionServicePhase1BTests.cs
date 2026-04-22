@@ -277,6 +277,9 @@ public class CategorySuggestionServicePhase1BTests
         mockTransactionRepo.Setup(r => r.GetUncategorizedDescriptionsAsync(default))
             .ReturnsAsync(new[] { "WALMART SUPERCENTER" });
 
+        mockDismissedRepo.Setup(r => r.IsDismissedAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
         mockMerchantMapping.Setup(m => m.FindMatchingPatternsAsync(userId, It.IsAny<IReadOnlyList<string>>(), default))
             .ReturnsAsync(new[]
             {
@@ -347,6 +350,9 @@ public class CategorySuggestionServicePhase1BTests
         mockCategoryRepo.Setup(r => r.GetActiveAsync(default))
             .ReturnsAsync(Array.Empty<BudgetCategory>());
 
+        mockDismissedRepo.Setup(r => r.IsDismissedAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+
         mockMerchantMapping.Setup(m => m.FindMatchingPatternsAsync(userId, It.IsAny<IReadOnlyList<string>>(), default))
             .ReturnsAsync(new[]
             {
@@ -412,6 +418,9 @@ public class CategorySuggestionServicePhase1BTests
 
         mockCategoryRepo.Setup(r => r.GetActiveAsync(default))
             .ReturnsAsync(Array.Empty<BudgetCategory>());
+
+        mockDismissedRepo.Setup(r => r.IsDismissedAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
 
         mockMerchantMapping.Setup(m => m.FindMatchingPatternsAsync(userId, It.IsAny<IReadOnlyList<string>>(), default))
             .ReturnsAsync(new[]

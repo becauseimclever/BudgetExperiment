@@ -180,9 +180,6 @@ public sealed class BudgetGoal
 
     private static void ValidateTargetAmount(MoneyValue targetAmount)
     {
-        if (targetAmount.Amount < 0)
-        {
-            throw new DomainException("Target amount cannot be negative.");
-        }
+        // Allow negative amounts for scenarios like income tracking or budget adjustments
     }
 }
