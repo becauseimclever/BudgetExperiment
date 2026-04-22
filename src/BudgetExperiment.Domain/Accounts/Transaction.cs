@@ -288,7 +288,7 @@ public sealed class Transaction
             throw new DomainException("Amount is required.");
         }
 
-        this.Amount = amount;
+        this.Amount = MoneyValue.Create(amount.Currency, amount.Amount);
         this.UpdatedAtUtc = DateTime.UtcNow;
     }
 
@@ -496,7 +496,7 @@ public sealed class Transaction
         {
             Id = id,
             AccountId = accountId,
-            Amount = amount,
+            Amount = MoneyValue.Create(amount.Currency, amount.Amount),
             Date = date,
             Description = description,
             CategoryId = categoryId,

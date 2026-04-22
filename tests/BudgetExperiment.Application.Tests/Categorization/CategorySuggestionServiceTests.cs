@@ -102,7 +102,7 @@ public class CategorySuggestionServiceTests
             .ReturnsAsync(false);
 
         _merchantMappingServiceMock
-            .Setup(m => m.FindMatchingPatternsAsync(It.IsAny<string>(), It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
+            .Setup(m => m.FindMatchingPatternsAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<PatternMatch>
             {
                 new PatternMatch
@@ -161,7 +161,7 @@ public class CategorySuggestionServiceTests
             .ReturnsAsync(false);
 
         _merchantMappingServiceMock
-            .Setup(m => m.FindMatchingPatternsAsync(It.IsAny<string>(), It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
+            .Setup(m => m.FindMatchingPatternsAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<PatternMatch>
             {
                 new PatternMatch { Pattern = "netflix", Category = "Entertainment", Icon = "movie", TransactionCount = 1 },
@@ -202,7 +202,7 @@ public class CategorySuggestionServiceTests
             .ReturnsAsync(true);
 
         _merchantMappingServiceMock
-            .Setup(m => m.FindMatchingPatternsAsync(It.IsAny<string>(), It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
+            .Setup(m => m.FindMatchingPatternsAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<PatternMatch>
             {
                 new PatternMatch { Pattern = "netflix", Category = "Entertainment", Icon = "movie", TransactionCount = 1 },
@@ -238,7 +238,7 @@ public class CategorySuggestionServiceTests
             .ReturnsAsync(false);
 
         _merchantMappingServiceMock
-            .Setup(m => m.FindMatchingPatternsAsync(It.IsAny<string>(), It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
+            .Setup(m => m.FindMatchingPatternsAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<PatternMatch>
             {
                 new PatternMatch { Pattern = "amazon", Category = "Shopping", Icon = "shopping-cart", TransactionCount = 1 },

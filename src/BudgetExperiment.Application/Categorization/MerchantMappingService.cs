@@ -83,7 +83,7 @@ public sealed class MerchantMappingService : IMerchantMappingService
     /// <inheritdoc />
     public async Task<IReadOnlyList<PatternMatch>> FindMatchingPatternsAsync(
         string ownerId,
-        IEnumerable<string> descriptions,
+        IReadOnlyList<string> descriptions,
         CancellationToken cancellationToken = default)
     {
         var descriptionList = descriptions.ToList();

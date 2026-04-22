@@ -420,14 +420,14 @@ public class CategorySuggestionServiceAiDiscoveryTests
     private void SetupNoPatternMatches()
     {
         _merchantMappingServiceMock
-            .Setup(m => m.FindMatchingPatternsAsync(It.IsAny<string>(), It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
+            .Setup(m => m.FindMatchingPatternsAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<PatternMatch>());
     }
 
     private void SetupPatternMatches(params PatternMatch[] matches)
     {
         _merchantMappingServiceMock
-            .Setup(m => m.FindMatchingPatternsAsync(It.IsAny<string>(), It.IsAny<IEnumerable<string>>(), It.IsAny<CancellationToken>()))
+            .Setup(m => m.FindMatchingPatternsAsync(It.IsAny<string>(), It.IsAny<IReadOnlyList<string>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(matches.ToList());
     }
 

@@ -29,7 +29,7 @@ public interface IMerchantMappingService
     /// <returns>List of pattern matches grouped by category.</returns>
     Task<IReadOnlyList<PatternMatch>> FindMatchingPatternsAsync(
         string ownerId,
-        IEnumerable<string> descriptions,
+        IReadOnlyList<string> descriptions,
         CancellationToken cancellationToken = default);
 
     /// <summary>

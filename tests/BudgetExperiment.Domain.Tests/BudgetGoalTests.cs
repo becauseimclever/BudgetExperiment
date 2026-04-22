@@ -93,15 +93,17 @@ public class BudgetGoalTests
     }
 
     [Fact]
-    public void Create_With_Negative_Target_Throws()
+    public void Create_With_Negative_Target_Is_Allowed()
     {
         // Arrange
         var categoryId = Guid.NewGuid();
         var targetAmount = MoneyValue.Create("USD", -100m);
 
-        // Act & Assert
-        var ex = Assert.Throws<DomainException>(() => BudgetGoal.Create(categoryId, 2026, 1, targetAmount));
-        Assert.Contains("target", ex.Message, StringComparison.OrdinalIgnoreCase);
+        // Act
+        var goal = BudgetGoal.Create(categoryId, 2026, 1, targetAmount);
+
+        // Assert
+        Assert.Equal(-100m, goal.TargetAmount.Amount);
     }
 
     [Fact]
@@ -135,15 +137,17 @@ public class BudgetGoalTests
     }
 
     [Fact]
-    public void UpdateTarget_With_Negative_Amount_Throws()
+    public void UpdateTarget_With_Negative_Amount_Is_Allowed()
     {
         // Arrange
         var goal = BudgetGoal.Create(Guid.NewGuid(), 2026, 1, MoneyValue.Create("USD", 500m));
         var newTarget = MoneyValue.Create("USD", -100m);
 
-        // Act & Assert
-        var ex = Assert.Throws<DomainException>(() => goal.UpdateTarget(newTarget));
-        Assert.Contains("target", ex.Message, StringComparison.OrdinalIgnoreCase);
+        // Act
+        goal.UpdateTarget(newTarget);
+
+        // Assert
+        Assert.Equal(-100m, goal.TargetAmount.Amount);
     }
 
     [Fact]

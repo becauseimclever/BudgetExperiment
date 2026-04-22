@@ -72,7 +72,7 @@ public class CategorySuggestionServicePhase1BTests
         var mockScorer = new Mock<ICategorySuggestionScorer>();
 
         mockUserContext.Setup(u => u.UserId).Returns(userId);
-        mockTransactionRepo.Setup(r => r.GetUncategorizedDescriptionsAsync(default))
+        mockTransactionRepo.Setup(r => r.GetUncategorizedDescriptionsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Array.Empty<string>());
         mockSuggestionRepo.Setup(r => r.GetPendingByOwnerAsync(userId, default))
             .ReturnsAsync(Array.Empty<CategorySuggestion>());
@@ -274,7 +274,7 @@ public class CategorySuggestionServicePhase1BTests
                 BudgetCategory.Create("Groceries", CategoryType.Expense),
             });
 
-        mockTransactionRepo.Setup(r => r.GetUncategorizedDescriptionsAsync(default))
+        mockTransactionRepo.Setup(r => r.GetUncategorizedDescriptionsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { "WALMART SUPERCENTER" });
 
         mockDismissedRepo.Setup(r => r.IsDismissedAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -344,7 +344,7 @@ public class CategorySuggestionServicePhase1BTests
 
         mockUserContext.Setup(u => u.UserId).Returns(userId);
 
-        mockTransactionRepo.Setup(r => r.GetUncategorizedDescriptionsAsync(default))
+        mockTransactionRepo.Setup(r => r.GetUncategorizedDescriptionsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { "TARGET STORE 1234", "TARGET #5678" });
 
         mockCategoryRepo.Setup(r => r.GetActiveAsync(default))
@@ -413,7 +413,7 @@ public class CategorySuggestionServicePhase1BTests
 
         mockUserContext.Setup(u => u.UserId).Returns(userId);
 
-        mockTransactionRepo.Setup(r => r.GetUncategorizedDescriptionsAsync(default))
+        mockTransactionRepo.Setup(r => r.GetUncategorizedDescriptionsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { "  starbucks  ", "STARBUCKS", "Starbucks Coffee" });
 
         mockCategoryRepo.Setup(r => r.GetActiveAsync(default))
@@ -482,7 +482,7 @@ public class CategorySuggestionServicePhase1BTests
 
         mockUserContext.Setup(u => u.UserId).Returns(userId);
 
-        mockTransactionRepo.Setup(r => r.GetUncategorizedDescriptionsAsync(default))
+        mockTransactionRepo.Setup(r => r.GetUncategorizedDescriptionsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new[] { "TEST MERCHANT" });
 
         mockCategoryRepo.Setup(r => r.GetActiveAsync(default))
