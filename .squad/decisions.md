@@ -3312,3 +3312,445 @@ Targeted client slice test filter: Category!=Performance&FullyQualifiedName~Acco
 **Status:** ✅ Slice 1 approved for merge. Phase 1 UI simplification complete.
 
 **Next:** Slice 2 (API layer removal) can proceed with clean foundation. Scope header, middleware, and DTOs targeted for removal in upstream slices.
+
+---
+
+## Feature 127: Code Coverage Beyond 80% — Team Analysis & Roadmap
+
+**Date:** 2026-04-21  
+**Status:** APPROVED (with Vic's mandatory guardrails)  
+**Team:** Lucius, Alfred, Barbara, Vic  
+**Decision Owner:** Alfred (Lead), with critical inputs from Barbara (Tester), Lucius (High-ROI targets), Vic (Audit & guardrails)
+
+---
+
+### Executive Summary
+
+**Lucius's Analysis (High-ROI Targets):**
+Api coverage at 77.2% and Application at 90.3% reveal missing error path tests (validation, concurrency conflicts, exception handling). Identified 20 high-ROI tests (10 Api, 10 Application) focusing on concurrency integrity (ETag conflicts) and input validation boundaries. Expected gain: ~4% (79.7% Api, 91.8% Application). Tests avoid heavy mocking; most are "Simple" complexity with 4-5 lines/test coverage.
+
+**Alfred's Roadmap (Three-Phase Strategy):**
+Solution at 78.4% requires surgical three-phase approach (Application→Api→Client) to reach 80.5% within 2-3 sprints (~50 high-ROI tests). Architecture review confirms yield differences reflect layer responsibilities (Service orchestration: 77.8 lines/test; Controllers: 26.4 lines/test; Components: 46.2 lines/test). Phase order (Application→Api→Client) maximizes EffortIndex; module-specific targets prevent diminishing returns (Application 85%→90%, Api 77.2%→80%, Client 68.1%→70%).
+
+**Barbara's Analysis (Client Ceiling):**
+Client at 68.1% with 2,847 tests shows 70% is appropriate ceiling due to markup saturation (182 .razor files, minimal testable logic). High-impact opportunities: Tier 1 (DataHealthViewModel, RecurringChargeSuggestionsViewModel, Calendar, StatementReconciliation, ReconciliationHistory — ~30 tests, 250-350 lines, 71-72% total). Tier 2 quick wins (ReportsIndex, ReconciliationDetail, KaizenDashboardView — 73-74%). Tier 3 (LocationReportPage, Transactions) deferred. ComponentShowcase (0% coverage, pure demo UI) explicitly excluded from testing.
+
+**Vic's Audit (Sustainability with Guardrails):**
+Coverage strategy is **defensible but fragile**. Current critical gaps: Application at 35% is **project-threatening** (should be 85%+), Domain at 44% untested (financial invariants at risk, should be 90%+). Diminishing returns Phase 2/3 incentivizes coverage gaming without enforcement. Per-module CI gates **non-negotiable** to prevent "averaging down." Confidence: MEDIUM IF guardrails enforced; LOW without them. **Phase 0 (NEW) critical:** Application 35%→60% must address major critical paths before Client UI work.
+
+---
+
+### Module-Specific Coverage Targets (Vic's Recommendations)
+
+| Module | Current | Target | Rationale |
+|--------|---------|--------|-----------|
+| **Domain** | 44% | **90%** | Financial invariants, arithmetic, core entities — must be exhaustive |
+| **Application** | 35% | **85%** | Business logic orchestration — Phase 0 (35%→60%) CRITICAL before phases 1-3 |
+| **Api** | 77.2% | **80%** | Controller orchestration, error paths, concurrency conflicts |
+| **Client** | 68.1% | **75%** | UI components — high-traffic pages (Transactions, Budgets, Accounts) 80%+, low-traffic deferred |
+| **Infrastructure** | ? | **70%** | Data access, integration-heavy, Testcontainer-backed |
+| **Contracts** | 95% | **60%** | DTOs with minimal logic, low risk |
+| **Solution** | 78.4% | **75%** overall gate | Overall floor (pragmatic, allows Infrastructure/Contracts to pull down average if necessary) |
+
+---
+
+### Critical Phase 0: Application 35%→60% (NEW — Vic's Major Concern)
+
+**Why Phase 0 Exists:**
+Application at 35% is **project-threatening**. This layer contains budgeting rules, categorization logic, recurring transaction patterns, financial reporting orchestration. 65% untested means silent bugs risk user data integrity. **Cannot proceed to Client UI tests (Phase 1) until critical Application paths covered.**
+
+**Phase 0 Scope:**
+- Audit Application services for zero-coverage critical paths
+- Prioritize services with **financial impact:** BudgetProgressService, CategorySuggestionService, RecurringChargeDetectionService, TransactionService, BudgetGoalService, RecurringTransactionService
+- Target: Application 60% coverage (addresses major orchestration, business logic, exception handling)
+- Estimate: ~10-15 tests, ~200-300 lines gained
+- Duration: 1 sprint (before Phase 1 begins)
+
+**Success Criteria Phase 0:**
+- ✅ Application coverage: 60%+
+- ✅ Critical financial services (Budget, Transaction, Categorization, RecurringTransaction, Transfer) have >50% coverage each
+- ✅ Zero regression in existing passing tests
+- ✅ Ready to proceed to Phase 1 (Client UI + Api error paths in parallel)
+
+---
+
+### Phase 1: Application 60%→90% (Parallel with Phase 2)
+
+**Duration:** Sprint 1-2  
+**Owner:** Barbara (Application specialist)  
+**Focus:** Edge cases, exception handling, business logic orchestration
+
+**High-ROI Targets from Lucius (Application Layer 10 tests):**
+1. **BudgetGoalService.SetGoalAsync:** Concurrency conflict path (DbUpdateConcurrencyException) — Medium complexity, HIGH priority (budget goal integrity)
+2. **BudgetCategoryService.CreateAsync:** Invalid CategoryType/KakeiboCategory strings → DomainException — Simple tests for enum parsing
+3. **CategorizationRuleService.CreateAsync:** Invalid MatchType string → DomainException
+4. **ImportService.PreviewAsync:** Empty rows list early return (confirms fast path)
+5. **RecurringTransactionService.CreateAsync:** Account not found → DomainException
+6. **TransactionService.CreateAsync:** Account not found path → DomainException
+7. **TransactionService.GetByDateRangeAsync:** Kakeibo filter with zero matches → empty list (edge case)
+8. **CategorizationRuleService.ListPagedAsync:** Status null/invalid handling (null to repo)
+9. **BudgetGoalService.CopyGoalsAsync:** Zero source goals early return
+10. **TransactionService edge cases:** Invalid currency conversion, concurrent modification, linked recurring charge cascade/block
+
+**Expected Coverage Gain:** ~390 lines → **Application 90%+**
+
+**Success Criteria Phase 1:**
+- ✅ Application coverage: 90%+
+- ✅ 10+ new Application.Tests added (Lucius's targets + additional discovered)
+- ✅ Zero test flakiness introduced
+- ✅ Code review: Barbara validates test quality (no coverage gaming per Vic's guardrails)
+
+---
+
+### Phase 2: Api 77.2%→80% (Parallel with Phase 1, Sequential with Phase 3)
+
+**Duration:** Sprint 1-2  
+**Owner:** Lucius (Api specialist)  
+**Focus:** Error paths, validation failures, concurrency conflicts, RFC 7807 compliance
+
+**High-ROI Targets from Lucius (Api Layer 10 tests — HIGH PRIORITY):**
+
+**Concurrency Conflicts (HIGH priority — data integrity):**
+1. **AccountsController ETag Conflict (PUT):** Create account, update with stale ETag → expect 409 Conflict (4-5 lines)
+2. **BudgetsController ETag Conflict (PUT):** Set goal, then update with wrong version → 409 (4-5 lines)
+3. **RecurringTransactionsController ETag Conflict (PUT):** Update with wrong version → 409 (4-5 lines)
+4. **ImportController ETag Conflict (PUT):** Create mapping, update with stale version → 409 (4-5 lines)
+
+**Input Validation Boundaries (MEDIUM priority):**
+5. **BudgetsController Month Validation (GET):** month=0 or month=13 → 400 BadRequest (3-4 lines)
+6. **CalendarController Month Validation (GET):** month=15 → 400 (3-4 lines)
+7. **CategorizationRulesController Pagination Boundary:** page=0, pageSize=-1 → 400 (5-6 lines)
+8. **TransactionQueryController Invalid Kakeibo Category:** Enum.TryParse failure → 400 (4-5 lines)
+9. **CategorizationRulesController Status Filter Validation:** Invalid status like "pending" → validate behavior (3-4 lines)
+10. **TransactionBatchController Missing If-Match:** PUT without If-Match header → 200 OK (last-write-wins path, 3-4 lines)
+
+**Expected Coverage Gain:** ~80 lines → **Api 80%+**
+
+**Success Criteria Phase 2:**
+- ✅ Api coverage: 80%+
+- ✅ 10 new Api.Tests added (focus: error paths, concurrency, validation)
+- ✅ ProblemDetails middleware fully covered (RFC 7807)
+- ✅ Code review: Barbara validates test quality (behavioral assertions, no implementation details)
+
+---
+
+### Phase 3: Client 68.1%→75% (Sequential after Phase 2)
+
+**Duration:** Sprint 2-3  
+**Owner:** Barbara (Client specialist)  
+**Focus:** High-impact pages only; skip markup-heavy showcase components
+
+**Tier 1 High-Impact Tests (Target these FIRST — ~30 tests, 250-350 lines, 71-72%):**
+
+1. **DataHealthViewModel** (114 lines, 8-10 tests):
+   - LoadAsync, MergeDuplicatesAsync, DismissOutlierAsync
+   - Covers duplicate detection, outlier dismissal, error handling
+   
+2. **RecurringChargeSuggestionsViewModel** (70-90 lines, 10-12 tests):
+   - Pattern detection and suggestion management
+   - Detect, accept, dismiss, filter, confidence formatting
+   
+3. **Calendar.razor Code-Behind Logic** (50-70 lines, 8-10 tests):
+   - Month navigation, week selection, day detail logic, account filtering
+   - Most-used page in application
+   
+4. **StatementReconciliation.razor** (60-80 lines, 10-12 tests):
+   - Multi-step workflow (balance input, transaction clearing, reconciliation)
+   - Financial accuracy critical path
+   
+5. **ReconciliationHistory.razor** (30-40 lines, 5-6 tests):
+   - List filtering, date range, account selection logic
+   - Audit trail for reconciliation feature
+
+**Tier 2 Quick Wins (Optional, 73-74% total — ~20 tests):**
+6. **ReportsIndex.razor** (20-30 lines, 4-5 tests): Navigation hub with feature flags
+7. **ReconciliationDetail.razor** (25-35 lines, 5-6 tests): Display logic for completed reconciliation
+8. **KaizenDashboardView.razor** (40-50 lines, 6-8 tests): Kakeibo insights aggregation
+
+**Tier 3 / Explicitly Deferred (Low ROI — defer or skip):**
+- **ComponentShowcase.razor** (0% coverage, 144 lines, pure demo UI) — **explicitly excluded**
+- **LocationReportPage.razor** (25-35 lines, low usage) — **defer to 60%**
+- **Transactions.razor** (15-20 lines, mostly wiring) — ViewModel already 100% tested
+
+**Expected Coverage Gain:** ~350-450 lines → **Client 74-76%**
+
+**Success Criteria Phase 3:**
+- ✅ Client coverage: 75%+
+- ✅ Tier 1 tests complete (high-impact pages 75%+)
+- ✅ Tier 2 optional (if effort allows, push toward 76%)
+- ✅ ComponentShowcase, low-traffic pages explicitly documented as "low-coverage exemptions"
+
+---
+
+### Mandatory Guardrails (Vic's Non-Negotiable Requirements)
+
+**These are mandatory. Do NOT proceed without them.**
+
+#### A. Per-Module CI Gates
+
+**Why:** Solution-wide 75% gate allows "averaging down." Api at 80%, but Application at 50% still passes gate.
+
+**Implementation in .github/workflows/ci.yml:**
+`yaml
+minimum_coverage:
+  solution: 75%  # Overall floor
+  per_module:
+    BudgetExperiment.Domain: 90%       # Financial invariants
+    BudgetExperiment.Application: 85%  # Business logic
+    BudgetExperiment.Api: 80%          # Controller orchestration
+    BudgetExperiment.Client: 75%       # UI components
+    BudgetExperiment.Infrastructure: 70%  # Data access (integration-heavy)
+    BudgetExperiment.Contracts: 60%    # DTOs (minimal logic)
+`
+
+**Effect:**
+- PR fails if *any* module drops below target
+- Per-module coverage reported in PR comment
+- Prevents shipping low-quality modules to ship low-quality modules within high-quality solution
+
+#### B. Coverage Quality Review (Vic's Anti-Gaming Mechanism)
+
+**Why:** 75% gate incentivizes hitting numbers, not writing valuable tests.
+
+**Checklist for PR reviewers:**
+- [ ] Each new test asserts on *behavior*, not implementation
+- [ ] Each test would catch a real regression (ask: "what breaks if I delete this code?")
+- [ ] No trivial assertions (\Assert.NotNull()\, \Assert.True(true)\, \Assert.Empty()\ without context)
+- [ ] No brittle UI tests that break on CSS refactor without testing logic
+- [ ] Test failure message explains *why* it matters
+
+**Forbidden patterns:**
+- Constructor tests that only set properties without testing behavior
+- CSS class assertions without behavioral validation
+- \Assert.NotNull()\ as only assertion
+
+**Spot Audits:**
+- Vic reviews 10% of Phase 2/3 tests for coverage gaming
+- Report patterns to team for calibration
+- Team calibration session after Phase 1 completes (align on "what good looks like")
+
+#### C. Testcontainer Flakiness Fix BEFORE Phase 2
+
+**Current state:** Infrastructure tests exhibit pre-existing Docker flakiness (noted in Feature 161 audit). Phase 2/3 will add 100+ integration tests.
+
+**Must fix before Phase 2 starts:**
+- Investigate and document current flake rate
+- Add retry logic to Testcontainer startup (3 attempts with exponential backoff)
+- Establish flake budget: <1% of tests
+- If flake exceeds 1%, **halt new test additions** until root cause fixed
+
+**Monitoring:**
+- Track flaky tests in \.squad/decisions.md\ with repro steps
+- Monthly review in team standup (if flake accumulates, escalate)
+
+#### D. Explicit Low-Coverage Exemptions
+
+**Document zero-coverage files with rationale and exclude from module calculation:**
+
+| File | Lines | Reason | Module |
+|------|-------|--------|--------|
+| \Program.cs\ | ~100 | Composition root — tested via integration tests | Api |
+| \App.razor\ | ~20 | Routing only — integration-tested | Client |
+| \*Layout.razor\ | ~150 total | Pure HTML, no logic to test | Client |
+| \ComponentShowcase.razor\ | 144 | Demo page, zero production logic | Client |
+| \CsvParseResultModel.cs\ | ~50 | DTO, no behavior | Contracts |
+
+**Effect:** Module coverage calculated excluding these files prevents team from wasting effort testing infrastructure glue.
+
+---
+
+### Success Criteria & Confidence Assessment
+
+#### Phase 0 (Critical Foundation)
+- ✅ Application coverage: 60%+
+- ✅ Critical financial services have >50% coverage each
+- ✅ Zero regression in existing tests
+- ✅ Testcontainer flakiness audit complete
+
+#### Phase 1 (Parallel: Application→90%, Api→80%)
+- ✅ Application coverage: 90%+
+- ✅ Api coverage: 80%+
+- ✅ 20+ new tests (10 Application, 10 Api) added
+- ✅ Zero test flakiness introduced
+- ✅ Code review validates test quality (no gaming)
+
+#### Phase 2 (sequential: Client→75%)
+- ✅ Client coverage: 75%+
+- ✅ Tier 1 tests complete (DataHealth, RecurringChargeSuggestions, Calendar, Reconciliation)
+- ✅ ComponentShowcase and low-traffic pages explicitly exempted
+
+#### Overall Success
+- ✅ Solution coverage: 80.5%+
+- ✅ Per-module targets met (Domain 90%, Application 85%, Api 80%, Client 75%, Infrastructure 70%, Contracts 60%)
+- ✅ CI gate enforces per-module minimums
+- ✅ Coverage quality review prevents gaming
+- ✅ Test suite health: <2min unit tests, <5min integration tests, <1% flaky tests
+- ✅ Coverage debt documented in \.squad/decisions.md\ with rationales
+
+#### Confidence Assessment
+
+**Vic's Verdict: MEDIUM-HIGH confidence IF guardrails enforced.**
+
+**High confidence IF:**
+- ✅ Per-module CI gates implemented
+- ✅ Application Phase 0 addresses 35% gap (major concern)
+- ✅ Domain target set at 90% (financial invariants)
+- ✅ Coverage quality review established (Barbara + Vic spot-checks)
+- ✅ Testcontainer flakiness fixed before Phase 2
+- ✅ Low-coverage exemptions documented
+
+**Low confidence IF:**
+- ❌ Strategy executed as-is without guardrails
+- ❌ Application/Domain gaps deferred
+- ❌ Coverage gaming allowed in Phase 2/3
+- ❌ Per-module gates not enforced
+
+---
+
+### High-ROI Test Targets (Lucius's 20 High-Confidence Targets)
+
+#### API Layer (10 tests — 77.2%→79.7% expected gain)
+
+**Implementation Order:** Phase 2 (must-complete by end of Phase 1/2 parallel work)
+
+| # | Controller | Test Case | File:Line | Expected Lines | Priority |
+|---|-----------|-----------|-----------|---|----------|
+| 1 | AccountsController | ETag Concurrency Conflict (PUT) | AccountsController.cs:107 | 4-5 | HIGH |
+| 2 | BudgetsController | Month Validation (GET) | BudgetsController.cs:51 | 3-4 | MEDIUM |
+| 3 | BudgetsController | ETag Conflict (PUT) | BudgetsController.cs:97-99 | 4-5 | HIGH |
+| 4 | CalendarController | Month Validation (GET) | CalendarController.cs:79 | 3-4 | MEDIUM |
+| 5 | CategorizationRulesController | Pagination Boundary (page=0) | CategorizationRulesController.cs:61-76 | 5-6 | MEDIUM |
+| 6 | CategorizationRulesController | Status Filter Validation | CategorizationRulesController.cs:54 | 3-4 | LOW |
+| 7 | ImportController | ETag Conflict (PUT) | ImportController.cs:115 | 4-5 | MEDIUM |
+| 8 | RecurringTransactionsController | ETag Conflict (PUT) | RecurringTransactionsController.cs:108 | 4-5 | HIGH |
+| 9 | TransactionBatchController | Missing If-Match (200 fallback) | TransactionBatchController.cs:81-84 | 3-4 | MEDIUM |
+| 10 | TransactionQueryController | Invalid Kakeibo Category (400) | TransactionQueryController.cs:76-80 | 4-5 | MEDIUM |
+
+#### Application Layer (10 tests — 90.3%→91.8% expected gain)
+
+**Implementation Order:** Phase 1 (must-complete by end of Phase 1)
+
+| # | Service | Test Case | File:Line | Expected Lines | Priority |
+|---|---------|-----------|-----------|---|----------|
+| 11 | BudgetCategoryService | Invalid CategoryType → DomainException | BudgetCategoryService.cs:70-73 | 4-5 | MEDIUM |
+| 12 | BudgetCategoryService | Invalid KakeiboCategory → DomainException | BudgetCategoryService.cs:78-80 | 3-4 | MEDIUM |
+| 13 | BudgetGoalService | Concurrency Conflict Path | BudgetGoalService.cs:73-76 | 5-6 | HIGH |
+| 14 | CategorizationRuleService | Invalid MatchType → DomainException | CategorizationRuleService.cs:96-99 | 4-5 | MEDIUM |
+| 15 | ImportService | Empty Rows List Early Return | ImportService.cs:84-87 | 3-4 | LOW |
+| 16 | RecurringTransactionService | Account Not Found → DomainException | RecurringTransactionService.cs:97-100 | 4-5 | MEDIUM |
+| 17 | TransactionService | Account Not Found Path | TransactionService.cs:100 | 4-5 | MEDIUM |
+| 18 | TransactionService | Kakeibo Filter Zero Matches | TransactionService.cs:74-82 | 5-6 | LOW |
+| 19 | CategorizationRuleService | Status Null Handling (ListPagedAsync) | CategorizationRuleService.cs:54-59 | 3-4 | LOW |
+| 20 | BudgetGoalService | Zero Source Goals (CopyGoalsAsync) | BudgetGoalService.cs:110-117 | 3-4 | LOW |
+
+**Estimated Total Gain:** ~70-100 lines of uncovered code → **4.0% total coverage improvement** (solution 78.4%→82.4% if applied in isolation; combined with Client gains → 80.5%+)
+
+---
+
+### Client High-Impact Targets (Barbara's Tier 1-3 Analysis)
+
+#### Tier 1: High Value, Moderate Effort (Target FIRST — Push to 71-72%)
+
+1. **DataHealthViewModel** (114 lines, 8-10 tests) — Duplicate detection, outlier dismissal, error handling — **Highest priority**
+2. **RecurringChargeSuggestionsViewModel** (70-90 lines, 10-12 tests) — Pattern detection, suggestion management
+3. **Calendar.razor Code-Behind** (50-70 lines, 8-10 tests) — Most-used page, month/week navigation, filtering
+4. **StatementReconciliation.razor** (60-80 lines, 10-12 tests) — Multi-step financial workflow
+5. **ReconciliationHistory.razor** (30-40 lines, 5-6 tests) — Audit trail, list filtering
+
+**Tier 1 Total:** ~30 tests, 250-350 lines covered → Client 71-72%
+
+#### Tier 2: Moderate Value, Low Effort (Quick Wins — Optional, Push to 73-74%)
+
+6. **ReportsIndex.razor** (20-30 lines, 4-5 tests) — Navigation hub, feature flags
+7. **ReconciliationDetail.razor** (25-35 lines, 5-6 tests) — Display logic, balance rendering
+8. **KaizenDashboardView.razor** (40-50 lines, 6-8 tests) — Cultural feature aggregation
+
+**Tier 2 Total:** ~20 tests, 100-150 lines covered → Client 73-74%
+
+#### Tier 3 / Explicitly Deferred (Low ROI — Skip unless business case emerges)
+
+- **ComponentShowcase.razor** — 0% coverage, 144 lines, **PURE DEMO UI — EXPLICITLY EXCLUDED**
+- **LocationReportPage.razor** — Low usage, 25-35 lines, 4-5 tests, defer to 60%
+- **Transactions.razor** — ViewModel already 100% tested, mostly markup wiring
+
+---
+
+### Implementation Plan & Timeline
+
+**Sprint 1 (Week 1-2):**
+1. ✅ Phase 0 begins: Application audit for zero-coverage critical paths
+2. ✅ Phase 1 (Application): Barbara starts Lucius's 10 high-ROI targets
+3. ✅ Phase 2 (Api): Lucius starts Api layer concurrency & validation tests (parallel with Phase 1)
+4. ✅ Testcontainer flakiness audit completes; retry logic added if needed
+5. ✅ Per-module CI gates implemented in \.github/workflows/ci.yml\
+
+**Sprint 2 (Week 3-4):**
+1. ✅ Phase 1 & 2 complete: Application 90%, Api 80%
+2. ✅ Phase 3 begins: Barbara starts Tier 1 Client tests
+3. ✅ Coverage quality review established; Barbara validates test behavioral value
+4. ✅ Low-coverage exemptions documented (ComponentShowcase, Program.cs, Layouts)
+
+**Sprint 3 (Week 5-6):**
+1. ✅ Phase 3 Tier 1 complete: Client 71-72%
+2. ✅ Tier 2 optional: If effort allows, push Client to 73-74%
+3. ✅ Per-module gates stable; Coverage 80.5%+ achieved
+4. ✅ Team calibration session: Review what "good coverage quality" looks like
+5. ✅ Quarterly audit calendar established (Vic reviews one module/quarter)
+
+**Ongoing:**
+- Monitor test execution time budget (<2min unit, <5min integration)
+- Track flaky tests; fix before adding more
+- Monthly coverage trend review
+- TDD non-negotiable for Domain/Application changes
+- Quarterly Vic audit of coverage quality (not just quantity)
+
+---
+
+### Recommendation
+
+**APPROVE** this comprehensive coverage strategy with all mandatory guardrails:
+
+1. ✅ **Phase 0 (NEW):** Application 35%→60% critical paths (addresses Vic's "project-threatening" concern)
+2. ✅ **Phase 1:** Application 60%→90% (Barbara, Sprint 1-2)
+3. ✅ **Phase 2:** Api 77.2%→80% (Lucius, Sprint 1-2, parallel with Phase 1)
+4. ✅ **Phase 3:** Client 68.1%→75% (Barbara, Sprint 2-3, sequential after Phase 2)
+5. ✅ **Mandatory Guardrails:**
+   - Per-module CI gates (Domain 90%, App 85%, Api 80%, Client 75%, Infrastructure 70%, Contracts 60%)
+   - Coverage quality review (Barbara validates, Vic spot-checks 10% of Phase 2/3 tests)
+   - Testcontainer flakiness fixed before Phase 2 begins
+   - Explicit low-coverage exemptions (ComponentShowcase, Program.cs, Layouts)
+   - Quarterly audit calendar + test suite health metrics
+
+**Do NOT approve if:**
+- ❌ Team rejects per-module CI gates
+- ❌ Application/Domain targets deferred
+- ❌ Coverage quality review not established
+- ❌ Phase 0 (Application critical paths) skipped
+
+---
+
+### Success Probability
+
+**Vic's Assessment: HIGH confidence (75%+) IF guardrails enforced.**
+
+**Why this works:**
+- Team has excellent TDD discipline (5,866 tests, strong cultural baseline)
+- 75% gate acknowledges current reality while establishing quality floor
+- Per-module gates prevent averaging down
+- Coverage quality review prevents gaming
+- Phase 0 addresses project-threatening Application gap immediately
+
+**Risk factors mitigated:**
+- ✅ Application at 35% → Phase 0 (60%+) before Client work
+- ✅ Domain at 44% → Explicit 90% target with financial invariants focus
+- ✅ Diminishing returns → Lucius's high-ROI targets eliminate speculation
+- ✅ Coverage gaming → Quality review + Barbara validation + Vic audits
+- ✅ Test debt → Health metrics (execution time <5min, flake <1%, LOC ratio 1.5-2.5x)
+- ✅ Drift → Per-module CI gates + TDD enforcement + Quarterly audits
+
+---
+
+**Decision Approved**  
+**Led by:** Alfred (Roadmap), with critical input from Lucius (High-ROI targets), Barbara (Client analysis + quality review), Vic (Audit & mandatory guardrails)  
+**Date:** 2026-04-21  
+**Next Step:** Phase 0 begins immediately; Barbara audits Application services for zero-coverage critical paths. Phase 1 (Application→90%) and Phase 2 (Api→80%) can proceed in parallel. Phase 3 (Client→75%) sequential after Phase 2 completes.
