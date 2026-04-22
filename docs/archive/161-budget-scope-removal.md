@@ -1,6 +1,6 @@
 # Feature 161: BudgetScope Removal
 
-> **Status:** ✅ COMPLETE — All 4 Phases merged to main (2026-04-19). Migration `RemoveBudgetScopeColumns` ready to apply.
+> **Status:** ✅ COMPLETE — All 4 Phases merged to main (2026-04-19). Final artifact cleanup completed (2026-04-21). Migration `RemoveBudgetScopeColumns` ready to apply.
 
 ## Overview
 
