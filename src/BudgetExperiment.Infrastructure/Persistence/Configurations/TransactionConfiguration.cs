@@ -176,5 +176,10 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
         builder.Property(t => t.KakeiboOverride)
             .HasConversion<int?>()
             .IsRequired(false);
+
+        builder.Property(t => t.DeletedAtUtc);
+
+        // Query filter to exclude soft-deleted transactions
+        builder.HasQueryFilter(t => t.DeletedAtUtc == null);
     }
 }

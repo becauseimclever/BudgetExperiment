@@ -109,6 +109,14 @@ public sealed class BudgetCategory
     }
 
     /// <summary>
+    /// Gets the UTC timestamp when the category was soft-deleted (null if not deleted).
+    /// </summary>
+    public DateTime? DeletedAtUtc
+    {
+        get; private set;
+    }
+
+    /// <summary>
     /// Gets the Kakeibo spending bucket for this category.
     /// Set only for Expense categories; null for Income and Transfer.
     /// </summary>
@@ -201,6 +209,24 @@ public sealed class BudgetCategory
         }
 
         this.KakeiboCategory = kakeiboCategory;
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Soft-deletes this budget category by setting the DeletedAtUtc timestamp.
+    /// </summary>
+    public void SoftDelete()
+    {
+        this.DeletedAtUtc = DateTime.UtcNow;
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Restores this budget category by clearing the DeletedAtUtc timestamp.
+    /// </summary>
+    public void Restore()
+    {
+        this.DeletedAtUtc = null;
         this.UpdatedAtUtc = DateTime.UtcNow;
     }
 

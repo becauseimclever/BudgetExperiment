@@ -78,5 +78,10 @@ internal sealed class AccountConfiguration : IEntityTypeConfiguration<Account>
 
         // Indexes for ownership filtering
         builder.HasIndex(a => a.OwnerUserId);
+
+        builder.Property(a => a.DeletedAtUtc);
+
+        // Query filter to exclude soft-deleted accounts
+        builder.HasQueryFilter(a => a.DeletedAtUtc == null);
     }
 }

@@ -140,5 +140,10 @@ internal sealed class RecurringTransactionConfiguration : IEntityTypeConfigurati
         // Optimistic concurrency token (PostgreSQL-specific xmin config applied in DbContext.OnModelCreating)
         builder.Property<uint>("xmin")
             .IsConcurrencyToken();
+
+        builder.Property(r => r.DeletedAtUtc);
+
+        // Query filter to exclude soft-deleted recurring transactions
+        builder.HasQueryFilter(r => r.DeletedAtUtc == null);
     }
 }

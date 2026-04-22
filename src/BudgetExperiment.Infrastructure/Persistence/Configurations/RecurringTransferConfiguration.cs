@@ -122,5 +122,10 @@ internal sealed class RecurringTransferConfiguration : IEntityTypeConfiguration<
         // Optimistic concurrency token (PostgreSQL-specific xmin config applied in DbContext.OnModelCreating)
         builder.Property<uint>("xmin")
             .IsConcurrencyToken();
+
+        builder.Property(r => r.DeletedAtUtc);
+
+        // Query filter to exclude soft-deleted recurring transfers
+        builder.HasQueryFilter(r => r.DeletedAtUtc == null);
     }
 }

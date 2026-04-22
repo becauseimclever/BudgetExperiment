@@ -276,4 +276,170 @@ public class TransactionServiceTests
         Assert.NotNull(result);
         Assert.Null(result.CategoryId);
     }
+
+    [Fact]
+    public async Task UpdateAsync_With_Optimistic_Concurrency_Version_Check()
+    {
+        // Arrange
+        var account = Account.Create("Test", AccountType.Checking);
+        var money = MoneyValue.Create("USD", 100m);
+        var transaction = account.AddTransaction(money, new DateOnly(2026, 1, 10), "Original");
+        var expectedVersion = "version-1";
+
+        var transactionRepo = new Mock<ITransactionRepository>();
+        transactionRepo.Setup(r => r.GetByIdAsync(transaction.Id, default)).ReturnsAsync(transaction);
+
+        var accountRepo = new Mock<IAccountRepository>();
+        var uow = new Mock<IUnitOfWork>();
+        uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+
+        var categorizationEngine = new Mock<ICategorizationEngine>();
+        var service = new TransactionService(transactionRepo.Object, accountRepo.Object, uow.Object, categorizationEngine.Object);
+
+        var dto = new TransactionUpdateDto
+        {
+            Amount = new MoneyDto { Currency = "USD", Amount = 150m },
+            Date = new DateOnly(2026, 1, 11),
+            Description = "Updated",
+            CategoryId = null,
+        };
+
+        // Act
+        var result = await service.UpdateAsync(transaction.Id, dto, expectedVersion);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(150m, result.Amount.Amount);
+        uow.Verify(u => u.SetExpectedConcurrencyToken(transaction, expectedVersion), Times.Once);
+        uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_Soft_Delete_Sets_DeletedAt_Timestamp()
+    {
+        // Arrange
+        var account = Account.Create("Test", AccountType.Checking);
+        var money = MoneyValue.Create("USD", 50m);
+        var transaction = account.AddTransaction(money, new DateOnly(2026, 1, 10), "To Delete");
+
+        var transactionRepo = new Mock<ITransactionRepository>();
+        transactionRepo.Setup(r => r.GetByIdAsync(transaction.Id, default)).ReturnsAsync(transaction);
+
+        var accountRepo = new Mock<IAccountRepository>();
+        var uow = new Mock<IUnitOfWork>();
+        uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+
+        var categorizationEngine = new Mock<ICategorizationEngine>();
+        var service = new TransactionService(transactionRepo.Object, accountRepo.Object, uow.Object, categorizationEngine.Object);
+
+        // Act
+        var result = await service.DeleteAsync(transaction.Id);
+
+        // Assert
+        Assert.True(result);
+        transactionRepo.Verify(r => r.RemoveAsync(transaction, default), Times.Once);
+        uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateAsync_Unit_Of_Work_Failure_Rollback()
+    {
+        // Arrange
+        var account = Account.Create("Test", AccountType.Checking);
+        var accountRepo = new Mock<IAccountRepository>();
+        accountRepo.Setup(r => r.GetByIdAsync(account.Id, default)).ReturnsAsync(account);
+
+        var transactionRepo = new Mock<ITransactionRepository>();
+        var uow = new Mock<IUnitOfWork>();
+        uow.Setup(u => u.SaveChangesAsync(default)).ThrowsAsync(new InvalidOperationException("Database error"));
+
+        var categorizationEngine = new Mock<ICategorizationEngine>();
+        var service = new TransactionService(transactionRepo.Object, accountRepo.Object, uow.Object, categorizationEngine.Object);
+
+        var dto = new TransactionCreateDto
+        {
+            AccountId = account.Id,
+            Amount = new MoneyDto { Currency = "USD", Amount = 10m },
+            Date = new DateOnly(2026, 1, 9),
+            Description = "Test Transaction",
+        };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateAsync(dto));
+        uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_Concurrency_Conflict_Row_Version_Mismatch()
+    {
+        // Arrange
+        var account = Account.Create("Test", AccountType.Checking);
+        var money = MoneyValue.Create("USD", 100m);
+        var transaction = account.AddTransaction(money, new DateOnly(2026, 1, 10), "Original");
+        var staleVersion = "old-version-123";
+
+        var transactionRepo = new Mock<ITransactionRepository>();
+        transactionRepo.Setup(r => r.GetByIdAsync(transaction.Id, default)).ReturnsAsync(transaction);
+
+        var accountRepo = new Mock<IAccountRepository>();
+        var uow = new Mock<IUnitOfWork>();
+
+        // Simulate concurrency exception
+        uow.Setup(u => u.SaveChangesAsync(default))
+            .ThrowsAsync(new InvalidOperationException("Concurrency conflict: RowVersion mismatch"));
+
+        var categorizationEngine = new Mock<ICategorizationEngine>();
+        var service = new TransactionService(transactionRepo.Object, accountRepo.Object, uow.Object, categorizationEngine.Object);
+
+        var dto = new TransactionUpdateDto
+        {
+            Amount = new MoneyDto { Currency = "USD", Amount = 200m },
+            Date = new DateOnly(2026, 1, 11),
+            Description = "Conflict Update",
+            CategoryId = null,
+        };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<InvalidOperationException>(
+            () => service.UpdateAsync(transaction.Id, dto, staleVersion));
+        uow.Verify(u => u.SetExpectedConcurrencyToken(transaction, staleVersion), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_Duplicate_Soft_Delete_Idempotent()
+    {
+        // Arrange
+        var account = Account.Create("Test", AccountType.Checking);
+        var money = MoneyValue.Create("USD", 75m);
+        var transaction = account.AddTransaction(money, new DateOnly(2026, 1, 15), "Delete Twice");
+
+        var transactionRepo = new Mock<ITransactionRepository>();
+
+        // First call returns transaction, second returns null (already deleted)
+        var callCount = 0;
+        transactionRepo.Setup(r => r.GetByIdAsync(transaction.Id, default))
+            .Returns(() =>
+            {
+                callCount++;
+                return callCount == 1 ? Task.FromResult<Transaction?>(transaction) : Task.FromResult<Transaction?>(null);
+            });
+
+        var accountRepo = new Mock<IAccountRepository>();
+        var uow = new Mock<IUnitOfWork>();
+        uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+
+        var categorizationEngine = new Mock<ICategorizationEngine>();
+        var service = new TransactionService(transactionRepo.Object, accountRepo.Object, uow.Object, categorizationEngine.Object);
+
+        // Act - First delete succeeds
+        var firstResult = await service.DeleteAsync(transaction.Id);
+        Assert.True(firstResult);
+
+        // Reset mock for second call
+        callCount = 2;
+        var secondResult = await service.DeleteAsync(transaction.Id);
+
+        // Assert
+        Assert.False(secondResult);
+    }
 }

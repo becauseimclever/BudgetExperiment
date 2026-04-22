@@ -3,17 +3,20 @@ using System;
 using BudgetExperiment.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace BudgetExperiment.Infrastructure.Migrations
+namespace BudgetExperiment.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(BudgetDbContext))]
-    partial class BudgetDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260422033920_AddSoftDeleteFields")]
+    partial class AddSoftDeleteFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1525,7 +1528,7 @@ namespace BudgetExperiment.Infrastructure.Migrations
 
                             b1.HasKey("AccountId");
 
-                            b1.ToTable("Accounts", (string)null);
+                            b1.ToTable("Accounts");
 
                             b1.WithOwner()
                                 .HasForeignKey("AccountId");
@@ -1581,7 +1584,7 @@ namespace BudgetExperiment.Infrastructure.Migrations
 
                             b1.HasKey("TransactionId");
 
-                            b1.ToTable("Transactions", (string)null);
+                            b1.ToTable("Transactions");
 
                             b1.WithOwner()
                                 .HasForeignKey("TransactionId");
@@ -1618,7 +1621,7 @@ namespace BudgetExperiment.Infrastructure.Migrations
 
                             b1.HasKey("TransactionId");
 
-                            b1.ToTable("Transactions", (string)null);
+                            b1.ToTable("Transactions");
 
                             b1.WithOwner()
                                 .HasForeignKey("TransactionId");
@@ -1640,7 +1643,7 @@ namespace BudgetExperiment.Infrastructure.Migrations
 
                                     b2.HasKey("TransactionLocationValueTransactionId");
 
-                                    b2.ToTable("Transactions", (string)null);
+                                    b2.ToTable("Transactions");
 
                                     b2.WithOwner()
                                         .HasForeignKey("TransactionLocationValueTransactionId");
@@ -1683,7 +1686,7 @@ namespace BudgetExperiment.Infrastructure.Migrations
 
                             b1.HasKey("BudgetGoalId");
 
-                            b1.ToTable("BudgetGoals", (string)null);
+                            b1.ToTable("BudgetGoals");
 
                             b1.WithOwner()
                                 .HasForeignKey("BudgetGoalId");
@@ -1773,7 +1776,7 @@ namespace BudgetExperiment.Infrastructure.Migrations
 
                             b1.HasKey("ReconciliationRecordId");
 
-                            b1.ToTable("ReconciliationRecords", (string)null);
+                            b1.ToTable("ReconciliationRecords");
 
                             b1.WithOwner()
                                 .HasForeignKey("ReconciliationRecordId");
@@ -1797,7 +1800,7 @@ namespace BudgetExperiment.Infrastructure.Migrations
 
                             b1.HasKey("ReconciliationRecordId");
 
-                            b1.ToTable("ReconciliationRecords", (string)null);
+                            b1.ToTable("ReconciliationRecords");
 
                             b1.WithOwner()
                                 .HasForeignKey("ReconciliationRecordId");
@@ -1830,7 +1833,7 @@ namespace BudgetExperiment.Infrastructure.Migrations
 
                             b1.HasKey("StatementBalanceId");
 
-                            b1.ToTable("StatementBalances", (string)null);
+                            b1.ToTable("StatementBalances");
 
                             b1.WithOwner()
                                 .HasForeignKey("StatementBalanceId");
@@ -1860,7 +1863,7 @@ namespace BudgetExperiment.Infrastructure.Migrations
 
                             b1.HasKey("RecurringChargeSuggestionId");
 
-                            b1.ToTable("RecurringChargeSuggestions", (string)null);
+                            b1.ToTable("RecurringChargeSuggestions");
 
                             b1.WithOwner()
                                 .HasForeignKey("RecurringChargeSuggestionId");
@@ -1883,6 +1886,24 @@ namespace BudgetExperiment.Infrastructure.Migrations
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.SetNull);
 
+                    b.OwnsMany("BudgetExperiment.Domain.Recurring.ImportPatternValue", "ImportPatterns", b1 =>
+                        {
+                            b1.Property<Guid>("RecurringTransactionId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Pattern")
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)")
+                                .HasColumnName("Pattern");
+
+                            b1.HasKey("RecurringTransactionId", "Pattern");
+
+                            b1.ToTable("RecurringTransactionImportPatterns", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("RecurringTransactionId");
+                        });
+
                     b.OwnsOne("BudgetExperiment.Domain.Common.MoneyValue", "Amount", b1 =>
                         {
                             b1.Property<Guid>("RecurringTransactionId")
@@ -1901,25 +1922,7 @@ namespace BudgetExperiment.Infrastructure.Migrations
 
                             b1.HasKey("RecurringTransactionId");
 
-                            b1.ToTable("RecurringTransactions", (string)null);
-
-                            b1.WithOwner()
-                                .HasForeignKey("RecurringTransactionId");
-                        });
-
-                    b.OwnsMany("BudgetExperiment.Domain.Recurring.ImportPatternValue", "ImportPatterns", b1 =>
-                        {
-                            b1.Property<Guid>("RecurringTransactionId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Pattern")
-                                .HasMaxLength(500)
-                                .HasColumnType("character varying(500)")
-                                .HasColumnName("Pattern");
-
-                            b1.HasKey("RecurringTransactionId", "Pattern");
-
-                            b1.ToTable("RecurringTransactionImportPatterns", (string)null);
+                            b1.ToTable("RecurringTransactions");
 
                             b1.WithOwner()
                                 .HasForeignKey("RecurringTransactionId");
@@ -1954,7 +1957,7 @@ namespace BudgetExperiment.Infrastructure.Migrations
 
                             b1.HasKey("RecurringTransactionId");
 
-                            b1.ToTable("RecurringTransactions", (string)null);
+                            b1.ToTable("RecurringTransactions");
 
                             b1.WithOwner()
                                 .HasForeignKey("RecurringTransactionId");
@@ -1997,7 +2000,7 @@ namespace BudgetExperiment.Infrastructure.Migrations
 
                             b1.HasKey("RecurringTransactionExceptionId");
 
-                            b1.ToTable("RecurringTransactionExceptions", (string)null);
+                            b1.ToTable("RecurringTransactionExceptions");
 
                             b1.WithOwner()
                                 .HasForeignKey("RecurringTransactionExceptionId");
@@ -2038,7 +2041,7 @@ namespace BudgetExperiment.Infrastructure.Migrations
 
                             b1.HasKey("RecurringTransferId");
 
-                            b1.ToTable("RecurringTransfers", (string)null);
+                            b1.ToTable("RecurringTransfers");
 
                             b1.WithOwner()
                                 .HasForeignKey("RecurringTransferId");
@@ -2073,7 +2076,7 @@ namespace BudgetExperiment.Infrastructure.Migrations
 
                             b1.HasKey("RecurringTransferId");
 
-                            b1.ToTable("RecurringTransfers", (string)null);
+                            b1.ToTable("RecurringTransfers");
 
                             b1.WithOwner()
                                 .HasForeignKey("RecurringTransferId");
@@ -2112,7 +2115,7 @@ namespace BudgetExperiment.Infrastructure.Migrations
 
                             b1.HasKey("RecurringTransferExceptionId");
 
-                            b1.ToTable("RecurringTransferExceptions", (string)null);
+                            b1.ToTable("RecurringTransferExceptions");
 
                             b1.WithOwner()
                                 .HasForeignKey("RecurringTransferExceptionId");

@@ -81,5 +81,10 @@ internal sealed class BudgetCategoryConfiguration : IEntityTypeConfiguration<Bud
 
         // Unique constraint on name within owner scope
         builder.HasIndex(c => new { c.Name, c.OwnerUserId }).IsUnique();
+
+        builder.Property(c => c.DeletedAtUtc);
+
+        // Query filter to exclude soft-deleted categories
+        builder.HasQueryFilter(c => c.DeletedAtUtc == null);
     }
 }

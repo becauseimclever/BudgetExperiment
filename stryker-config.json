@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/stryker-mutator/stryker-net/master/src/Stryker.Core/Stryker.Core/schema.json",
+  "stryker-config": {
+    "solution": "BudgetExperiment.sln",
+    "thresholds": {
+      "high": 80,
+      "low": 60,
+      "break": 50
+    },
+    "reporters": [
+      "progress",
+      "html",
+      "json",
+      "cleartext"
+    ],
+    "mutate": [
+      "**/*.cs"
+    ],
+    "ignore-methods": [
+      "*ToString*",
+      "*GetHashCode*",
+      "*Equals*"
+    ],
+    "concurrency": 4,
+    "mutation-level": "standard"
+  }
+}

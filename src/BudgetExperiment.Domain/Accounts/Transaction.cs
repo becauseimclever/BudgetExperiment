@@ -234,6 +234,14 @@ public sealed class Transaction
     }
 
     /// <summary>
+    /// Gets the UTC timestamp when the transaction was soft-deleted (null if not deleted).
+    /// </summary>
+    public DateTime? DeletedAtUtc
+    {
+        get; private set;
+    }
+
+    /// <summary>
     /// Updates the description.
     /// </summary>
     /// <param name="description">New description.</param>
@@ -443,6 +451,24 @@ public sealed class Transaction
 
         this.RecurringTransactionId = null;
         this.RecurringInstanceDate = null;
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Soft-deletes this transaction by setting the DeletedAtUtc timestamp.
+    /// </summary>
+    public void SoftDelete()
+    {
+        this.DeletedAtUtc = DateTime.UtcNow;
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Restores this transaction by clearing the DeletedAtUtc timestamp.
+    /// </summary>
+    public void Restore()
+    {
+        this.DeletedAtUtc = null;
         this.UpdatedAtUtc = DateTime.UtcNow;
     }
 

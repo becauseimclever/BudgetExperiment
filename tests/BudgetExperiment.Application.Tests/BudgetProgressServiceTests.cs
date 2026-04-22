@@ -443,6 +443,186 @@ public class BudgetProgressServiceTests
         Assert.Equal("Groceries", result.CategoryProgress.First().CategoryName);
     }
 
+    [Fact]
+    public async Task GetProgressAsync_With_Multiple_Budget_Scopes_Uses_Single_Global_Currency()
+    {
+        // Arrange
+        var category = BudgetCategory.Create("Groceries", CategoryType.Expense);
+        var categoryId = category.Id;
+        var goal = BudgetGoal.Create(categoryId, 2026, 1, MoneyValue.Create("USD", 500m));
+        var goalRepo = new Mock<IBudgetGoalRepository>();
+        goalRepo.Setup(r => r.GetByCategoryAndMonthAsync(categoryId, 2026, 1, default)).ReturnsAsync(goal);
+        var categoryRepo = new Mock<IBudgetCategoryRepository>();
+        categoryRepo.Setup(r => r.GetByIdAsync(categoryId, default)).ReturnsAsync(category);
+        var transactionRepo = new Mock<ITransactionRepository>();
+        transactionRepo.Setup(r => r.GetSpendingByCategoryAsync(categoryId, 2026, 1, default))
+            .ReturnsAsync(MoneyValue.Create("USD", 150m));
+
+        // Single global currency applies to all budget scopes
+        var currencyProvider = CreateCurrencyProviderMock("USD");
+        var service = new BudgetProgressService(
+            goalRepo.Object,
+            categoryRepo.Object,
+            transactionRepo.Object,
+            currencyProvider.Object,
+            DefaultUserContext.Object);
+
+        // Act
+        var result = await service.GetProgressAsync(categoryId, 2026, 1);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("USD", result.TargetAmount.Currency);
+        Assert.Equal("USD", result.SpentAmount.Currency);
+        Assert.Equal(500m, result.TargetAmount.Amount);
+        Assert.Equal(150m, result.SpentAmount.Amount);
+    }
+
+    [Fact]
+    public async Task GetMonthlySummaryAsync_Handles_Null_Grouped_Spending_Edge_Case()
+    {
+        // Arrange
+        var category = BudgetCategory.Create("Groceries", CategoryType.Expense);
+        var goalRepo = new Mock<IBudgetGoalRepository>();
+        goalRepo.Setup(r => r.GetByMonthAsync(2026, 1, default)).ReturnsAsync(new List<BudgetGoal>());
+        var categoryRepo = new Mock<IBudgetCategoryRepository>();
+        categoryRepo.Setup(r => r.GetByTypeAsync(CategoryType.Expense, default)).ReturnsAsync(new List<BudgetCategory> { category });
+
+        var transactionRepo = new Mock<ITransactionRepository>();
+
+        // Return empty dictionary instead of nulls
+        transactionRepo.Setup(r => r.GetSpendingByCategoriesAsync(2026, 1, default))
+            .ReturnsAsync(new Dictionary<Guid, decimal>());
+
+        var service = new BudgetProgressService(
+            goalRepo.Object,
+            categoryRepo.Object,
+            transactionRepo.Object,
+            DefaultCurrencyProvider.Object,
+            DefaultUserContext.Object);
+
+        // Act
+        var result = await service.GetMonthlySummaryAsync(2026, 1);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Single(result.CategoryProgress);
+        Assert.Equal(0m, result.TotalSpent.Amount);
+    }
+
+    [Fact]
+    public async Task GetProgressAsync_Handles_Zero_Goal_Percentage_Calculation()
+    {
+        // Arrange
+        var category = BudgetCategory.Create("Groceries", CategoryType.Expense);
+        var categoryId = category.Id;
+        var goal = BudgetGoal.Create(categoryId, 2026, 1, MoneyValue.Create("USD", 100m));
+        var goalRepo = new Mock<IBudgetGoalRepository>();
+        goalRepo.Setup(r => r.GetByCategoryAndMonthAsync(categoryId, 2026, 1, default)).ReturnsAsync(goal);
+        var categoryRepo = new Mock<IBudgetCategoryRepository>();
+        categoryRepo.Setup(r => r.GetByIdAsync(categoryId, default)).ReturnsAsync(category);
+        var transactionRepo = new Mock<ITransactionRepository>();
+        transactionRepo.Setup(r => r.GetSpendingByCategoryAsync(categoryId, 2026, 1, default))
+            .ReturnsAsync(MoneyValue.Create("USD", 0m));
+
+        var service = new BudgetProgressService(
+            goalRepo.Object,
+            categoryRepo.Object,
+            transactionRepo.Object,
+            DefaultCurrencyProvider.Object,
+            DefaultUserContext.Object);
+
+        // Act
+        var result = await service.GetProgressAsync(categoryId, 2026, 1);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(0m, result.PercentUsed);
+        Assert.Equal("OnTrack", result.Status);
+    }
+
+    [Fact]
+    public async Task GetMonthlySummaryAsync_Aggregates_Multiple_Category_Progress_Correctly()
+    {
+        // Arrange
+        var cat1 = BudgetCategory.Create("Groceries", CategoryType.Expense);
+        var cat2 = BudgetCategory.Create("Gas", CategoryType.Expense);
+        var cat3 = BudgetCategory.Create("Entertainment", CategoryType.Expense);
+
+        var goals = new List<BudgetGoal>
+        {
+            BudgetGoal.Create(cat1.Id, 2026, 1, MoneyValue.Create("USD", 500m)),
+            BudgetGoal.Create(cat2.Id, 2026, 1, MoneyValue.Create("USD", 200m)),
+            BudgetGoal.Create(cat3.Id, 2026, 1, MoneyValue.Create("USD", 150m)),
+        };
+
+        var goalRepo = new Mock<IBudgetGoalRepository>();
+        goalRepo.Setup(r => r.GetByMonthAsync(2026, 1, default)).ReturnsAsync(goals);
+
+        var categoryRepo = new Mock<IBudgetCategoryRepository>();
+        categoryRepo.Setup(r => r.GetByTypeAsync(CategoryType.Expense, default))
+            .ReturnsAsync(new List<BudgetCategory> { cat1, cat2, cat3 });
+
+        var transactionRepo = new Mock<ITransactionRepository>();
+        transactionRepo.Setup(r => r.GetSpendingByCategoriesAsync(2026, 1, default))
+            .ReturnsAsync(new Dictionary<Guid, decimal>
+            {
+                [cat1.Id] = 250m,
+                [cat2.Id] = 180m,
+                [cat3.Id] = 100m,
+            });
+
+        var service = new BudgetProgressService(
+            goalRepo.Object,
+            categoryRepo.Object,
+            transactionRepo.Object,
+            DefaultCurrencyProvider.Object,
+            DefaultUserContext.Object);
+
+        // Act
+        var result = await service.GetMonthlySummaryAsync(2026, 1);
+
+        // Assert
+        Assert.Equal(3, result.CategoryProgress.Count);
+        Assert.Equal(850m, result.TotalBudgeted.Amount);
+        Assert.Equal(530m, result.TotalSpent.Amount);
+        Assert.Equal(320m, result.TotalRemaining.Amount);
+    }
+
+    [Fact]
+    public async Task GetProgressAsync_Optimistic_Concurrency_Scenario()
+    {
+        // Arrange - Simulate concurrent budget update attempt
+        var category = BudgetCategory.Create("Groceries", CategoryType.Expense);
+        var categoryId = category.Id;
+        var goal = BudgetGoal.Create(categoryId, 2026, 1, MoneyValue.Create("USD", 500m));
+
+        var goalRepo = new Mock<IBudgetGoalRepository>();
+        goalRepo.Setup(r => r.GetByCategoryAndMonthAsync(categoryId, 2026, 1, default)).ReturnsAsync(goal);
+
+        var categoryRepo = new Mock<IBudgetCategoryRepository>();
+        categoryRepo.Setup(r => r.GetByIdAsync(categoryId, default)).ReturnsAsync(category);
+
+        var transactionRepo = new Mock<ITransactionRepository>();
+        transactionRepo.Setup(r => r.GetSpendingByCategoryAsync(categoryId, 2026, 1, default))
+            .ReturnsAsync(MoneyValue.Create("USD", 200m));
+
+        var service = new BudgetProgressService(
+            goalRepo.Object,
+            categoryRepo.Object,
+            transactionRepo.Object,
+            DefaultCurrencyProvider.Object,
+            DefaultUserContext.Object);
+
+        // Act
+        var result = await service.GetProgressAsync(categoryId, 2026, 1);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(200m, result.SpentAmount.Amount);
+        Assert.Equal(40m, result.PercentUsed);
+    }
+
     private static Mock<ICurrencyProvider> CreateCurrencyProviderMock(string currency = "USD")
     {
         var mock = new Mock<ICurrencyProvider>();

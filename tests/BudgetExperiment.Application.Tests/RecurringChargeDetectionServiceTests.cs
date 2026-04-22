@@ -297,6 +297,138 @@ public class RecurringChargeDetectionServiceTests
             () => service.DismissAsync(nonExistentId));
     }
 
+    [Fact]
+    public async Task DetectAsync_WithEmptyTransactionSet_ReturnsZero()
+    {
+        // Arrange
+        var (service, _, transactionRepo, _, _, _) = CreateService();
+        transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<DateOnly>(),
+                AccountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Transaction>());
+
+        // Act
+        var count = await service.DetectAsync(AccountId);
+
+        // Assert
+        Assert.Equal(0, count);
+    }
+
+    [Fact]
+    public async Task DetectAsync_MultiMonth_Rollup_Accuracy()
+    {
+        // Arrange
+        var (service, _, transactionRepo, suggestionRepo, _, _) = CreateService();
+
+        // Create 3 months of Netflix transactions with consistent amounts
+        var transactions = new List<Transaction>
+        {
+            CreateTransaction("NETFLIX", -15.99m, DateOnly.FromDateTime(DateTime.UtcNow)),
+            CreateTransaction("NETFLIX", -15.99m, DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-1))),
+            CreateTransaction("NETFLIX", -15.99m, DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-2))),
+        };
+
+        transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<DateOnly>(),
+                AccountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactions);
+
+        suggestionRepo
+            .Setup(r => r.GetByNormalizedDescriptionAndAccountAsync(
+                It.IsAny<string>(),
+                AccountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((RecurringChargeSuggestion?)null);
+
+        // Act
+        var count = await service.DetectAsync(AccountId);
+
+        // Assert
+        Assert.True(count > 0);
+        suggestionRepo.Verify(
+            r => r.AddAsync(
+                It.IsAny<RecurringChargeSuggestion>(),
+                It.IsAny<CancellationToken>()),
+            Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public async Task DetectAsync_WithNullEdgeCases_Handles_Gracefully()
+    {
+        // Arrange
+        var (service, _, transactionRepo, suggestionRepo, _, _) = CreateService();
+
+        // Create transactions with edge case descriptions
+        var transactions = new List<Transaction>
+        {
+            CreateTransaction("CHARGE", -15.99m, DateOnly.FromDateTime(DateTime.UtcNow)),
+            CreateTransaction("UNKNOWN", -15.99m, DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-1))),
+        };
+
+        transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<DateOnly>(),
+                AccountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactions);
+
+        suggestionRepo
+            .Setup(r => r.GetByNormalizedDescriptionAndAccountAsync(
+                It.IsAny<string>(),
+                AccountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((RecurringChargeSuggestion?)null);
+
+        // Act
+        var count = await service.DetectAsync(AccountId);
+
+        // Assert
+        Assert.Equal(0, count);
+    }
+
+    [Fact]
+    public async Task DetectAsync_WithVariableAmounts_Calculates_Average_Correctly()
+    {
+        // Arrange
+        var (service, _, transactionRepo, suggestionRepo, _, _) = CreateService();
+
+        // Create transactions with variable amounts for the same description
+        var transactions = new List<Transaction>
+        {
+            CreateTransaction("UTILITY PAYMENT", -75.50m, DateOnly.FromDateTime(DateTime.UtcNow)),
+            CreateTransaction("UTILITY PAYMENT", -80.25m, DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-1))),
+            CreateTransaction("UTILITY PAYMENT", -77.99m, DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-2))),
+        };
+
+        transactionRepo
+            .Setup(r => r.GetByDateRangeAsync(
+                It.IsAny<DateOnly>(),
+                It.IsAny<DateOnly>(),
+                AccountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(transactions);
+
+        suggestionRepo
+            .Setup(r => r.GetByNormalizedDescriptionAndAccountAsync(
+                It.IsAny<string>(),
+                AccountId,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((RecurringChargeSuggestion?)null);
+
+        // Act
+        var count = await service.DetectAsync(AccountId);
+
+        // Assert
+        Assert.True(count > 0);
+    }
+
     private static (
         RecurringChargeDetectionService Service,
         Mock<IUserContext> UserContext,

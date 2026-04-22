@@ -72,5 +72,10 @@ internal sealed class BudgetGoalConfiguration : IEntityTypeConfiguration<BudgetG
 
         // Indexes for ownership filtering
         builder.HasIndex(g => g.OwnerUserId);
+
+        builder.Property(g => g.DeletedAtUtc);
+
+        // Query filter to exclude soft-deleted goals
+        builder.HasQueryFilter(g => g.DeletedAtUtc == null);
     }
 }

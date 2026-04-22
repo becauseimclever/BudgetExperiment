@@ -94,6 +94,14 @@ public sealed class BudgetGoal
     }
 
     /// <summary>
+    /// Gets the UTC timestamp when the goal was soft-deleted (null if not deleted).
+    /// </summary>
+    public DateTime? DeletedAtUtc
+    {
+        get; private set;
+    }
+
+    /// <summary>
     /// Gets the associated budget category.
     /// </summary>
     public BudgetCategory Category { get; private set; } = null!;
@@ -149,6 +157,24 @@ public sealed class BudgetGoal
         ValidateTargetAmount(newTarget);
 
         this.TargetAmount = newTarget;
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Soft-deletes this budget goal by setting the DeletedAtUtc timestamp.
+    /// </summary>
+    public void SoftDelete()
+    {
+        this.DeletedAtUtc = DateTime.UtcNow;
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Restores this budget goal by clearing the DeletedAtUtc timestamp.
+    /// </summary>
+    public void Restore()
+    {
+        this.DeletedAtUtc = null;
         this.UpdatedAtUtc = DateTime.UtcNow;
     }
 

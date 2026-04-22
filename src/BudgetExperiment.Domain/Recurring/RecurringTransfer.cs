@@ -131,6 +131,14 @@ public sealed class RecurringTransfer
     }
 
     /// <summary>
+    /// Gets the UTC timestamp when the recurring transfer was soft-deleted (null if not deleted).
+    /// </summary>
+    public DateTime? DeletedAtUtc
+    {
+        get; private set;
+    }
+
+    /// <summary>
     /// Creates a new recurring transfer.
     /// </summary>
     /// <param name="sourceAccountId">The source account identifier.</param>
@@ -337,6 +345,24 @@ public sealed class RecurringTransfer
 
             current = this.RecurrencePatternValue.CalculateNextOccurrence(current);
         }
+    }
+
+    /// <summary>
+    /// Soft-deletes this recurring transfer by setting the DeletedAtUtc timestamp.
+    /// </summary>
+    public void SoftDelete()
+    {
+        this.DeletedAtUtc = DateTime.UtcNow;
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Restores this recurring transfer by clearing the DeletedAtUtc timestamp.
+    /// </summary>
+    public void Restore()
+    {
+        this.DeletedAtUtc = null;
+        this.UpdatedAtUtc = DateTime.UtcNow;
     }
 
     private static void ValidateAccountIds(Guid sourceAccountId, Guid destinationAccountId)

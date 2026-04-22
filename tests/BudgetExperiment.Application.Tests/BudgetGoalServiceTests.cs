@@ -382,4 +382,77 @@ public class BudgetGoalServiceTests
         Assert.Equal(0, result.GoalsSkipped);
         uow.Verify(u => u.SaveChangesAsync(default), Times.Never);
     }
+
+    [Fact]
+    public async Task GetByIdAsync_Calculates_Goal_Progress_Correctly()
+    {
+        // Arrange
+        var categoryId = Guid.NewGuid();
+        var goal = BudgetGoal.Create(categoryId, 2026, 1, MoneyValue.Create("USD", 500m));
+        var repo = new Mock<IBudgetGoalRepository>();
+        repo.Setup(r => r.GetByIdAsync(goal.Id, default)).ReturnsAsync(goal);
+        var categoryRepo = new Mock<IBudgetCategoryRepository>();
+        var uow = new Mock<IUnitOfWork>();
+        var service = new BudgetGoalService(repo.Object, categoryRepo.Object, uow.Object);
+
+        // Act
+        var result = await service.GetByIdAsync(goal.Id);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(goal.Id, result.Id);
+        Assert.Equal(500m, result.TargetAmount.Amount);
+        Assert.Equal("USD", result.TargetAmount.Currency);
+    }
+
+    [Fact]
+    public async Task SetGoalAsync_Handles_Null_Category_Reference()
+    {
+        // Arrange - When category is deleted but goal exists
+        var categoryId = Guid.NewGuid();
+        var repo = new Mock<IBudgetGoalRepository>();
+        var categoryRepo = new Mock<IBudgetCategoryRepository>();
+        categoryRepo.Setup(r => r.GetByIdAsync(categoryId, default)).ReturnsAsync((BudgetCategory?)null);
+
+        var uow = new Mock<IUnitOfWork>();
+        var service = new BudgetGoalService(repo.Object, categoryRepo.Object, uow.Object);
+
+        var dto = new BudgetGoalSetDto
+        {
+            Year = 2026,
+            Month = 1,
+            TargetAmount = new MoneyDto { Amount = 500m, Currency = "USD" },
+        };
+
+        // Act
+        var result = await service.SetGoalAsync(categoryId, dto);
+
+        // Assert
+        Assert.Null(result);
+        uow.Verify(u => u.SaveChangesAsync(default), Times.Never);
+    }
+
+    [Fact]
+    public async Task DeleteGoalAsync_Transitions_Goal_Status_On_Removal()
+    {
+        // Arrange
+        var categoryId = Guid.NewGuid();
+        var goal = BudgetGoal.Create(categoryId, 2026, 1, MoneyValue.Create("USD", 500m));
+        var repo = new Mock<IBudgetGoalRepository>();
+        repo.Setup(r => r.GetByCategoryAndMonthAsync(categoryId, 2026, 1, default)).ReturnsAsync(goal);
+        repo.Setup(r => r.RemoveAsync(goal, default)).Returns(Task.CompletedTask);
+        var categoryRepo = new Mock<IBudgetCategoryRepository>();
+        var uow = new Mock<IUnitOfWork>();
+        uow.Setup(u => u.SaveChangesAsync(default)).ReturnsAsync(1);
+
+        var service = new BudgetGoalService(repo.Object, categoryRepo.Object, uow.Object);
+
+        // Act
+        var result = await service.DeleteGoalAsync(categoryId, 2026, 1);
+
+        // Assert
+        Assert.True(result);
+        repo.Verify(r => r.RemoveAsync(goal, default), Times.Once);
+        uow.Verify(u => u.SaveChangesAsync(default), Times.Once);
+    }
 }

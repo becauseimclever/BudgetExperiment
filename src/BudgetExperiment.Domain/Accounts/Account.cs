@@ -88,6 +88,14 @@ public sealed class Account
     }
 
     /// <summary>
+    /// Gets the UTC timestamp when the account was soft-deleted (null if not deleted).
+    /// </summary>
+    public DateTime? DeletedAtUtc
+    {
+        get; private set;
+    }
+
+    /// <summary>
     /// Gets the transactions in this account.
     /// </summary>
     public IReadOnlyCollection<Transaction> Transactions => _transactions.AsReadOnly();
@@ -301,5 +309,23 @@ public sealed class Account
         _transactions.Remove(transaction);
         this.UpdatedAtUtc = DateTime.UtcNow;
         return true;
+    }
+
+    /// <summary>
+    /// Soft-deletes this account by setting the DeletedAtUtc timestamp.
+    /// </summary>
+    public void SoftDelete()
+    {
+        this.DeletedAtUtc = DateTime.UtcNow;
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Restores this account by clearing the DeletedAtUtc timestamp.
+    /// </summary>
+    public void Restore()
+    {
+        this.DeletedAtUtc = null;
+        this.UpdatedAtUtc = DateTime.UtcNow;
     }
 }

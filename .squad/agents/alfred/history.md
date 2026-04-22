@@ -5,6 +5,62 @@
 - **Stack:** .NET 10, ASP.NET Core Minimal API, Blazor WebAssembly (plain, no FluentUI), EF Core + Npgsql (PostgreSQL), xUnit + Shouldly, NSubstitute/Moq (one, consistent), StyleCop.Analyzers
 - **Created:** 2026-03-22
 
+---
+
+## Phase 1 Planning — Soft-Delete Implementation + 60%→85% Coverage (2026-04-21)
+
+**Status:** ✅ Design complete; planning documents submitted to `.squad/decisions/inbox/`
+
+**Deliverables Produced:**
+1. **`alfred-phase1-soft-delete-plan.md`** — Complete soft-delete architecture (6 entities, query filters, migration strategy, testing)
+2. **`alfred-phase1-test-strategy.md`** — Coverage roadmap (97 new tests, 6 categories: soft-delete, concurrency, data consistency, edge cases, authorization, integration workflows)
+3. **`alfred-phase1-readiness.md`** — Execution checklist, dependencies, risk register, decision gates, team roles, sign-off
+
+**Key Decisions:**
+- **Soft-delete pattern:** Simple query filter (`DeletedAt == null`) at EF Core level; non-cascading; transparent to API
+- **Test categories:** A (Soft-Delete 17), B (Concurrency 15), C (Data Consistency 18), D (Edge Cases 20), E (Authorization 12), F (Integration 15) = 97 total
+- **Coverage targets (Phase 1 gates):** Domain 90%, Application 85%, Api 80%, Overall 80%
+- **Per-module CI gates:** Domain 90%, Application 85%, Api 80%, Infrastructure 70%, Client 75%, Contracts 60% (to be implemented post-Phase 1)
+- **Resource allocation:** Lucius (Stream A: soft-delete, 7–8 days), Barbara (Stream B: deep-dive tests, 9–10 days), Alfred (review gates, 3–4 days)
+- **Quality guardrails (Vic's mandatory):** Barbara quality review for all tests, no coverage gaming, per-module enforcement, monthly trend analysis
+
+**Soft-Delete Architecture Summary:**
+- 6 entities: Transaction, Account, BudgetCategory, BudgetGoal, RecurringTransaction, RecurringTransfer
+- Each gets: `DeletedAt: DateTime?`, `SoftDelete()` method, `Restore()` method
+- EF Core: `HasQueryFilter(x => x.DeletedAt == null)` in entity configurations
+- Repositories: Queries automatically exclude soft-deleted; special `GetByIdIncludeDeletedAsync()` for restore
+- Services: New `DeleteAsync()` / `RestoreAsync()` methods; soft-delete transparent to callers
+- API: DELETE endpoint unchanged (204 No Content); subsequent GET returns 404 (filtered out)
+- Migration: Add `DeletedAt TIMESTAMP NULL` columns; backfill `= NULL` (all existing records non-deleted)
+
+**Test Strategy Summary (97 tests, ~12K–15K LOC):**
+- **Stream A (Weeks 1–2):** Soft-delete unit + repo + service tests (17 tests); Concurrency ETag foundation (15 tests)
+- **Stream B (Weeks 1–2):** Data consistency (18 tests), edge cases (20 tests), authorization (12 tests), integration workflows (15 tests)
+- **Quality gate:** Barbara reviews all tests daily; meaningful assertions only; no gaming
+- **Coverage projection:** +20% overall (Domain +30%, Application +25%); Phase 1 gate: 80%+
+- **Timeline:** 11–14 dev days across 2 weeks (both streams parallel after soft-delete domain layer complete)
+
+**Blockers & Risks Documented:**
+- Phase 0 must complete (Application 60%+) before Phase 1 gates activated
+- Testcontainer flakiness (Phase 2 blocker, not Phase 1 critical; workaround: SQLite for unit tests)
+- Barbara's bandwidth (mitigation: daily batch reviews, quality checklist provided)
+- Coverage gaming prevention (Vic's guardrails enforced; per-module gates)
+
+**Next Steps:**
+1. ⏳ Await Vic's architecture approval (soft-delete pattern + test strategy)
+2. ⏳ Await Lucius & Barbara sign-off (feasibility + bandwidth confirmation)
+3. ✅ Upon approval: Execute Phase 1 (Week 1–2)
+   - Lucius starts Stream A immediately (soft-delete, 2–3 days critical path)
+   - Barbara starts Stream B planning + early test writes
+   - Alfred leads daily standups + decision gates
+4. ✅ EOW1: Soft-delete completion checkpoint (Lucius code review)
+5. ✅ EOW2: Phase 1 completion checkpoint (Barbara quality review + coverage metrics)
+
+**Decision Documents Workflow:**
+- Documents now in `.squad/decisions/inbox/` (temporary holding area)
+- Scribe (coordinator) will merge into `.squad/decisions.md` after Vic approval
+- Once merged: Alfred updates `.squad/agents/alfred/history.md` with execution notes
+
 ## Architecture
 
 Clean/Onion hybrid. Layers (outer → inner, dependencies flow inward only):
@@ -588,3 +644,88 @@ Only Phase 1 is complete. The branch has ~25% of the total feature work done.
 **Decision written to:** `.squad/decisions/inbox/alfred-161-phase2-boundary.md`
 
 **Lesson:** Phased architectural work requires explicit boundary definition before each phase. "API layer only" needs to be unpacked into precise file lists with clear exclusions, or implementers will drift into adjacent layers and create merge conflicts with future phases.
+
+---
+
+### Phase 1B Soft-Delete Design & Test Strategy (2026-01-10)
+
+**Context:** Phase 1A achieved 55%+ coverage (47.39% → 55%+, gate PASSED). Phase 1B targets 60%+ via 40+ tests focused on soft-delete domain methods, service edge cases, and integration workflows.
+
+**Key Decisions:**
+
+1. **Soft-Delete Architecture: Non-Cascading Domain Methods**
+   - Domain methods (`SoftDelete()`, `Restore()`) are **leaf operations** — no repository dependencies
+   - Cascade logic belongs in **service layer** where business policies are enforced
+   - Service methods gain cascade flags (e.g., `DeleteAccountAsync(cascadeToTransactions: bool)`)
+   - Rationale: Domain models are immutable primitives; they don't orchestrate across aggregates
+   - Example: `Account.SoftDelete()` only sets `DeletedAtUtc`; service decides if transactions cascade
+
+2. **Cascade Rules Summary**
+   - Account → Transactions: NO auto-cascade (service decides: preserve for audit vs. cascade on closure)
+   - BudgetCategory → BudgetGoals: NO auto-cascade (service decides: cascade or preserve)
+   - BudgetCategory → Transactions: NO auto-cascade (transactions become orphaned; service can reassign)
+   - RecurringTransaction → Transaction instances: NO auto-cascade (already-realized remain; future stop)
+   - RecurringTransfer → Transaction pairs: NO auto-cascade (same as RecurringTransaction)
+
+3. **Repository Layer: Query Filters + Special Restore Method**
+   - EF Core `HasQueryFilter(x => x.DeletedAtUtc == null)` automatically excludes soft-deleted records
+   - Standard queries (`GetByIdAsync`, `GetAllAsync`) respect filter transparently
+   - Special method `GetByIdIncludeDeletedAsync()` uses `IgnoreQueryFilters()` for restore workflows
+   - Service layer uses standard methods for normal operations; special method only for restore
+
+4. **Service Layer Integration Patterns**
+   - Each service gains: `DeleteAsync(id)`, `RestoreAsync(id)`
+   - AccountService gains: `DeleteAsync(id, cascadeToTransactions: bool = true)`
+   - BudgetCategoryService gains: `DeleteAsync(id, cascadeToGoals: bool = false)`
+   - Authorization check: Verify `OwnerUserId` matches current user before soft-delete
+   - Atomic persistence: All soft-deletes (parent + cascaded children) saved in single `UnitOfWork.SaveChangesAsync()`
+
+5. **Phase 1B Test Strategy: 40+ Tests Across 6 Categories**
+   - **Category A (8 tests):** Soft-Delete Domain Methods — validate timestamps, exceptions, double-delete protection
+   - **Category B (12 tests):** CategorySuggestionService Edge Cases — null handling, concurrent dismissals, cache invalidation
+   - **Category C (8 tests):** BudgetProgressService Rollup Logic — multi-category aggregation, zero budget, overflow
+   - **Category D (6 tests):** Transaction Import Edge Cases — duplicate detection with soft-delete, file format edge cases
+   - **Category E (4 tests):** RecurringCharge Detection — soft-delete affects detection, threshold boundaries
+   - **Category F (2 tests):** Cross-Service Integration — soft-delete cascading, atomic transactions
+
+6. **Coverage Roadmap (Per-Service Targets)**
+   - BudgetProgressService: 65% → 75% (+10% via 8 rollup tests)
+   - CategorySuggestionService: 85% → 92% (+7% via 12 edge case tests)
+   - TransactionService: 75% → 82% (+7% via soft-delete tests)
+   - RecurringChargeDetectionService: 60% → 75% (+15% via 4 detection tests)
+   - ImportService: 70% → 82% (+12% via 6 import edge cases)
+   - **Overall Application:** 55% → 60%+ (+5% via 40 tests)
+
+7. **Per-Module CI Gates (Enforcement Plan)**
+   - Domain: 90% gate (activate post-Phase 1B)
+   - Application: 60% gate (Phase 1B milestone)
+   - Api: 80% gate (already enforced)
+   - Client: 75% gate (already enforced)
+   - Infrastructure: 70% gate (already enforced)
+   - Contracts: 60% gate (already enforced)
+   - Rationale: Per-module gates prevent averaging (e.g., high Client coverage hiding low Application coverage)
+
+8. **Implementation Timeline**
+   - Day 1 (Lucius): Domain soft-delete methods (6 entities × 2 methods)
+   - Day 2 (Lucius): Service layer methods + cascade logic
+   - Days 2-6 (Barbara): 40 tests across 6 categories
+   - Day 7 (Alfred): Review + coverage measurement
+
+**Architectural Patterns Validated:**
+
+- **Domain-Driven Design:** Domain methods are pure behavior; no infrastructure dependencies
+- **Service Layer Orchestration:** Complex workflows (cascade, authorization) belong in services
+- **Repository Pattern:** Query filters provide transparent soft-delete filtering; special methods for edge cases
+- **Unit of Work:** Atomic persistence ensures cascade operations are transactional
+- **Test Quality Guardrails:** AAA pattern, culture-aware setup, meaningful assertions, no trivial tests
+
+**Documents Created:**
+- `.squad/decisions/inbox/alfred-phase1b-domain-methods.md` — Domain method design (6 entities, cascade rules)
+- `.squad/decisions/inbox/alfred-phase1b-strategy.md` — Test strategy (40 tests, coverage roadmap, CI gates)
+
+**Next Steps:**
+1. Await Fortinbra approval of design + strategy
+2. Lucius implements domain methods (Day 1)
+3. Barbara writes tests (Days 2-6)
+4. Alfred reviews + measures coverage (Day 7)
+5. Phase 1B gate: 60%+ Application coverage achieved

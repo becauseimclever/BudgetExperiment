@@ -144,6 +144,14 @@ public sealed class RecurringTransaction
     }
 
     /// <summary>
+    /// Gets the UTC timestamp when the recurring transaction was soft-deleted (null if not deleted).
+    /// </summary>
+    public DateTime? DeletedAtUtc
+    {
+        get; private set;
+    }
+
+    /// <summary>
     /// Gets the import patterns used to match imported transactions.
     /// </summary>
     public IReadOnlyCollection<ImportPatternValue> ImportPatterns => _importPatterns.AsReadOnly();
@@ -379,5 +387,23 @@ public sealed class RecurringTransaction
         }
 
         return _importPatterns.Any(p => p.Matches(description));
+    }
+
+    /// <summary>
+    /// Soft-deletes this recurring transaction by setting the DeletedAtUtc timestamp.
+    /// </summary>
+    public void SoftDelete()
+    {
+        this.DeletedAtUtc = DateTime.UtcNow;
+        this.UpdatedAtUtc = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Restores this recurring transaction by clearing the DeletedAtUtc timestamp.
+    /// </summary>
+    public void Restore()
+    {
+        this.DeletedAtUtc = null;
+        this.UpdatedAtUtc = DateTime.UtcNow;
     }
 }

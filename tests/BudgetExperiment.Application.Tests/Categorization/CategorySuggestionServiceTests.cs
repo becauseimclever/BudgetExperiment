@@ -367,6 +367,306 @@ public class CategorySuggestionServiceTests
         Assert.Empty(result);
     }
 
+    [Fact]
+    public async Task AcceptSuggestionAsync_WithCustomName_Override_Creates_Category_With_Custom_Name()
+    {
+        // Arrange
+        var suggestion = CategorySuggestion.Create(
+            "Entertainment",
+            CategoryType.Expense,
+            new[] { "netflix" },
+            5,
+            0.85m,
+            TestOwnerId,
+            "movie",
+            "#FF5733");
+
+        _suggestionRepoMock
+            .Setup(r => r.GetByIdAsync(suggestion.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(suggestion);
+
+        _categoryRepoMock
+            .Setup(r => r.GetByNameAsync("My Custom Entertainment", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BudgetCategory?)null);
+
+        // Act
+        var result = await _service.AcceptSuggestionAsync(
+            suggestion.Id,
+            customName: "My Custom Entertainment",
+            customIcon: null,
+            customColor: null);
+
+        // Assert
+        Assert.True(result.Success);
+        Assert.NotNull(result.CreatedCategoryId);
+        _categoryRepoMock.Verify(
+            r => r.AddAsync(
+                It.Is<BudgetCategory>(c => c.Name == "My Custom Entertainment"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task AcceptSuggestionAsync_WithCustomIcon_Override_Creates_Category_With_Custom_Icon()
+    {
+        // Arrange
+        var suggestion = CategorySuggestion.Create(
+            "Entertainment",
+            CategoryType.Expense,
+            new[] { "netflix" },
+            5,
+            0.85m,
+            TestOwnerId,
+            "movie",
+            "#FF5733");
+
+        _suggestionRepoMock
+            .Setup(r => r.GetByIdAsync(suggestion.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(suggestion);
+
+        _categoryRepoMock
+            .Setup(r => r.GetByNameAsync("Entertainment", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BudgetCategory?)null);
+
+        // Act
+        var result = await _service.AcceptSuggestionAsync(
+            suggestion.Id,
+            customName: null,
+            customIcon: "custom-icon",
+            customColor: null);
+
+        // Assert
+        Assert.True(result.Success);
+        _categoryRepoMock.Verify(
+            r => r.AddAsync(
+                It.Is<BudgetCategory>(c => c.Icon == "custom-icon"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task AcceptSuggestionAsync_WithCustomColor_Override_Creates_Category_With_Custom_Color()
+    {
+        // Arrange
+        var suggestion = CategorySuggestion.Create(
+            "Entertainment",
+            CategoryType.Expense,
+            new[] { "netflix" },
+            5,
+            0.85m,
+            TestOwnerId,
+            "movie",
+            "#FF5733");
+
+        _suggestionRepoMock
+            .Setup(r => r.GetByIdAsync(suggestion.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(suggestion);
+
+        _categoryRepoMock
+            .Setup(r => r.GetByNameAsync("Entertainment", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BudgetCategory?)null);
+
+        // Act
+        var result = await _service.AcceptSuggestionAsync(
+            suggestion.Id,
+            customName: null,
+            customIcon: null,
+            customColor: "#00FF00");
+
+        // Assert
+        Assert.True(result.Success);
+        _categoryRepoMock.Verify(
+            r => r.AddAsync(
+                It.Is<BudgetCategory>(c => c.Color == "#00FF00"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task AcceptSuggestionAsync_WithMixed_Overrides_All_Applied_Together()
+    {
+        // Arrange
+        var suggestion = CategorySuggestion.Create(
+            "Entertainment",
+            CategoryType.Expense,
+            new[] { "netflix" },
+            5,
+            0.85m,
+            TestOwnerId,
+            "movie",
+            "#FF5733");
+
+        _suggestionRepoMock
+            .Setup(r => r.GetByIdAsync(suggestion.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(suggestion);
+
+        _categoryRepoMock
+            .Setup(r => r.GetByNameAsync("Streaming Services", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BudgetCategory?)null);
+
+        // Act
+        var result = await _service.AcceptSuggestionAsync(
+            suggestion.Id,
+            customName: "Streaming Services",
+            customIcon: "streaming-icon",
+            customColor: "#FF00FF");
+
+        // Assert
+        Assert.True(result.Success);
+        _categoryRepoMock.Verify(
+            r => r.AddAsync(
+                It.Is<BudgetCategory>(c =>
+                    c.Name == "Streaming Services" &&
+                    c.Icon == "streaming-icon" &&
+                    c.Color == "#FF00FF"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task AcceptSuggestionAsync_Trims_Whitespace_On_Custom_Fields()
+    {
+        // Arrange
+        var suggestion = CategorySuggestion.Create(
+            "Entertainment",
+            CategoryType.Expense,
+            new[] { "netflix" },
+            5,
+            0.85m,
+            TestOwnerId,
+            "movie",
+            "#FF5733");
+
+        _suggestionRepoMock
+            .Setup(r => r.GetByIdAsync(suggestion.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(suggestion);
+
+        _categoryRepoMock
+            .Setup(r => r.GetByNameAsync("Streaming", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((BudgetCategory?)null);
+
+        // Act
+        var result = await _service.AcceptSuggestionAsync(
+            suggestion.Id,
+            customName: "  Streaming  ",
+            customIcon: "  icon  ",
+            customColor: "  #FF00FF  ");
+
+        // Assert
+        Assert.True(result.Success);
+        _categoryRepoMock.Verify(
+            r => r.AddAsync(
+                It.Is<BudgetCategory>(c =>
+                    c.Name == "Streaming" &&
+                    c.Icon == "icon" &&
+                    c.Color == "#FF00FF"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task AcceptSuggestionAsync_Rejects_Duplicate_Category_Name_With_Custom_Override()
+    {
+        // Arrange
+        var suggestion = CategorySuggestion.Create(
+            "Entertainment",
+            CategoryType.Expense,
+            new[] { "netflix" },
+            5,
+            0.85m,
+            TestOwnerId,
+            "movie",
+            "#FF5733");
+
+        var existingCategory = CreateTestCategory("Streaming", CategoryType.Expense);
+
+        _suggestionRepoMock
+            .Setup(r => r.GetByIdAsync(suggestion.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(suggestion);
+
+        _categoryRepoMock
+            .Setup(r => r.GetByNameAsync("Streaming", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingCategory);
+
+        // Act
+        var result = await _service.AcceptSuggestionAsync(
+            suggestion.Id,
+            customName: "Streaming",
+            customIcon: null,
+            customColor: null);
+
+        // Assert
+        Assert.False(result.Success);
+        Assert.Contains("already exists", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
+        _categoryRepoMock.Verify(r => r.AddAsync(It.IsAny<BudgetCategory>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task GetSuggestedRulesAsync_Returns_Matching_Patterns_With_Sample_Descriptions()
+    {
+        // Arrange
+        var suggestion = CategorySuggestion.Create(
+            "Streaming",
+            CategoryType.Expense,
+            new[] { "netflix", "hulu" },
+            5,
+            0.85m,
+            TestOwnerId,
+            "movie");
+
+        _suggestionRepoMock
+            .Setup(r => r.GetByIdAsync(suggestion.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(suggestion);
+
+        _transactionRepoMock
+            .Setup(r => r.GetUncategorizedDescriptionsAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new[]
+            {
+                "NETFLIX.COM*123",
+                "NETFLIX MONTHLY",
+                "HULU PLUS",
+                "OTHER CHARGE",
+            });
+
+        // Act
+        var result = await _service.GetSuggestedRulesAsync(suggestion.Id);
+
+        // Assert
+        Assert.NotEmpty(result);
+        var netflixRule = result.FirstOrDefault(r => r.Pattern == "netflix");
+        Assert.NotNull(netflixRule);
+        Assert.Equal(2, netflixRule.MatchingTransactionCount);
+    }
+
+    [Fact]
+    public async Task AcceptSuggestionAsync_Denies_Cross_User_Access_Authorization_Check()
+    {
+        // Arrange
+        var otherUserId = "user-other-456";
+        var suggestion = CategorySuggestion.Create(
+            "Entertainment",
+            CategoryType.Expense,
+            new[] { "netflix" },
+            5,
+            0.85m,
+            otherUserId, // Different owner
+            "movie",
+            "#FF5733");
+
+        _suggestionRepoMock
+            .Setup(r => r.GetByIdAsync(suggestion.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(suggestion);
+
+        // Act
+        var result = await _service.AcceptSuggestionAsync(suggestion.Id, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.Success);
+        Assert.Contains("permission", result.ErrorMessage, StringComparison.OrdinalIgnoreCase);
+        _categoryRepoMock.Verify(r => r.AddAsync(It.IsAny<BudgetCategory>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     private static Account CreateTestAccount()
     {
         return Account.Create("Test Account", AccountType.Checking, MoneyValue.Create("USD", 1000m));

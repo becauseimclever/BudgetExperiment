@@ -148,6 +148,11 @@ public sealed class BudgetProgressService : IBudgetProgressService
         var categoriesOverBudget = categoryProgress.Count(p => p.Status == nameof(BudgetStatus.OverBudget));
         var categoriesNoBudgetSet = categoryProgress.Count(p => p.Status == nameof(BudgetStatus.NoBudgetSet));
 
+        // Calculate overall percent used
+        var overallPercentUsed = totalBudgeted.Amount > 0
+            ? Math.Round((totalSpent.Amount / totalBudgeted.Amount) * 100m, 0, MidpointRounding.AwayFromZero)
+            : 0m;
+
         return new BudgetSummaryDto
         {
             Year = year,
@@ -156,6 +161,7 @@ public sealed class BudgetProgressService : IBudgetProgressService
             TotalBudgeted = CommonMapper.ToDto(totalBudgeted),
             TotalSpent = CommonMapper.ToDto(totalSpent),
             TotalRemaining = CommonMapper.ToDto(MoneyValue.Create(totalBudgeted.Currency, totalBudgeted.Amount - totalSpent.Amount)),
+            OverallPercentUsed = overallPercentUsed,
             CategoriesOnTrack = categoriesOnTrack,
             CategoriesWarning = categoriesWarning,
             CategoriesOverBudget = categoriesOverBudget,
