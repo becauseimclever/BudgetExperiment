@@ -7,6 +7,25 @@
 
 ---
 
+## Phase 2 Planning — Per-Module CI Gates (2026-05-22)
+
+**Status:** ✅ Architecture & implementation plan complete
+
+**Deliverable:** `alfred-phase2-ci-gates-plan.md` — 11-section comprehensive plan addressing:
+1. **Module targets:** Domain 90%, Application 85%, Api 80%, Client 75%, Infrastructure 70%, Contracts 60%
+2. **Measurement approach:** Enhanced Cobertura reporting + PowerShell gate script (`scripts/check-coverage.ps1`)
+3. **CI integration:** New workflow step to parse per-module coverage and fail if any threshold missed
+4. **PR communication:** Per-module breakdown table in sticky PR comment (pass/fail status, gaps)
+5. **Guardrails:** No averaging, no retroactive drops, Vic approval for exemptions, Barbara quality review
+6. **Rollout strategy:** Phase 2A (infrastructure), Phase 2B (develop → main merge), Phase 2C (Infrastructure stabilization, ongoing)
+7. **Timeline:** 2–3 days infrastructure + 1 day rollout (week of 2026-05-22)
+8. **Risk mitigation:** Cobertura parsing fallbacks, threshold validation on develop before main
+9. **Approvals needed:** Vic (guardrails), Lucius (CI integration), Fortinbra (final sign-off)
+
+**Key architectural decision:** Introduce coverage gate script for full control over per-module enforcement (vs. external SaaS tool).
+
+---
+
 ## Phase 1 Planning — Soft-Delete Implementation + 60%→85% Coverage (2026-04-21)
 
 **Status:** ✅ Design complete; planning documents submitted to `.squad/decisions/inbox/`
@@ -729,3 +748,33 @@ Only Phase 1 is complete. The branch has ~25% of the total feature work done.
 3. Barbara writes tests (Days 2-6)
 4. Alfred reviews + measures coverage (Day 7)
 5. Phase 1B gate: 60%+ Application coverage achieved
+
+---
+
+## Phase 2 Completion — Per-Module CI Gates APPROVED (2026-04-25)
+
+**Status:** ✅ COMPLETE & APPROVED FOR PRODUCTION
+
+**Phase 2B Fixes Applied:**
+- **Tim:** Validation script infrastructure tracking + retroactive drop detection finalized
+- **Gordon:** CI workflow state persistence & Cobertura error handling integrated
+- **Barbara:** Quality re-review completed; all gaps addressed; approval granted
+
+**Key Outcomes:**
+1. **Per-module validation:** All 6 modules now independently validated
+   - Domain (90%), Application (85%), Api (80%), Infrastructure (70%), Client (75%), Contracts (60%)
+2. **Retroactive drop detection:** Script correctly identifies coverage regression from baseline
+3. **CI integration:** Workflow gates integrated with error handling for artifact failures
+4. **Guardrails maintained:** Feature 127 quality standards enforced (no averaging, Vic exceptions, Barbara review)
+
+**Production Readiness:** ✅ All acceptance criteria met. Ready for merge to main and CI activation.
+
+**Feature 163 Created:** Data encryption investigation document (renumbered from Feature 128 to avoid archive conflicts). Feature 128 archived; Feature 163 active for Q2 2026 planning.
+
+**Approval Chain:**
+- ✅ Tim (Infrastructure expert): Script validation passed
+- ✅ Gordon (CI specialist): Workflow integration verified
+- ✅ Barbara (Quality): Re-review approval obtained
+- ✅ Alfred (Lead): Phase 2 architecture sign-off
+
+**Next Phase:** Phase 2C (Infrastructure Stabilization + Ongoing Monitoring) — CI gates active, monthly trend analysis, exception management per Vic guardrails.

@@ -18,3 +18,7 @@
 - `BudgetScope` in ViewModel files without an explicit `using BudgetExperiment.Shared.Budgeting;` was covered by `GlobalUsings.cs`; files with the explicit using needed it removed.
 - Razor pages in `Pages/Reports/` had `@implements IDisposable` solely for scope event unsubscription — all four report pages had their `Dispose()` method and `@implements IDisposable` removed entirely.
 - Calendar.razor kept `@implements IDisposable` because `ChatContext.ClearContext()` remains in `Dispose()`.
+- Phase 2 CI workflow integration required 5 specific fixes: (1) state file caching via GitHub Actions cache/restore, (2) explicit Cobertura.xml existence check, (3) `-StatePath` parameter passed to validation script, (4) state save on push events (success OR failure), (5) `shell: pwsh` directive for PowerShell context.
+- Barbara identified Infrastructure module missing from coverage report — NOT a CI workflow issue; upstream collection/runsettings problem owned by Tim or Lucius.
+- State file cache strategy: primary key = branch+SHA, fallback #1 = same branch any commit, fallback #2 = main branch history (for new feature branches).
+- PR comment posting made conditional on validation output existing (`steps.module_coverage.outputs.result != ''`) to avoid errors when validation step crashes.

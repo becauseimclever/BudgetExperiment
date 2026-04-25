@@ -79,6 +79,62 @@ Domain Tests, Application Tests, Infrastructure Tests, API Tests, Client Tests �
 
 ## Recent Work
 
+### 2026-04-25 — Feature 127 Phase 2B: Re-Validation After Fixes
+
+**Task:** Re-validate Phase 2B per-module coverage gates after fixes by Tim (validation script) and Gordon (CI workflow).
+
+**Context:** Original validation (barbara-phase2-validation.md) identified 3 critical gaps:
+1. Infrastructure module missing from coverage report
+2. No retroactive drop tracking
+3. Current coverage below targets (2/5 modules failing)
+
+**Validation Results:**
+
+**✅ APPROVED — Phase 2B Ready for Merge to Develop**
+
+**Checklist Results:**
+1. ✅ **Infrastructure module tracked** — Script detects missing module, treats as 0% coverage, warns user, fails validation (correct behavior when Docker unavailable per Decision #3)
+2. ✅ **Retroactive drop detection working** — State file read/write verified, regressions detected correctly (tested with Domain 95% → 93.31% scenario)
+3. ✅ **Threshold enforcement correct** — All 6 modules validated individually, no averaging, fails if ANY module below target
+4. ✅ **Output format clear** — Text and GitHub markdown formats, trend arrows, gap calculation, actionable summary
+5. ✅ **CI integration sound** — State persistence via GitHub Actions cache, proper error handling, exit code propagation
+6. ✅ **Error handling adequate** — Missing Cobertura.xml → clear error, script crash → stack trace logged, validation failure → exit 1
+7. ✅ **No retroactive regressions** — State saved on both success and failure, no false regressions from missing state
+
+**Test Case Execution:**
+- ✅ Scenario 2 (Retroactive drop): Domain 95% → 93.31% detected as regression, validation failed
+- ✅ Scenario 3 (Infrastructure at 0%): Missing module treated as 0% coverage, validation failed
+- ✅ Scenario 4 (Cobertura.xml missing): Clear error message, exit 1
+- ⏳ Scenario 1 (All pass): Deferred to Phase 2C/3 (current codebase has 3/6 modules failing)
+
+**Current Coverage State:**
+- Domain: 93.31% ≥ 90% ✅
+- Application: 90.73% ≥ 85% ✅
+- Api: 79.91% < 80% ❌ (Gap: 0.09%)
+- Client: 68.01% < 75% ❌ (Gap: 6.99%)
+- Infrastructure: 0% < 70% ❌ (Docker required, tests skipped locally)
+- Contracts: 95.98% ≥ 60% ✅
+
+**Key Findings:**
+- Infrastructure module correctly tracked as 0% when Docker unavailable (expected per Decision #3: API and Infrastructure Tests Require Docker)
+- Retroactive drop detection working via coverage-state.json persistence in CI cache
+- Validation script correctly handles all error scenarios (missing Cobertura, corrupted state, script crash)
+- CI workflow properly saves state on push events (not PRs) for persistent history
+
+**Approved Deliverable:** `.squad/decisions/inbox/barbara-phase2b-validation-result.md`
+
+**Next Steps:**
+- Phase 2C: Infrastructure coverage stabilization (0% → 70%+, requires Testcontainer stability fixes)
+- Phase 3: Client coverage improvement (68% → 75%, ~15-20 high-ROI bUnit tests)
+
+**Lessons Learned:**
+- Missing module from coverage report is NOT a bug — it's expected when Testcontainer tests skipped (no Docker available)
+- Validation script correctly treats missing modules as 0% coverage and fails validation (prevents silent gaps)
+- State file persistence via GitHub Actions cache is reliable for retroactive drop detection
+- Clear error messages critical for CI debugging (missing Cobertura.xml, script crashes)
+
+---
+
 ### 2026-04-04 — Feature 127 Slice 10: RED-Phase bUnit Tests for ReportsDashboard
 
 **Task:** Write 6 RED-phase bUnit tests for the new `ReportsDashboard` aggregate page (Feature 127, Slice 10). Component did not exist yet.
