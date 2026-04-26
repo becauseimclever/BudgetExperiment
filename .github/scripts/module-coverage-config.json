@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Per-module code coverage thresholds for BudgetExperiment solution",
+  "modules": {
+    "BudgetExperiment.Domain": {
+      "threshold": 90,
+      "rationale": "Financial invariants, MoneyValue arithmetic — immutable primitives demand exhaustive testing"
+    },
+    "BudgetExperiment.Application": {
+      "threshold": 85,
+      "rationale": "Core business logic services — budget calculations, recurring charge detection, suggestions"
+    },
+    "BudgetExperiment.Api": {
+      "threshold": 80,
+      "rationale": "REST endpoints — validation, error handling, DTOs (achieved, maintain)"
+    },
+    "BudgetExperiment.Client": {
+      "threshold": 75,
+      "rationale": "Blazor WASM UI — markup-heavy, inherently difficult to test (raised from 70% to match solution floor)"
+    },
+    "BudgetExperiment.Infrastructure": {
+      "threshold": 70,
+      "rationale": "EF Core repositories, migrations — Testcontainer-heavy, integration-focused"
+    },
+    "BudgetExperiment.Contracts": {
+      "threshold": 60,
+      "rationale": "DTOs, request/response types — minimal logic, low risk"
+    }
+  }
+}

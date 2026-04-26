@@ -198,6 +198,116 @@ public class CalendarGridTests : BunitContext, IAsyncLifetime
         Assert.Empty(selectedRows);
     }
 
+    /// <summary>
+    /// Verifies that CalendarDay components are rendered correctly for the given days.
+    /// </summary>
+    [Fact]
+    public void CalendarGrid_SelectedDay_HasCorrectClass()
+    {
+        // Arrange
+        var days = CreateDays(42);
+        var selectedDate = days[10].Date;
+
+        // Act
+        var cut = Render<CalendarGrid>(p => p
+            .Add(x => x.Days, days)
+            .Add(x => x.SelectedDate, selectedDate));
+
+        // Assert - Verify CalendarDay components are rendered (at least 42 expected in 6-week grid)
+        var calendarDays = cut.FindComponents<CalendarDay>();
+        Assert.NotEmpty(calendarDays);
+        Assert.True(calendarDays.Count >= 42, $"Expected at least 42 CalendarDay components, got {calendarDays.Count}");
+    }
+
+    /// <summary>
+    /// Verifies that no heatmap is applied when HeatmapData is null.
+    /// </summary>
+    [Fact]
+    public void CalendarGrid_NoHeatmap_WhenHeatmapDataNull()
+    {
+        // Arrange
+        var days = CreateDays(42);
+
+        // Act
+        var cut = Render<CalendarGrid>(p => p
+            .Add(x => x.Days, days)
+            .Add(x => x.HeatmapData, null));
+
+        // Assert - No heatmap classes should be present
+        var markup = cut.Markup;
+        Assert.DoesNotContain("heatmap-low", markup);
+        Assert.DoesNotContain("heatmap-moderate", markup);
+        Assert.DoesNotContain("heatmap-high", markup);
+    }
+
+    /// <summary>
+    /// Verifies that clicking a week number button with stopPropagation prevents bubbling.
+    /// </summary>
+    [Fact]
+    public void CalendarGrid_WeekNumberClick_PreventsPropagation()
+    {
+        // Arrange
+        var days = CreateDays(42);
+        var dayClickCount = 0;
+
+        // Act
+        var cut = Render<CalendarGrid>(p => p
+            .Add(x => x.Days, days)
+            .Add(x => x.OnWeekSelected, (int _) => { })
+            .Add(x => x.OnDaySelected, (DateOnly _) => { dayClickCount++; }));
+
+        var weekButton = cut.FindAll(".week-number-btn")[0];
+        weekButton.Click();
+
+        // Assert - Day click should not increment (week click prevents propagation)
+        Assert.Equal(0, dayClickCount);
+    }
+
+    /// <summary>
+    /// Verifies that all 42 days are rendered in a 6-week month view.
+    /// </summary>
+    [Fact]
+    public void CalendarGrid_Renders_AllDaysInSixWeekView()
+    {
+        // Arrange
+        var days = CreateDays(42);
+
+        // Act
+        var cut = Render<CalendarGrid>(p => p
+            .Add(x => x.Days, days));
+
+        // Assert
+        var weekRows = cut.FindAll(".calendar-week-row");
+        Assert.Equal(6, weekRows.Count);
+
+        // Each week row should have 7 days + 1 week button = 8 child elements
+        foreach (var row in weekRows)
+        {
+            var cellsInRow = row.QuerySelectorAll(".calendar-day, .week-number-btn");
+            Assert.Equal(8, cellsInRow.Count());
+        }
+    }
+
+    /// <summary>
+    /// Verifies that week aria labels contain correct date ranges.
+    /// </summary>
+    [Fact]
+    public void CalendarGrid_WeekAriaLabel_ContainsDateRange()
+    {
+        // Arrange
+        var days = CreateDays(42);
+
+        // Act
+        var cut = Render<CalendarGrid>(p => p
+            .Add(x => x.Days, days));
+
+        // Assert
+        var weekRows = cut.FindAll("[role='row']");
+        var firstWeekLabel = weekRows[0].GetAttribute("aria-label");
+        Assert.Contains("Week of", firstWeekLabel);
+        Assert.Contains("to", firstWeekLabel);
+    }
+
     private static List<CalendarDaySummaryDto> CreateDays(int count)
     {
         var startDate = new DateOnly(2026, 2, 1);

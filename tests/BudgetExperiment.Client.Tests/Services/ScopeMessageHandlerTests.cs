@@ -57,7 +57,10 @@ public sealed class ScopeMessageHandlerTests
 
     private sealed class CapturingHandler : HttpMessageHandler
     {
-        public HttpRequestMessage? LastRequest { get; private set; }
+        public HttpRequestMessage? LastRequest
+        {
+            get; private set;
+        }
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {

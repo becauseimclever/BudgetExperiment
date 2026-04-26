@@ -772,6 +772,40 @@ Pure structural ISP refactor: `ITransactionRepository` had 23 methods spanning d
 
 Service list maintained in `.squad/decisions/inbox/impl-f150-isp-split.md` for future reference.
 
+## Learnings
+
+### Phase 3 Tier 1 — bUnit Test Implementation (2026-04-XX)
+
+**Overview:** Implemented 48 passing bUnit tests across 3 Blazor components (DataHealth.razor, RecurringChargeSuggestions.razor, Calendar.razor) using xUnit + Shouldly, exceeding 30-42 target.
+
+**Key Patterns Applied:**
+1. **DI Container Setup:** All page-level tests must register core services (ThemeService, CultureService, IFeatureFlagClientService, IApiErrorContext, IExportDownloadService) via Services.AddSingleton in constructor. Missing registrations cause "Cannot provide a value for property" failures during component render.
+2. **Blazor Boolean Attributes:** Use `button.HasAttribute("disabled")` instead of checking `GetAttribute("disabled")=="disabled"` — Blazor renders boolean bindings as valueless attributes.
+3. **Section Visibility:** When testing conditional rendering (e.g., `@if (Count > 0)`), check specific elements (h2.section-title) rather than loose markup strings, which can match stat labels unintentionally.
+4. **Collapsible Content:** Components with collapsible sections (CalendarBudgetPanel) start unexpanded; tests must click the header to expand before asserting nested content visibility.
+5. **CultureInfo Handling:** Set `CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-US")` in test constructor to ensure CI/Linux locale consistency when asserting on formatted strings (currency, dates).
+
+**Test Files Created:**
+- `tests/BudgetExperiment.Client.Tests/Pages/DataHealthPageTests.cs` — 17 tests
+- `tests/BudgetExperiment.Client.Tests/Pages/RecurringChargeSuggestionsPageTests.cs` — 17 tests
+- `tests/BudgetExperiment.Client.Tests/Pages/CalendarPageAdditionalTests.cs` — 14 tests
+
+**Coverage Gains:**
+- DataHealth: 0% → ~12% (stat cards, sections, error handling, loading state)
+- RecurringChargeSuggestions: 0% → ~13% (filter state, suggestions display, badges, empty state)
+- Calendar: ~30% → ~42% (month grid validation, budget panel rendering, account filter, day cell formatting)
+
+**Stub Services Created:**
+- `StubRecurringChargeSuggestionApiService` — Matches IRecurringChargeSuggestionApiService for test isolation
+
+**Common Pitfalls Fixed:**
+1. Forgotten service registrations (5 new tests initially failing with DI errors)
+2. Assumption that "Duplicates" label visibility = section rendered (fixed by checking h2.section-title CSS class)
+3. Button disabled attribute check format (fixed by using HasAttribute)
+4. Collapsed component content assertions (fixed by expanding before checking)
+
+**Result:** All 48 tests passing, exceeding Tier 1 target of 30-42. No component code modified.
+
 ### DI Registration
 
 ```csharp

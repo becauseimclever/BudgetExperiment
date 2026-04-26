@@ -85,12 +85,78 @@ jobs:
           format: markdown
           output: both
 
+      # Restore previous coverage state for retroactive drop detection
+      - name: Restore coverage state
+        uses: actions/cache@v5
+        with:
+          path: coverage-state.json
+          key: coverage-state-${{ github.ref }}-${{ github.sha }}
+          restore-keys: |
+            coverage-state-${{ github.ref }}-
+            coverage-state-refs/heads/main-
+
+      # Per-module coverage validation (Domain 90%, Application 85%, Api 80%, Client 75%, Infrastructure 70%, Contracts 60%)
+      # This step parses Cobertura.xml and fails the build if any module drops below its threshold.
+      # Prevents "averaging down" where high coverage in one module masks low coverage in another.
+      - name: Validate per-module coverage
+        id: module_coverage
+        if: always()
+        shell: pwsh
+        run: |
+          # Verify Cobertura.xml exists
+          if (-not (Test-Path ./CoverageReport/Cobertura.xml)) {
+            Write-Error "❌ Cobertura.xml not found at ./CoverageReport/Cobertura.xml"
+            Write-Error "Coverage report generation failed. Check 'Merge coverage reports' step output."
+            exit 1
+          }
+          
+          # Run validation script and capture output
+          try {
+            .github/scripts/validate-module-coverage.ps1 `
+              -CoberturaPath ./CoverageReport/Cobertura.xml `
+              -StatePath ./coverage-state.json `
+              -OutputFormat github-markdown | Tee-Object -FilePath module-coverage-results.md
+            
+            $exitCode = $LASTEXITCODE
+          }
+          catch {
+            Write-Error "❌ Validation script crashed: $_"
+            Write-Error $_.ScriptStackTrace
+            exit 1
+          }
+          
+          # Output result for workflow
+          if ($exitCode -eq 0) {
+            "result=success" >> $env:GITHUB_OUTPUT
+          } else {
+            "result=failure" >> $env:GITHUB_OUTPUT
+          }
+          
+          # Propagate exit code to fail CI if validation failed
+          exit $exitCode
+
+      # Save coverage state for next run (only on push events to persist history)
+      - name: Save coverage state
+        if: github.event_name == 'push' && (success() || failure())
+        uses: actions/cache/save@v5
+        with:
+          path: coverage-state.json
+          key: coverage-state-${{ github.ref }}-${{ github.sha }}
+
       - name: Add coverage PR comment
         uses: marocchino/sticky-pull-request-comment@v3
         if: github.event_name == 'pull_request'
         with:
           recreate: true
           path: code-coverage-results.md
+      
+      - name: Add per-module coverage PR comment
+        uses: marocchino/sticky-pull-request-comment@v3
+        if: github.event_name == 'pull_request' && always() && steps.module_coverage.outputs.result != ''
+        with:
+          recreate: false
+          append: true
+          path: module-coverage-results.md
 
       - name: Upload test results
         uses: actions/upload-artifact@v7

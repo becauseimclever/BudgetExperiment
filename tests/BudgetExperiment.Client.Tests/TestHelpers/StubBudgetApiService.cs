@@ -52,6 +52,30 @@ internal class StubBudgetApiService : IBudgetApiService
     }
 
     /// <summary>
+    /// Gets or sets the data health report that will be returned by <see cref="GetDataHealthReportAsync"/>.
+    /// </summary>
+    public DataHealthReportDto? DataHealthReport
+    {
+        get; set;
+    }
+
+    /// <summary>
+    /// Gets or sets an exception to throw from <see cref="GetDataHealthReportAsync"/>.
+    /// </summary>
+    public Exception? DataHealthReportException
+    {
+        get; set;
+    }
+
+    /// <summary>
+    /// Gets or sets a custom override for <see cref="GetDataHealthReportAsync"/>.
+    /// </summary>
+    public Func<Guid?, Task<DataHealthReportDto?>>? GetDataHealthReportAsyncOverride
+    {
+        get; set;
+    }
+
+    /// <summary>
     /// Gets or sets a value indicating whether <see cref="DeleteAccountAsync"/> returns true.
     /// </summary>
     public bool DeleteAccountResult
@@ -820,6 +844,22 @@ internal class StubBudgetApiService : IBudgetApiService
     }
 
     /// <summary>
+    /// Gets or sets the task source for controlling GetKaizenDashboardAsync completion.
+    /// </summary>
+    public TaskCompletionSource<KaizenDashboardDto?>? KaizenDashboardTaskSource
+    {
+        get; set;
+    }
+
+    /// <summary>
+    /// Gets or sets the task source for controlling CreateOrUpdateReflectionAsync completion.
+    /// </summary>
+    public TaskCompletionSource<MonthlyReflectionDto?>? CreateOrUpdateReflectionTaskSource
+    {
+        get; set;
+    }
+
+    /// <summary>
     /// Gets the list of reconciliation records returned by <see cref="GetReconciliationHistoryAsync"/>.
     /// </summary>
     public List<ReconciliationRecordDto> ReconciliationHistory { get; } = new();
@@ -1323,7 +1363,20 @@ internal class StubBudgetApiService : IBudgetApiService
         Task.FromResult<IReadOnlyList<TransactionDto>?>(ReconciliationTransactions.Count > 0 ? ReconciliationTransactions : null);
 
     /// <inheritdoc/>
-    public Task<DataHealthReportDto?> GetDataHealthReportAsync(Guid? accountId = null) => Task.FromResult<DataHealthReportDto?>(null);
+    public virtual Task<DataHealthReportDto?> GetDataHealthReportAsync(Guid? accountId = null)
+    {
+        if (GetDataHealthReportAsyncOverride != null)
+        {
+            return GetDataHealthReportAsyncOverride(accountId);
+        }
+
+        if (DataHealthReportException != null)
+        {
+            return Task.FromException<DataHealthReportDto?>(DataHealthReportException);
+        }
+
+        return Task.FromResult(DataHealthReport);
+    }
 
     /// <inheritdoc/>
     public Task<IReadOnlyList<DuplicateClusterDto>?> GetDuplicatesAsync(Guid? accountId = null) => Task.FromResult<IReadOnlyList<DuplicateClusterDto>?>(null);
@@ -1347,7 +1400,6 @@ internal class StubBudgetApiService : IBudgetApiService
     public Task<MonthlyReflectionDto?> GetReflectionByMonthAsync(int year, int month) => Task.FromResult<MonthlyReflectionDto?>(null);
 
     /// <inheritdoc/>
-    public Task<MonthlyReflectionDto?> CreateOrUpdateReflectionAsync(int year, int month, CreateOrUpdateMonthlyReflectionDto dto) => Task.FromResult<MonthlyReflectionDto?>(null);
 
     /// <inheritdoc/>
     public Task<MonthFinancialSummaryDto?> GetMonthFinancialSummaryAsync(int year, int month) => Task.FromResult<MonthFinancialSummaryDto?>(null);
@@ -1375,9 +1427,13 @@ internal class StubBudgetApiService : IBudgetApiService
 
     /// <inheritdoc />
     public virtual Task<KaizenDashboardDto?> GetKaizenDashboardAsync(int weeks = 12, CancellationToken ct = default)
-        => Task.FromResult<KaizenDashboardDto?>(null);
+        => this.KaizenDashboardTaskSource?.Task ?? Task.FromResult<KaizenDashboardDto?>(null);
 
     /// <inheritdoc />
     public virtual Task<HeatmapDataResponse?> GetCalendarHeatmapAsync(int year, int month, CancellationToken ct = default)
         => Task.FromResult<HeatmapDataResponse?>(null);
+
+    /// <inheritdoc />
+    public virtual Task<MonthlyReflectionDto?> CreateOrUpdateReflectionAsync(int year, int month, CreateOrUpdateMonthlyReflectionDto dto)
+        => this.CreateOrUpdateReflectionTaskSource?.Task ?? Task.FromResult<MonthlyReflectionDto?>(null);
 }
