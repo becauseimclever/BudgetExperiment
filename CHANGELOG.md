@@ -2,6 +2,22 @@
 
 All notable changes to Budget Experiment.
 
+## [3.30.0] - 2026-04-25
+
+### Features
+
+- **testing:** Feature 127 Phase 3 Complete — 107 new bUnit tests for Client module covering chart components, dialog interactions, parameter validation, and async state transitions; Application layer coverage improved from 35% to 81.47%; total test suite: 3,934 tests (100% passing)
+
+### Documentation
+
+- **archive:** Reorganized feature documentation archive from individual feature files to consistent grouping convention (features grouped by tens: 001-010 through 151-160); consolidated 16 individual feature files into 2 grouping files per archive structure; archive now fully consistent with grouping pattern
+- **policy:** Client UI code coverage now included in reports but excluded from CI quality gates (rationale: Razor markup dominates logic in UI components; functional test quality > coverage percentage for presentation layer)
+
+### Chores
+
+- **docs:** Updated PHASE_3_COMPLETION_REPORT.md with coverage policy explanation and architectural learnings
+- **archive:** Created `.squad/decisions/inbox/copilot-directive-2026-04-25-client-coverage.md` documenting Client coverage exclusion policy
+
 ## [3.29.0] - 2026-04-19
 
 ### Features
