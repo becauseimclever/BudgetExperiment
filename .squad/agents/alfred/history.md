@@ -7,6 +7,68 @@
 
 ---
 
+## Learnings — Feature 163 Phase 1 Review (2026-05-01)
+
+**Status:** ❌ BLOCKED — Implementation incomplete (~40% done), critical compilation errors, missing entity integrations
+
+**What Was Reviewed:**
+- `IEncryptionService` interface (Domain.Services)
+- `EncryptionService` implementation (Infrastructure.Encryption)
+- `EncryptedStringConverter` (EF Core value converter)
+- `EncryptionServiceTests` (14 unit tests)
+- DI registration in `AddInfrastructure()`
+
+**What's Missing (Blockers):**
+1. ❌ **Compilation failures (2 errors):**
+   - Line 126: `throw new DomainException("message", ex)` — wrong signature (cannot pass `CryptographicException` as second parameter to constructor expecting `DomainExceptionType` enum)
+   - Line 136: StyleCop SA1204 — static `GenerateSecureKey()` method must appear before instance members
+2. ❌ **Test infrastructure broken:** Tests instantiate `new EncryptionService()` (parameterless) but production constructor requires `IConfiguration`
+3. ❌ **No entity configurations:** `EncryptedStringConverter` exists but not applied to any of the 6 target columns (Transactions.Description, ChatMessages.Content, Accounts.Name, MonthlyReflections.Reflection, KaizenGoals.Description, CategorizationRules.MerchantPattern)
+4. ❌ **No migration:** Latest migration is `20260422033920_AddSoftDeleteFields` (soft-delete feature); no encryption migration exists
+5. ❌ **No Cassandra boundary audit:** No audit document found in `.squad/log/` or `.squad/decisions/inbox/`
+6. ❌ **No performance validation:** Calendar < 500ms constraint (Phase 1 critical per Fortinbra's directive) not verified
+
+**SOLID Review (Mixed Results):**
+- ✅ **SRP:** EncryptionService does ONE thing (encrypt/decrypt), EncryptedStringConverter does ONE thing (EF Core conversion)
+- ✅ **DIP:** Interface in Domain.Services, implementation in Infrastructure, no layer violations
+- ✅ **OCP:** Encryption algorithm encapsulated, swappable via DI
+- ✅ **ISP:** Interface has only 2 methods (minimal)
+- ✅ **Layering:** Domain unaware of encryption, Infrastructure owns all crypto logic
+
+**Clean Code Review:**
+- ✅ **Good:** Named constants (`KeySizeBytes`, `NonceSizeBytes`, `TagSizeBytes`), guard clauses, meaningful variable names
+- ⚠️ **Method length:** EncryptAsync 24 lines, DecryptAsync 42 lines (justified for crypto), constructor 26 lines (acceptable)
+- ❌ **Error handling:** Line 126 constructor signature mismatch (blocker)
+
+**Test Coverage (Excellent for Unit Tests):**
+- ✅ **14 comprehensive unit tests:** Happy path, edge cases, security (tampering detection, wrong key, nonce randomness), configuration validation, key rotation design test
+- ❌ **No integration tests:** EF Core converter not tested with real DbContext
+- ❌ **No performance tests:** Encryption overhead on calendar queries not measured
+
+**Architecture Insights — Cross-Cutting Concerns Pattern:**
+- **Challenge:** Encryption is cross-cutting (affects 6 entities across 4 configurations). Where does converter application live?
+- **Solution recommended:** Apply converters globally in `BudgetDbContext.OnModelCreating()` rather than per-entity configuration, because EF Core entity configurations cannot access `IServiceProvider` to resolve `IEncryptionService`.
+  ```csharp
+  // In BudgetDbContext.OnModelCreating():
+  var encryptionService = this.GetService<IEncryptionService>();
+  var converter = new EncryptedStringConverter(encryptionService);
+  modelBuilder.Entity<Transaction>().Property(t => t.Description).HasConversion(converter);
+  // ... repeat for 5 other columns
+  ```
+- **Takeaway:** For cross-cutting concerns (encryption, auditing, logging) that require DI services, **apply EF Core configurations globally in DbContext rather than individual entity configurations** when framework limitations prevent clean separation.
+
+**Estimated Completion:** 6-8 hours (1 working day)
+- Lucius: 6-7 hours (fix compilation, apply entity configurations, generate migration, integration tests)
+- Cassandra: 1 hour (boundary audit)
+- Barbara: 30 min (verify tests pass)
+- Performance agent: 1 hour (calendar benchmark)
+
+**Deliverable:** `alfred-feature-163-phase1-review.md` in `.squad/decisions/inbox/` — comprehensive 26K-character audit report with approval checklist, SOLID review, proposed fixes with code examples, timeline estimate.
+
+**Decision:** ❌ BLOCKED — Reassign to Lucius for completion of entity configurations, migration, and compilation fixes. Re-submit for approval after all artifacts complete.
+
+---
+
 ## Phase 2 Planning — Per-Module CI Gates (2026-05-22)
 
 **Status:** ✅ Architecture & implementation plan complete
@@ -828,3 +890,171 @@ Only Phase 1 is complete. The branch has ~25% of the total feature work done.
 Phase 3 client coverage analysis complete: 8 priority targets identified + 70 test scenarios drafted.
 
 **Deliverable:** Coverage analysis merged into .squad/decisions.md, ready for implementation phase.
+
+---
+
+## Learnings — Feature 163 Phase 0 Analysis (2026-01-10)
+
+### Encryption Approaches Researched
+
+**EF Core Value Converters vs. PostgreSQL pgcrypto:**
+
+1. **EF Core Value Converters (Recommended):**
+   - Clean Architecture alignment: encryption logic isolated in Infrastructure layer
+   - Domain entities remain POCO (no EncryptedString type leakage)
+   - Testability: converters unit-testable independently; integration tests use Testcontainers
+   - Per-column control: can selectively encrypt sensitive fields without encrypting query-critical columns
+   - Implementation: AesGcm class from System.Security.Cryptography (.NET 10)
+   - Storage: Base64-encoded TEXT [IV:12 bytes][Ciphertext:variable][Tag:16 bytes]
+   - Trade-off: Key rotation requires dual-column migration strategy
+
+2. **PostgreSQL pgcrypto (Not Recommended for Phase 1):**
+   - Database-native TDE (Transparent Data Encryption)
+   - Harder to test (requires PostgreSQL-specific SQL)
+   - Key management still required (pgcrypto functions need keys as parameters)
+   - Less control for per-user key derivation (would require application logic anyway)
+   - Minimal performance advantage (~5-10µs vs. 10-20µs per row for AES-GCM)
+
+3. **Hybrid Approach (Phase 2+ Enhancement):**
+   - Combine TDE for entire tables + column-level encryption for high-sensitivity fields
+   - Complex setup, dual key management
+   - Only justified if compliance requires defense-in-depth beyond column encryption
+
+**Key Decision Pattern:** When evaluating encryption strategies, **prefer application-level encryption (value converters) over database-native TDE** for clean architecture alignment, testability, and flexibility (per-column control, future per-user key derivation).
+
+---
+
+### Architectural Patterns Discovered
+
+**1. Dual-Column Migration Strategy (Zero-Downtime Encryption):**
+
+Pattern for migrating existing plaintext data to encrypted storage without service interruption:
+
+- **Phase 1:** Add *Encrypted columns (nullable) alongside existing plaintext columns
+- **Phase 2:** Background job encrypts plaintext → writes to encrypted columns (batch 1000 rows, resumable)
+- **Phase 3:** Application dual-read (read encrypted first, fallback to plaintext if null)
+- **Phase 4:** Drop plaintext columns after 100% migration + 1 release cycle safety buffer
+
+**Why this pattern:**
+- Rollback safety: keep plaintext columns during transition
+- Resumable migration: background job can be stopped/restarted
+- Testable: dual-read logic verifiable in integration tests
+- Standard practice: similar to blue-green deployments for schema changes
+
+**Applicability:** Any feature requiring data format migration without downtime (e.g., changing hash algorithms, compression schemes, encoding formats).
+
+---
+
+**2. Performance-Gated Feature Rollout:**
+
+Pattern for features with uncertain performance impact:
+
+- **Phase 1 MVP:** Implement low-risk subset (encrypt display-only columns)
+- **Benchmark Gate:** Measure performance before proceeding to high-risk features
+- **Phase 2 Conditional:** Only encrypt query-critical columns (e.g., Amount) if benchmarks pass acceptance thresholds
+- **Fallback Documentation:** If benchmarks fail, document limitation (partial encryption acceptable)
+
+**Why this pattern:**
+- Risk mitigation: avoid degrading user experience with speculative optimizations
+- Data-driven decisions: benchmarks inform go/no-go for risky features
+- Incremental delivery: users get value from low-risk features while high-risk features validated
+
+**Applicability:** Any performance-sensitive feature (caching strategies, indexing changes, query optimizations).
+
+---
+
+**3. Key Management for Self-Hosted Applications:**
+
+Pattern for managing encryption keys in self-hosted (non-cloud) deployments:
+
+- **Local Development:** dotnet user-secrets (never committed to Git)
+- **Docker Deployment:** Environment variable from .env file (gitignored)
+- **Key Generation:** CLI tool generates Base64-encoded 32-byte keys (dotnet run --project tools/GenerateEncryptionKey)
+- **Validation:** Reject non-Base64 or != 32-byte keys at startup with clear error
+- **Backup Strategy:** Documented requirement (password manager + paper backup in safe)
+- **Disaster Recovery:** Quarterly restore drills to validate key backup process
+
+**Why this pattern:**
+- Acceptable for single-user self-hosted deployments (Raspberry Pi home servers)
+- Operational simplicity: no cloud KMS dependencies
+- Critical: Key loss = permanent data loss → backup strategy mandatory
+
+**NOT suitable for:**
+- Multi-tenant cloud deployments (would require Azure Key Vault / AWS KMS)
+- Compliance requiring auditable key access logs
+
+**Applicability:** Self-hosted applications with sensitive data (password managers, personal finance, health records).
+
+---
+
+### User Preferences / Constraints Captured
+
+**Deployment Context (from Custom Instructions #35):**
+- Primary deployment: Raspberry Pi (Docker Compose)
+- Database: PostgreSQL (not cloud-hosted)
+- CI/CD: GitHub Actions builds multi-architecture images (amd64, arm64)
+- Hardened images: Use Docker Hardened Images (dhi.io/postgres) where available
+
+**Implication for Feature 163:**
+- Key management must work with environment variables (no Azure Key Vault dependency in Phase 1)
+- Performance benchmarks should target Raspberry Pi 4 hardware (ARM64, limited RAM)
+- Backup encryption (pg_dump | gpg) must be scriptable in Docker Compose environment
+
+**Privacy Philosophy (from Feature 163 doc #42-49):**
+- "Self-hoster who wants full control over financial data — no third-party cloud"
+- Encryption at rest strengthens value proposition: **data is not only yours, it's unreadable without your keys**
+- Competitive differentiation vs. cloud services: even the host cannot read your financial data
+
+**Implication:**
+- Encryption is a **strategic feature** (aligns with core value prop), not a compliance checkbox
+- User education required: key management responsibility shifts to user (document backup strategy prominently)
+
+---
+
+### Complexity Estimation Learning
+
+**Feature 163 vs. Feature 161 Comparison:**
+
+| Metric | Feature 161 (BudgetScope Removal) | Feature 163 (Encryption Phase 1) |
+|--------|-----------------------------------|----------------------------------|
+| Phases | 2 | 3+ |
+| Database Changes | Drop 2 columns | Add 5-7 encrypted columns |
+| Migration Strategy | Dual-read (2 weeks) | Dual-column (4 weeks) |
+| New Infrastructure | None (refactoring) | Encryption converters, key provider, background job |
+| Testing Effort | ~20 tests | ~40-50 tests |
+| Security Audit Required | No | Yes (Vic mandatory) |
+| Timeline | 2 weeks | 4-5 weeks |
+| Complexity | Low-Medium | Medium-High |
+
+**Heuristic:** Features introducing **new cryptographic infrastructure** are ~2-2.5x complexity of refactoring features, even if lines-of-code are similar. Factor in:
+- Discovery spikes (validate approach before committing)
+- Security audit (independent review mandatory for crypto)
+- Operational documentation (key management, disaster recovery)
+- Performance validation (benchmarks to prevent regressions)
+
+---
+
+### Decision Points Pattern
+
+When analyzing features with uncertain trade-offs, structure decision points as:
+
+1. **Current Feature Doc Position:** What does the spec say?
+2. **Alfred Recommendation:** Architecture-informed position (with rationale)
+3. **Reasoning:** Why this recommendation? (risks, trade-offs, constraints)
+4. **User Confirmation Required:** Explicit approval/override checkboxes
+5. **If OVERRIDE chosen:** Mitigations or constraints to accept override safely
+
+**Why this pattern:**
+- Forces explicit architectural position (not just "here are options")
+- Surfaces trade-offs for non-technical stakeholders (Fortinbra)
+- Prevents scope creep (override requires acknowledging increased timeline/risk)
+- Documents decision rationale for future reference
+
+**Applicability:** Any feature with:
+- Performance vs. security trade-offs
+- MVP scope vs. advanced features
+- Operational complexity vs. feature completeness
+
+---
+
+*Learnings appended 2026-01-10. Next: Await Fortinbra decision points before discovery spikes.*
