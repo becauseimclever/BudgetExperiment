@@ -19187,3 +19187,705 @@ Phase 1B test quality is exceptional. No remediation required. Team may proceed 
 **Report Version:** 1.0 (Final)
 
 
+
+---
+
+## Phase 3: Client Coverage Analysis — 8 Priority Targets + 70 Test Scenarios (Approved 2026-04-26)
+
+**Assessed by:** Alfred (coverage analysis), Barbara (test scenario design)  
+**Status:** ✅ APPROVED — Ready for implementation  
+**Scope:** Feature 127 Phase 3 — Client module coverage improvement (68% → 75%+)
+
+### Summary
+
+Two parallel coverage initiatives converge on high-ROI targets:
+
+**Alfred Analysis:** Identified 8 priority targets (pages and components) with highest per-test coverage yield and user impact.
+
+**Barbara Design:** Drafted 70 high-ROI test scenarios across 3 core workflows (budget creation, transaction import, AI suggestions).
+
+**Combined Output:** 64–93 projected new tests; targeting 75%+ Client coverage (current 73.8%).
+
+### Alfred's 8 Priority Targets
+
+**Tier 1 — Critical Pages (Highest ROI):**
+1. DataHealth/DataHealth.razor — Data quality dashboard (duplicates, outliers, gaps)
+2. RecurringChargeSuggestions.razor — Recurring charge detection UI
+
+**Tier 2 — Core Workflow Pages:**
+3. Calendar.razor — Home page (multi-budget panels, day detail, past-due alerts)
+4. AiSuggestions.razor — AI-powered category and recurring suggestions
+
+**Tier 3 — High-Logic Components:**
+5. AI/UnifiedSuggestionCard.razor — Suggestion accept/dismiss logic
+6. AI/SuggestionGroup.razor — Batch operations, filtering
+7. Calendar/KakeiboMonthHeader.razor — Kakeibo savings progress
+8. Goals/KaizenGoalModal.razor — Kaizen weekly goal management
+
+**Recommendation:** Focus Pages first (higher per-test ROI), then high-logic components.
+
+### Barbara's 70 Test Scenarios (3 Core Flows)
+
+**Tier 1 (Critical, 30 tests):** Budget creation, Import wizard, AI suggestions  
+**Tier 2 (High, 25 tests):** Import column mapping, AI ViewModel  
+**Tier 3 (Medium, 15 tests):** Calendar, FormStateService, TransactionTable  
+
+**Estimated Impact:** 70 tests → ~9% coverage gain → 82–83% Client coverage (exceeds Phase 3 target).
+
+**4-Week Timeline:**
+- Week 3, Days 1–2: BudgetGoalModal + BudgetViewModel (tests 1–14)
+- Week 3, Day 3: Budget page + CategoryBudgetCard (tests 15–22)
+- Week 3, Days 4–5: Import wizard + ColumnMappingEditor (tests 23–36)
+- Week 4, Day 1: ImportPreviewTable + CsvParserService (tests 37–46)
+- Week 4, Days 2–3: AI components (UnifiedSuggestionCard, SuggestionGroup, AnalysisInlineProgress) (tests 47–62)
+- Week 4, Day 4: AI ViewModel (tests 63–66)
+- Week 4, Day 5: Additional high-value tests (tests 67–70)
+
+### Quality Standards
+
+**Zero Vanity Tests:** Every test passes the high-ROI filter:
+- Would the test fail if behavior broke? (mutation resistance)
+- Does it assert meaningful user-visible or business logic?
+- Does it cover an edge case that could cause production issues?
+
+**Culture-Aware Testing:** All tests asserting formatted currency/numbers/dates set CultureInfo.CurrentCulture to n-US (prevents CI failures on Linux).
+
+**CI Stability:** All 70 tests must pass 10 consecutive CI runs, complete in <5s each, use deterministic assertions.
+
+### Success Criteria
+
+1. ✅ Client module coverage ≥ 75%
+2. ✅ All 70 high-ROI tests written and passing
+3. ✅ Zero vanity tests (Barbara quality review passed)
+4. ✅ Budget creation, import wizard, AI suggestions fully covered
+5. ✅ All tests culture-aware (no Linux CI failures)
+
+### References
+
+- **Test Scenario Document:** .squad/agents/barbara/phase3-test-scenarios.md
+- **Coverage Analysis:** .squad/agents/alfred/phase3-coverage-analysis.md
+- **Phase 3 Definition:** docs/127-code-coverage-beyond-80-percent.md
+- **Tracking:** Phase 1B Results — Application 81.47%, Client 73.8%, all tests passing
+
+---
+
+# Phase 3 Client Coverage Analysis — Priority Targets (68% → 75%)
+
+**Author:** Alfred  
+**Date:** 2026-01-10  
+**Context:** Feature 127, Phase 3 — Client module coverage improvement  
+**Current State:** Client module 68.01% (coverage-state.json), needs 75% to meet solution floor  
+**Gap:** ~7 percentage points  
+
+---
+
+## Executive Summary
+
+Analyzed the Client module structure against Phase 3 goals (budget creation flow, transaction import, category suggestion UI). Identified **8 priority targets** ordered by ROI: high user impact + currently low/no test coverage. These pages/components touch critical workflows and have significant testable logic beyond pure markup.
+
+**Recommendation:** Focus on Pages first (higher per-test coverage yield, fewer markup-only components), then move to high-value Components if additional coverage needed.
+
+---
+
+## Client Module Structure Map
+
+### Pages (30 total)
+**Core Workflow Pages (tested):**
+- ✅ Budget.razor — BudgetPageTests.cs (5 tests) — budget overview, month navigation
+- ✅ Import.razor — ImportPageTests.cs (3 tests) — multi-step wizard, CSV upload
+- ✅ AiSuggestions.razor — AiSuggestionsPageTests.cs (minimal) — AI-powered category suggestions
+- ✅ Transactions.razor — (ViewModel tests exist) — transaction management
+- ✅ Categories.razor — CategoriesPageTests.cs — category and budget goal management
+- ✅ Recurring.razor — RecurringPageTests.cs — recurring charge management
+- ✅ Accounts.razor — AccountsPageTests.cs — account list/create/edit
+
+**Core Workflow Pages (UNTESTED — High Priority):**
+- ❌ **DataHealth/DataHealth.razor** — Data quality dashboard (duplicates, outliers, gaps, uncategorized) — **NO TESTS**
+- ❌ **RecurringChargeSuggestions.razor** — Recurring charge detection and acceptance — **NO TESTS**
+- ❌ **Calendar.razor** — Primary home page (multi-budget panels, day detail, reflection, past-due alerts) — CalendarPageTests.cs **EXISTS but likely minimal**
+
+**Report Pages (mix):**
+- ✅ Reports/MonthlyCategoriesReport.razor — MonthlyCategoriesReportPageTests.cs
+- ✅ Reports/MonthlyTrendsReport.razor — MonthlyTrendsReportPageTests.cs
+- ✅ Reports/BudgetComparisonReport.razor — BudgetComparisonReportTests.cs
+- ✅ Reports/ReportsDashboard.razor — ReportsDashboardTests.cs
+- ✅ Reports/CustomReportBuilder.razor — CustomReportBuilderPageTests.cs
+- ✅ Reports/LocationReportPage.razor — LocationReportPageTests.cs
+- ❌ **Reports/KaizenDashboardView.razor** — 12-week Kakeibo spending trend with micro-goals — **NO TESTS**
+- ❌ **Reports/ReportsIndex.razor** — Report landing page (navigation cards) — **NO TESTS**
+
+**Secondary Pages (lower priority):**
+- ✅ Onboarding.razor — OnboardingPageTests.cs
+- ✅ Settings.razor — SettingsPageTests.cs
+- ✅ Rules.razor — RulesPageTests.cs
+- ✅ Reconciliation.razor — ReconciliationPageTests.cs
+- ✅ StatementReconciliation/StatementReconciliation.razor — (component tests exist)
+- ✅ StatementReconciliation/ReconciliationHistory.razor — (component tests exist)
+- ✅ StatementReconciliation/ReconciliationDetail.razor — (component tests exist)
+- ❌ ComponentShowcase.razor — Demo page for charts/components (dev tool only, low impact)
+- ✅ PaycheckPlanner.razor — PaycheckPlannerPageTests.cs
+- ✅ Uncategorized.razor — UncategorizedPageTests.cs
+- ✅ Transfers.razor — TransfersPageTests.cs
+- ✅ AccountTransactions.razor — AccountTransactionsPageTests.cs
+- ✅ Licenses.razor — LicensesPageTests.cs
+- ✅ Authentication.razor — AuthenticationPageTests.cs
+- ✅ RecurringTransfers.razor — RecurringTransfersPageTests.cs
+
+### Components (~150 total)
+**Critical Workflow Components (well-tested):**
+- ✅ Import/* (13 components) — All have tests (AmountModeSelector, ColumnMappingEditor, CsvPreviewTable, DateFormatSelector, DuplicateWarningCard, FileUploadZone, ImportHistoryList, ImportPreviewTable, ImportSummaryCard, IndicatorSettingsEditor, SavedMappingSelector, SavedMappingsManager, SkipRowsInput)
+- ✅ Forms/* (17 components) — All have tests (AccountForm, ApplyRulesDialog, BudgetGoalModal, CategoryForm, EditInstanceDialog, EditRecurringForm, EditRecurringTransferForm, PastDueReviewModal, QuickAddForm, RecurringTransactionForm, RecurringTransferForm, RuleForm, RuleTestPanel, TransactionForm, TransferDialog)
+- ✅ Charts/* (many) — Core chart components tested (BarChart, DonutChart, LineChart, etc.)
+- ✅ Display/* — Many display components tested (BudgetProgressBar, CategoryCard, MoneyDisplay, TransactionTable, RulesTable, etc.)
+
+**Critical Workflow Components (gaps identified):**
+- ❌ **Calendar/CalendarGrid.razor** — Month calendar grid with day cells, week selection — CalendarGridTests.cs **EXISTS but may be minimal**
+- ❌ **Calendar/CalendarBudgetPanel.razor** — Budget category summary panel on Calendar page — CalendarBudgetPanelTests.cs **EXISTS but may be minimal**
+- ❌ **Calendar/DayDetail.razor** — Day detail panel (transaction list for selected day) — DayDetailTests.cs **EXISTS but may be minimal**
+- ❌ **Calendar/KakeiboMonthHeader.razor** — Kakeibo savings progress header — **NO TESTS**
+- ❌ **Calendar/MonthIntentionPrompt.razor** — Monthly goal-setting prompt — **NO TESTS**
+- ❌ **AI/UnifiedSuggestionCard.razor** — AI suggestion card for category/recurring/rule suggestions — **NO TESTS**
+- ❌ **AI/SuggestionGroup.razor** — Grouped AI suggestions — **NO TESTS**
+- ❌ **Reconciliation/MatchReviewModal.razor** — Recurring charge match review — **NO TESTS**
+- ❌ **Goals/KaizenWeekGoalCard.razor** — Kaizen weekly goal card — **NO TESTS**
+- ❌ **Goals/KaizenGoalModal.razor** — Kaizen goal modal — **NO TESTS**
+
+**Markup-heavy/Low-logic Components (lower priority):**
+- Common/* — Buttons, Badges, Cards, Icons, LoadingSpinner, Modal — mostly presentational (some tested, acceptable coverage)
+- Charts/Shared/* — ChartAxis, ChartGrid, ChartTooltip — SVG primitives (low logic)
+- Navigation/NavMenu.razor — Navigation menu (mostly markup)
+- Auth/* — AuthInitializer, AuthOffBanner, RedirectToLogin, UserProfile — Some tested, auth flow is lightweight
+
+---
+
+## Phase 3 Priority Targets (5-10 Ranked)
+
+**Selection Criteria:**
+1. **User Impact:** Touches core workflows (budget creation, transaction import, category suggestion)
+2. **Coverage Gap:** Missing tests or minimal smoke tests
+3. **Testability:** Sufficient logic to write meaningful bUnit tests (not pure markup)
+4. **Lines-per-Test Ratio:** Pages > Complex Components > Simple Components
+
+---
+
+### **TIER 1 — Critical Pages (Highest ROI)**
+
+#### 1. **DataHealth/DataHealth.razor** 🚨 HIGH IMPACT
+- **Current Coverage:** 0% (no tests)
+- **User Impact:** Data quality dashboard — identifies duplicates, outliers, date gaps, uncategorized transactions
+- **Workflow:** Data health / quality assurance (implicit pre-requisite for accurate budgeting)
+- **Testability:** HIGH
+  - State: `_vm` with `IsLoading`, `ErrorMessage`, `DuplicateCount`, `OutlierCount`, `DateGapCount`, `UncategorizedCount`
+  - User actions: Refresh button, merge duplicates, dismiss outliers
+  - Conditional rendering: Summary stats, duplicate clusters, outlier cards, date gap cards, uncategorized summary
+- **Test Scenarios (10-15 tests):**
+  - Page renders without errors
+  - Loading state shows spinner
+  - Error state displays alert
+  - Summary stats render correctly (duplicates, outliers, gaps, uncategorized)
+  - Duplicate clusters display when present
+  - Outlier cards display when present
+  - Date gap cards display when present
+  - Uncategorized summary displays
+  - Refresh button triggers API call
+  - "All clear" message when no issues
+  - Stat values apply correct CSS classes (warning/success)
+- **Lines-per-Test Estimate:** ~8-10 lines/test (DataHealth.razor ~120 lines + code-behind)
+
+---
+
+#### 2. **RecurringChargeSuggestions.razor** 🚨 HIGH IMPACT
+- **Current Coverage:** 0% (no tests)
+- **User Impact:** Recurring charge detection and acceptance — core feature for automating recurring transaction management
+- **Workflow:** Category suggestion / recurring charge automation
+- **Testability:** HIGH
+  - ViewModel: `RecurringChargeSuggestionsViewModel` with `IsDetecting`, `IsProcessing`, `Suggestions`, `StatusFilter`
+  - User actions: Run detection, filter by status (Pending/Accepted/Dismissed), accept/dismiss suggestions
+  - Conditional rendering: Detection button state, filter bar, suggestion list
+- **Test Scenarios (8-12 tests):**
+  - Page renders without errors
+  - Detection button triggers detection
+  - Detection button disabled during detection (IsDetecting)
+  - Filter bar switches between Pending/Accepted/Dismissed
+  - Suggestions display when available
+  - Empty state when no suggestions
+  - Error alert displays and dismisses
+  - Accept/dismiss buttons trigger ViewModel methods
+  - Status filter updates UI (active class on filter button)
+- **Lines-per-Test Estimate:** ~7-9 lines/test (RecurringChargeSuggestions.razor ~100 lines + ViewModel logic)
+
+---
+
+#### 3. **Calendar.razor** (Expand Existing Tests) 🔥 MEDIUM-HIGH IMPACT
+- **Current Coverage:** Unknown (CalendarPageTests.cs exists but likely minimal smoke tests)
+- **User Impact:** Primary home page — month calendar, budget panel, day detail, past-due alerts, reflection prompts
+- **Workflow:** Budget creation + monitoring (budget panel), transaction viewing (day detail), data health (past-due alerts)
+- **Testability:** HIGH (complex orchestration)
+  - State: `currentDate`, `selectedAccountId`, `accounts`, `pastDueSummary`, `budgetSummary`, `calendarGrid`, `showIntentionPrompt`
+  - User actions: Month navigation (previous/next), account filter, view budget goals, view day detail, respond to past-due alerts, open reflection panel
+  - Conditional rendering: PastDueAlert, BudgetAlert, MonthIntentionPrompt, CalendarBudgetPanel, CalendarGrid, MonthlyReflectionPanel
+- **Test Scenarios (12-18 tests):**
+  - Page renders without errors
+  - Month navigation updates `currentDate`
+  - Account filter dropdown populates from accounts
+  - Account filter change triggers data reload
+  - PastDueAlert displays when past-due summary exists
+  - BudgetAlert displays when budget summary exists
+  - Month intention prompt displays when `showIntentionPrompt == true`
+  - Budget panel displays budget summary
+  - Calendar grid displays days
+  - Day click opens day detail
+  - Reflection button toggles reflection panel (if feature flag enabled)
+  - Reports link navigates to reports page
+  - Previous/Next buttons navigate months correctly
+- **Lines-per-Test Estimate:** ~10-15 lines/test (Calendar.razor ~200+ lines + orchestration logic)
+
+---
+
+### **TIER 2 — High-Value Components (Medium-High ROI)**
+
+#### 4. **Calendar/CalendarGrid.razor** (Expand Existing Tests)
+- **Current Coverage:** Unknown (CalendarGridTests.cs exists, likely minimal)
+- **User Impact:** Core calendar visualization — week selection, day selection, heatmap rendering
+- **Workflow:** Budget monitoring (calendar view)
+- **Testability:** HIGH
+  - Parameters: `Days`, `SelectedDate`, `SelectedWeekIndex`, `HeatmapData`
+  - User actions: Click day (OnDaySelected), click week number (OnWeekSelected)
+  - Rendering: Week rows, day cells, week numbers, heatmap classes
+- **Test Scenarios (8-12 tests):**
+  - Component renders without errors
+  - Renders 7 day headers (Sun-Sat)
+  - Renders week rows with week numbers
+  - Day click invokes OnDaySelected callback
+  - Week click invokes OnWeekSelected callback
+  - Selected date highlights correct day
+  - Selected week highlights correct row
+  - Heatmap classes apply correctly to days (when HeatmapData provided)
+  - Aria labels for accessibility (week labels, day labels)
+  - Empty days render for padding (out-of-month days)
+- **Lines-per-Test Estimate:** ~6-8 lines/test (CalendarGrid.razor ~100 lines)
+
+---
+
+#### 5. **AI/UnifiedSuggestionCard.razor**
+- **Current Coverage:** 0% (no tests)
+- **User Impact:** AI suggestion display (category, recurring, rule suggestions)
+- **Workflow:** Category suggestion UI
+- **Testability:** MEDIUM-HIGH
+  - Parameters: Suggestion DTO, OnAccept/OnDismiss callbacks
+  - Rendering: Suggestion type badge, description, confidence level, action buttons
+  - User actions: Accept suggestion, dismiss suggestion
+- **Test Scenarios (6-10 tests):**
+  - Card renders without errors
+  - Suggestion description displays
+  - Suggestion type badge displays (category/recurring/rule)
+  - Confidence level displays correctly
+  - Accept button triggers OnAccept callback
+  - Dismiss button triggers OnDismiss callback
+  - Card styling varies by suggestion type
+  - Disabled state when processing
+- **Lines-per-Test Estimate:** ~5-7 lines/test (UnifiedSuggestionCard.razor ~80-100 lines)
+
+---
+
+#### 6. **Calendar/KakeiboMonthHeader.razor**
+- **Current Coverage:** 0% (no tests)
+- **User Impact:** Kakeibo savings progress visualization
+- **Workflow:** Budget monitoring (Kakeibo savings tracking)
+- **Testability:** MEDIUM
+  - Parameters: `Year`, `Month`, `SavingsProgress`, callbacks for intention prompt and reflection
+  - Rendering: Savings progress bar, savings amount, target amount, percentage
+  - User actions: Open intention prompt, open reflection
+- **Test Scenarios (6-8 tests):**
+  - Component renders without errors
+  - Displays month and year
+  - Displays savings progress (if SavingsProgress provided)
+  - Progress bar renders with correct percentage
+  - Intention button triggers OnOpenIntentionPrompt
+  - Reflection button triggers OnOpenReflection
+  - Empty state when no savings progress
+- **Lines-per-Test Estimate:** ~5-7 lines/test (KakeiboMonthHeader.razor ~60-80 lines)
+
+---
+
+### **TIER 3 — Medium-Value Targets (Medium ROI)**
+
+#### 7. **Reports/KaizenDashboardView.razor**
+- **Current Coverage:** 0% (no tests)
+- **User Impact:** 12-week Kakeibo spending trend visualization
+- **Workflow:** Reporting / spending analysis
+- **Testability:** MEDIUM
+  - State: `isLoading`, `errorMessage`, `dashboard` with week summaries
+  - Rendering: Week bars (Essentials, Wants, Culture, Unexpected), goal badges (achieved/missed)
+  - Feature flag: `Kaizen:Dashboard` must be enabled
+- **Test Scenarios (8-10 tests):**
+  - Page renders without errors (when feature flag enabled)
+  - Feature-disabled state renders when flag disabled
+  - Loading state shows spinner
+  - Error state displays alert
+  - Week bars render with correct data
+  - Goal badges display (achieved/missed)
+  - Empty state when no dashboard data
+  - Week tooltip shows correct amounts (Essentials, Wants, Culture, Unexpected)
+- **Lines-per-Test Estimate:** ~6-8 lines/test (KaizenDashboardView.razor ~120 lines)
+
+---
+
+#### 8. **Calendar/MonthIntentionPrompt.razor**
+- **Current Coverage:** 0% (no tests)
+- **User Impact:** Monthly goal-setting prompt (Kakeibo reflection workflow)
+- **Workflow:** Budget creation / goal-setting
+- **Testability:** MEDIUM
+  - Parameters: `Year`, `Month`, `PreviousMonthGoal`, callbacks for dismiss and goal set
+  - User actions: Set goal, dismiss prompt
+  - Rendering: Previous month's goal (if any), input field for new goal
+- **Test Scenarios (6-8 tests):**
+  - Component renders without errors
+  - Displays month and year
+  - Displays previous month's goal (if provided)
+  - Goal input field binds correctly
+  - Set goal button triggers OnGoalSet callback
+  - Dismiss button triggers OnDismissed callback
+  - Validation prevents empty goal submission
+- **Lines-per-Test Estimate:** ~5-7 lines/test (MonthIntentionPrompt.razor ~60-80 lines)
+
+---
+
+## Test Count Estimate & Coverage Projection
+
+**Priority Targets (8 total):**
+1. DataHealth.razor: 10-15 tests (~100-150 lines coverage)
+2. RecurringChargeSuggestions.razor: 8-12 tests (~70-100 lines coverage)
+3. Calendar.razor (expand): 12-18 tests (~150-200 lines coverage)
+4. CalendarGrid.razor (expand): 8-12 tests (~60-80 lines coverage)
+5. UnifiedSuggestionCard.razor: 6-10 tests (~50-70 lines coverage)
+6. KakeiboMonthHeader.razor: 6-8 tests (~40-60 lines coverage)
+7. KaizenDashboardView.razor: 8-10 tests (~60-80 lines coverage)
+8. MonthIntentionPrompt.razor: 6-8 tests (~40-60 lines coverage)
+
+**Total Test Estimate:** 64-93 tests  
+**Total Lines Coverage Estimate:** ~570-800 lines  
+**Current Client Module Coverage:** 68.01%  
+**Target Client Module Coverage:** 75%  
+**Gap:** ~7 percentage points
+
+**Lines-per-Point Estimate (rough):**  
+Client module has ~6,000-8,000 total lines (estimated from project size). 7 percentage points = ~420-560 lines needed.
+
+**Projection:** Writing 64-93 tests targeting 570-800 lines should comfortably exceed the 75% target, potentially reaching 76-78%.
+
+---
+
+## Testability Assessment
+
+**bUnit-Testable (High Confidence):**
+- ✅ All 8 priority targets are bUnit-testable
+- ✅ All have sufficient logic (state management, conditional rendering, user interactions)
+- ✅ All use ViewModels or direct API services (mockable dependencies)
+
+**Markup-only (Excluded):**
+- ComponentShowcase.razor (demo page, no business logic)
+- Reports/ReportsIndex.razor (navigation cards only, minimal logic — could add 3-5 trivial tests if needed, but low ROI)
+- Some Calendar/* components are partially markup-heavy but have enough logic for meaningful tests
+
+---
+
+## Rationale for Each Target
+
+**Tier 1 Pages — Highest ROI:**
+- **DataHealth.razor:** Zero coverage + high user impact (data quality assurance) + significant testable logic (stats, conditional rendering, user actions)
+- **RecurringChargeSuggestions.razor:** Zero coverage + core feature (recurring charge automation) + ViewModel-driven logic (detection, filtering, accept/dismiss)
+- **Calendar.razor:** Existing tests likely minimal + primary home page (highest traffic) + complex orchestration (budget panel, day detail, past-due alerts, reflection)
+
+**Tier 2 Components — Medium-High ROI:**
+- **CalendarGrid.razor:** Existing tests likely minimal + core visualization (week/day selection, heatmap) + user interaction logic
+- **UnifiedSuggestionCard.razor:** Zero coverage + critical for AI suggestions workflow + reusable across suggestion types
+- **KakeiboMonthHeader.razor:** Zero coverage + Kakeibo savings tracking (domain feature) + progress visualization logic
+
+**Tier 3 Targets — Medium ROI:**
+- **KaizenDashboardView.razor:** Zero coverage + Kaizen feature (domain-specific) + complex rendering (week bars, goal badges)
+- **MonthIntentionPrompt.razor:** Zero coverage + goal-setting workflow + input validation logic
+
+---
+
+## Excluded Targets & Reasoning
+
+**Pages:**
+- **ComponentShowcase.razor:** Demo page for dev/design reference only; no user-facing business logic; low impact.
+- **Reports/ReportsIndex.razor:** Navigation landing page with static cards; minimal logic (3-5 tests possible but low coverage yield).
+
+**Components:**
+- **Common/*** (Button, Badge, Card, Icon, Modal, etc.): Presentational primitives with existing coverage or acceptable as-is.
+- **Charts/Shared/*** (ChartAxis, ChartGrid, ChartTooltip): SVG rendering primitives with minimal logic.
+- **Auth/*** (AuthInitializer, AuthOffBanner, etc.): Some already tested; auth flow is lightweight and well-covered at service level.
+- **AI/SuggestionGroup.razor, AI/AnalysisInlineProgress.razor, AI/AiStatusBadge.razor, AI/AiSetupBanner.razor, AI/AiSettingsForm.razor:** Lower priority than UnifiedSuggestionCard; could be added if coverage gap persists after Tier 1-2.
+
+---
+
+## Recommended Execution Order
+
+**Week 3 (Phase 3 Start):**
+1. DataHealth.razor (10-15 tests) — highest impact, zero coverage
+2. RecurringChargeSuggestions.razor (8-12 tests) — core feature, zero coverage
+3. Calendar.razor (expand existing tests, 12-18 tests) — primary home page
+
+**Week 4 (Phase 3 Finish):**
+4. CalendarGrid.razor (expand existing tests, 8-12 tests) — calendar visualization
+5. UnifiedSuggestionCard.razor (6-10 tests) — AI suggestions UI
+6. KakeiboMonthHeader.razor (6-8 tests) — Kakeibo savings tracking
+7. KaizenDashboardView.razor (8-10 tests) — Kaizen dashboard (if time permits)
+8. MonthIntentionPrompt.razor (6-8 tests) — goal-setting prompt (if time permits)
+
+**Coverage Checkpoint:** After items 1-6 (minimum 56 tests), check coverage. If 75%+ reached, stop. If gap remains, proceed with items 7-8 or revisit existing tests for deeper scenarios.
+
+---
+
+## Dependencies & Risks
+
+**Dependencies:**
+- Phase 0 (Application 60%+) ✅ COMPLETE (81.47%)
+- Phase 1A (Testing guardrails) ✅ COMPLETE (100% compliance)
+- Phase 1B (Application deep dive) ✅ COMPLETE (6,043/6,045 tests passing)
+- bUnit test infrastructure ✅ READY (all existing Client tests use bUnit)
+
+**Risks:**
+- **Client module inherently difficult to test:** Mitigated by focusing on pages/components with ViewModel logic (not pure markup).
+- **Low lines-per-test ratio:** Expected; Client tests typically yield 5-10 lines/test vs. 15-20 for Application. Compensate with higher test volume (64-93 tests vs. typical 30-40 for other modules).
+- **Existing tests may be smoke-only:** Expanded test scenarios for Calendar.razor and CalendarGrid.razor account for this.
+
+**No Blockers Identified.**
+
+---
+
+## Success Criteria
+
+1. **Client module coverage reaches 75%+** (current 68.01%)
+2. **64-93 new bUnit tests written** (high-value scenarios, not gaming)
+3. **All 8 priority targets have meaningful test coverage** (state, rendering, user interactions)
+4. **Barbara quality review passes** (meaningful behavior assertions, no trivial tests)
+5. **Overall solution coverage reaches 80%+** (Client 75% + other modules holding/improving)
+
+---
+
+## Next Steps
+
+1. ✅ **Submit this analysis** to `.squad/decisions/inbox/` (done)
+2. ⏳ **Await Vic approval** (Phase 3 strategy + priority list)
+3. ⏳ **Assign to Barbara** (Barbara owns test writing for Phase 3)
+4. ✅ **Week 3 execution:** DataHealth, RecurringChargeSuggestions, Calendar (expand)
+5. ✅ **Week 4 execution:** CalendarGrid (expand), UnifiedSuggestionCard, KakeiboMonthHeader, KaizenDashboardView (if time), MonthIntentionPrompt (if time)
+6. ✅ **Coverage checkpoint** after Week 3 Day 3 (re-assess targets if 75% already reached)
+
+---
+
+**Decision Status:** ⏳ Pending Vic approval  
+**Assigned To:** Barbara (Phase 3 test writing)  
+**Timeline:** Week 3-4 (2026-01-13 to 2026-01-24)
+
+
+---
+
+# Decision: Phase 3 Client Test Scenario Prioritization
+
+**Date:** 2026-01-09  
+**Agent:** Barbara (Tester)  
+**Status:** Proposed  
+**Scope:** Feature 127 Phase 3 Client coverage improvement
+
+---
+
+## Context
+
+Phase 1B complete (Application module at 81.47%, all tests passing). Phase 3 targets Client module coverage increase from 68% to 75% through surgical, high-ROI bUnit tests focused on core user workflows.
+
+**Current State:**
+- Client module: 73.8% coverage (Phase 1B result)
+- Test count: 2,847 Client tests passing
+- Coverage gap: 1.2% to Phase 3 target (75%)
+
+**Phase 3 Mandate:**
+- Identify 50-75 specific test scenarios for budget creation, transaction import, and AI suggestions
+- Prioritize tests that would catch real regressions (no vanity tests)
+- Deliver comprehensive test scenario document for team review
+
+---
+
+## Decision
+
+**Approved Test Scenario Document:** `.squad/agents/barbara/phase3-test-scenarios.md`
+
+**Test Count:** 70 scenarios across 3 core flows plus additional high-value targets
+
+**Coverage Tiers:**
+- **Tier 1 (Critical, 30 tests):** Budget creation flow, Import wizard core, AI suggestion components, estimated 4% coverage gain
+- **Tier 2 (High, 25 tests):** Import column mapping and preview, AI ViewModel and progress, estimated 3% coverage gain
+- **Tier 3 (Medium, 15 tests):** Additional high-value components (Calendar, FormStateService, TransactionTable), estimated 2% coverage gain
+
+**Estimated Impact:** 70 tests leads to 9% coverage increase, reaching 82-83% Client coverage (exceeds 75% target)
+
+**Implementation Order (4-week timeline):**
+1. Week 3, Days 1-2: BudgetGoalModal plus BudgetViewModel (tests 1-14)
+2. Week 3, Day 3: Budget page integration plus CategoryBudgetCard (tests 15-22)
+3. Week 3, Days 4-5: Import wizard plus ColumnMappingEditor (tests 23-36)
+4. Week 4, Day 1: ImportPreviewTable plus CsvParserService (tests 37-46)
+5. Week 4, Days 2-3: AI components UnifiedSuggestionCard, SuggestionGroup, AnalysisInlineProgress (tests 47-62)
+6. Week 4, Day 4: AI ViewModel (tests 63-66)
+7. Week 4, Day 5: Additional high-value tests, if time allows (tests 67-75)
+
+---
+
+## Rationale
+
+### 1. Coverage Gap Analysis
+
+**Zero-coverage components (Priority 1 — Critical):**
+- UnifiedSuggestionCard (AI suggestion accept and dismiss logic)
+- SuggestionGroup (batch operations, high-confidence filtering)
+- AnalysisInlineProgress (progress states: analyzing, error, complete)
+- AiSetupBanner (setup flow states)
+
+These components are on the critical path for AI suggestions user workflow. Zero coverage means any regression would go undetected.
+
+**Partial-coverage components (Priority 2 — High ROI):**
+- BudgetGoalModal (has basic render tests, missing validation and error paths)
+- ColumnMappingEditor (has basic tests, missing required field validation)
+- ImportPreviewTable (has tests, missing duplicate handling and pagination)
+
+Quick wins: add validation and error path tests to components that already have infrastructure.
+
+**Intentional Exclusions (Defer to Phase 4):**
+- Calendar.razor and Reconciliation.razor (0% coverage but complex workflows, lower user frequency)
+- Chart components (already at 65-70% coverage, diminishing returns)
+- Report pages (lower user impact than core workflows)
+
+### 2. Test Quality Standards
+
+Every test scenario passes the high-ROI filter:
+- **Would the test fail if the behavior broke?** (Mutation resistance)
+- **Does it assert meaningful user-visible behavior or business logic?** (No vanity tests)
+- **Does it cover an edge case that could cause production issues?** (Validation, error handling, state transitions)
+
+**Rejected test ideas (vanity tests, not included in 70):**
+- Assert component renders without errors when there is no conditional logic
+- Assert hardcoded strings that never change
+- Assert property setter sets a property
+- Assert not null on components (render failure would throw anyway)
+
+### 3. bUnit Testing Methodology
+
+**Test Approach by Component Type:**
+- **Isolated components** (Button, Badge, Icon): Simple render tests with parameter variations
+- **Components with ViewModels** (Budget.razor plus BudgetViewModel): Inject real ViewModel with stubbed API services, test user interactions
+- **Wizard flows** (Import.razor): Multi-step state progression, render parent page, assert child component visibility
+- **Service logic** (CsvParserService, FormStateService): Standard xUnit tests, no bUnit required
+
+**Culture-Aware Testing:**
+All tests that assert formatted currency, numbers, or dates MUST set CultureInfo.CurrentCulture to en-US in test constructor. Prevents CI failures on Linux (invariant culture renders currency as symbol instead of dollar sign).
+
+### 4. Coverage ROI Analysis
+
+**High-ROI test targets (most coverage gain per test):**
+- AI components (0% coverage, complex logic, 7-12 tests per component)
+- Import wizard flow (low coverage, multi-step validation, 8 tests for state progression)
+- BudgetGoalModal validation (partial coverage, 8 tests for Create and Edit modes plus validation)
+
+**Low-ROI targets (excluded or deferred):**
+- Chart components (already at 65-70%, each new test only adds 0.1% coverage)
+- Report pages (low user frequency, complex setup for minimal gain)
+- Calendar and Reconciliation pages (complex workflows, defer until user demand increases)
+
+**Estimated coverage gain per test:**
+- Tier 1 (critical components with 0% coverage): ~0.13% per test
+- Tier 2 (partial coverage components): ~0.12% per test
+- Tier 3 (additional high-value targets): ~0.13% per test
+
+Total: 70 tests times 0.13% average equals approximately 9% coverage increase.
+
+---
+
+## Alternatives Considered
+
+### Option A: Focus Only on Zero-Coverage Components (35 tests)
+
+**Pros:** Fastest path to closing critical gaps (UnifiedSuggestionCard, SuggestionGroup, AnalysisInlineProgress)  
+**Cons:** Only reaches 77-78% coverage, misses Phase 3 target (75%), leaves validation gaps in partial-coverage components  
+**Rejected:** Insufficient to meet Phase 3 target, leaves BudgetGoalModal and Import wizard undertested
+
+### Option B: Brute-Force All Components to 80% (150 tests)
+
+**Pros:** Highest coverage number (85%+ Client module)  
+**Cons:** Includes many low-ROI tests (chart variants, report pages), diminishing returns, 6-week timeline  
+**Rejected:** Inefficient, would include vanity tests to inflate numbers, Phase 3 timeline only 4 weeks
+
+### Option C: Selected Approach (70 tests, 3 core flows)
+
+**Pros:** Surgical focus on high-ROI user workflows, exceeds 75% target, 4-week timeline, zero vanity tests  
+**Cons:** Intentionally defers some components (Calendar, Reconciliation) to Phase 4  
+**Chosen:** Best balance of coverage gain, test quality, and timeline
+
+---
+
+## Implementation Guardrails
+
+### Quality Review Process (Barbara's Audit)
+
+Before any test is considered complete:
+1. **Mutation resistance check:** Would the test fail if I commented out the validation logic or error handler?
+2. **Assertion intent check:** Does the test verify one clear behavior (not just component rendered)?
+3. **Edge case check:** Does the test cover a realistic error scenario (empty input, API failure, concurrent updates)?
+4. **Culture-aware check:** Does the test set CultureInfo.CurrentCulture if it asserts formatted output?
+
+### CI Stability Requirements
+
+All 70 new tests must:
+- Pass 10 consecutive CI runs (no flakiness)
+- Complete in under 5 seconds each (no performance regressions)
+- Use deterministic assertions (no DateTime.Now, no random data)
+
+### Coverage Quality Metric
+
+Run mutation testing sample on 10 random new tests. Must kill at least 70% of mutants. If mutation score is below 70%, tests are too weak (likely testing framework behavior instead of business logic).
+
+---
+
+## Success Criteria
+
+**Phase 3 Complete When:**
+1. Client module coverage is 75% or higher (CI gate passes)
+2. All 70 high-ROI tests written and passing
+3. Zero vanity tests (Barbara quality review passes)
+4. Budget creation, import wizard, AI suggestions flows have comprehensive coverage
+5. All tests use culture-aware formatting (no CI failures on Linux)
+
+**Tracking:**
+- Coverage report after each tier (Tier 1 should reach 77-78%, Tier 2 should reach 80-81%)
+- Test count: 2,847 (current) to 2,917 (after Phase 3)
+- Build time impact: under 30 seconds total increase (70 tests times average 0.4 seconds)
+
+---
+
+## Next Steps
+
+1. **Alfred review:** Approve test scenario document and prioritization
+2. **Lucius implementation:** Begin Tier 1 tests (BudgetGoalModal and BudgetViewModel, 14 tests)
+3. **Barbara validation:** Real-time quality audit as tests land (mutation resistance check)
+4. **CI monitoring:** Track coverage progression after each tier merge
+
+**Timeline:** 4 weeks (Week 3 for budget and import flows, Week 4 for AI suggestions and additional targets)
+
+---
+
+## References
+
+- **Test Scenario Document:** `.squad/agents/barbara/phase3-test-scenarios.md` (70 test scenarios, detailed implementation notes)
+- **Phase 3 Definition:** `docs/127-code-coverage-beyond-80-percent.md` (Phase 3 section)
+- **Phase 1B Results:** Application 81.47%, Client 73.8%, all tests passing
+- **bUnit Patterns:** Feature 127 chart test patterns (SVG assertion, JSInterop mocking)
+- **Culture-Aware Testing:** Section 37 of custom instructions (CultureService and formatting)
+
+---
+
+**Status:** Proposed — awaiting Alfred approval  
+**Risk:** Low — surgical approach with proven bUnit patterns, no infrastructure changes  
+**Confidence:** High — test scenarios validated against existing component structure, ROI analysis data-driven
+

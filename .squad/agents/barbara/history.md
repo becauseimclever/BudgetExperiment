@@ -38,6 +38,101 @@ Domain Tests, Application Tests, Infrastructure Tests, API Tests, Client Tests �
 - **Decision:** Merged `barbara-publish-audit-report` decision to squad decisions.md
 - **Status:** COMPLETE
 
+### 2026-01-09: Phase 3 Client Test Gap Analysis & High-ROI Test Scenario Draft
+
+**Task:** Draft 50-75 specific bUnit test scenarios for Phase 3 (Client 68% → 75%) focused on high-ROI user workflows
+
+**Context:** Phase 1B complete (Application 81.47%, all modules green except Client). Phase 3 targets Client module with surgical tests for budget creation, transaction import, and AI suggestions.
+
+**Deliverables:**
+- **Test Scenario Document:** `.squad/agents/barbara/phase3-test-scenarios.md` (70 test scenarios)
+- 3 core flows analyzed: Budget creation (22 tests), Transaction import (24 tests), AI suggestions (20 tests)
+- Additional high-value targets (8 tests): Calendar page, FormStateService, TransactionTable
+
+**Coverage Gap Analysis:**
+- **Zero-coverage components (Priority 1):** UnifiedSuggestionCard, SuggestionGroup, AnalysisInlineProgress, AiSetupBanner (critical for AI suggestions flow)
+- **Partial coverage (Priority 2):** BudgetGoalModal, ColumnMappingEditor, ImportPreviewTable (need validation/error path tests)
+- **Low coverage (Priority 3):** Calendar.razor, Reconciliation.razor (complex, defer to Phase 4)
+
+**Test Scenarios by Flow:**
+
+**Flow 1: Budget Creation (22 tests)**
+1. BudgetGoalModal validation (empty/negative/zero amounts, Create vs. Edit modes, delete confirmation)
+2. BudgetViewModel state management (API errors, month navigation, status calculation)
+3. Budget.razor page integration (summary display, status counts, button interactions)
+4. CategoryBudgetCard display logic (warning/danger states, no-budget handling)
+
+**Flow 2: Transaction Import (24 tests)**
+1. Import wizard flow (step progression, CSV parse → mapping → preview → import)
+2. ColumnMappingEditor validation (required field detection, saved mapping loading)
+3. ImportPreviewTable data display (duplicates, pagination, category mapping)
+4. CsvParserService edge cases (BOM handling, skipRows, empty files, malformed data)
+
+**Flow 3: AI Suggestions (20 tests)**
+1. UnifiedSuggestionCard interactions (confidence display, accept/dismiss, details toggle)
+2. SuggestionGroup batch operations (Accept All high-confidence, item rendering)
+3. AnalysisInlineProgress state display (analyzing, error, complete states)
+4. AiSuggestionsViewModel workflow (start analysis, handle errors, dismiss all)
+
+**Estimated Coverage Impact:**
+- Tier 1 (30 critical tests): ~4% gain → 73.8% → 77.8%
+- Tier 2 (25 high-priority tests): ~3% gain → 77.8% → 80.8%
+- Tier 3 (15 medium-priority tests): ~2% gain → 80.8% → 82.8%
+- **Total: 70 tests → 9% coverage increase → 82-83% Client coverage (exceeds 75% target)**
+
+**Implementation Order:**
+- Week 3, Days 1-2: BudgetGoalModal + BudgetViewModel (tests 1-14)
+- Week 3, Days 3: Budget page + CategoryBudgetCard (tests 15-22)
+- Week 3, Days 4-5: Import wizard + ColumnMappingEditor (tests 23-36)
+- Week 4, Day 1: ImportPreviewTable + CsvParserService (tests 37-46)
+- Week 4, Days 2-3: AI components (tests 47-62)
+- Week 4, Day 4: AI ViewModel (tests 63-66)
+- Week 4, Day 5: Additional high-value tests (tests 67-75, if time allows)
+
+**Key Learnings:**
+
+1. **Component Coverage Triage:**
+   - Zero-coverage AI components (UnifiedSuggestionCard, SuggestionGroup) are critical-path for user workflows → highest priority
+   - Calendar.razor and Reconciliation.razor have 0% coverage but are lower user impact → defer to Phase 4
+   - Partial-coverage components (BudgetGoalModal, ColumnMappingEditor) lack validation/error tests → quick wins
+
+2. **bUnit Testing Patterns by Component Type:**
+   - **Isolated components** (Button, Badge): Simple render tests with parameter variations
+   - **Components with ViewModels** (Budget.razor + BudgetViewModel): Inject real ViewModel with stubbed APIs, test user interactions
+   - **Wizard flows** (Import.razor): Multi-step state progression, parent page renders child components conditionally
+   - **Service logic** (CsvParserService, FormStateService): Standard xUnit tests, no bUnit needed
+
+3. **Coverage ROI Analysis:**
+   - Chart components already at ~65-70% coverage → diminishing returns
+   - Report pages (MonthlyTrendsReport, LocationReport) low user frequency → defer
+   - Core workflows (budget goals, import, AI suggestions) undertested → highest ROI
+
+4. **Test Quality Standards Applied:**
+   - No vanity tests (Assert.NotNull, trivial renders without behavior)
+   - Every test must validate meaningful user-visible behavior or business logic
+   - Culture-aware formatting (set CultureInfo.CurrentCulture to en-US)
+   - One assertion intent per test (logical grouping allowed)
+
+5. **Methodology Notes:**
+   - UnifiedSuggestionCard has complex progressive disclosure logic (details toggle, confidence indicators) → needs interaction tests, not just render tests
+   - Import wizard step progression requires testing state transitions (Step 1 → 2 → 3 → 4) with API success/failure scenarios
+   - AI ViewModel tests must cover async state (IsAnalyzing=true during API call) via mock delays
+
+**Intentional Exclusions (Defer to Phase 4 or accept low coverage):**
+- Reconciliation.razor (complex workflow, low usage frequency)
+- ComponentShowcase.razor (demo page, not production)
+- Chart components (already at ~65% coverage, diminishing returns)
+- Report pages (lower user impact than core workflows)
+
+**Success Metrics for Phase 3:**
+- ✅ Client module ≥ 75% coverage (CI gate passes)
+- ✅ 70 high-ROI tests written and passing
+- ✅ Zero vanity tests (Barbara quality audit passes)
+- ✅ Budget creation, import, AI suggestions flows comprehensively covered
+- ✅ All tests culture-aware (no CI failures on Linux)
+
+**Status:** ✅ PHASE 3 TEST SCENARIO DRAFT COMPLETE — ready for review and prioritization
+
 ---
 
 ## Core Context
@@ -1562,3 +1657,9 @@ Read every line of:
 - Updated agent history (this entry)
 
 **Status:** ✅ **PHASE 0 COMPLETE & VALIDATED** — Ready for Phase 1 planning (Application 60%→90%, Api 77%→80%, soft-delete implementation)
+
+## 2026-04-26 — Phase 3 Coverage Analysis Complete
+
+Phase 3 coverage analysis complete: 8 priority targets identified + 70 test scenarios drafted.
+
+**Deliverable:** Test scenarios merged into .squad/decisions.md, ready for implementation phase.

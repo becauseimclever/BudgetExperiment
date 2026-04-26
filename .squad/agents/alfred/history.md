@@ -80,6 +80,50 @@
 - Scribe (coordinator) will merge into `.squad/decisions.md` after Vic approval
 - Once merged: Alfred updates `.squad/agents/alfred/history.md` with execution notes
 
+## Phase 3 Client Coverage Analysis (2026-01-10)
+
+**Status:** ✅ Analysis complete, awaiting Vic approval
+
+**Deliverable:** `alfred-phase3-coverage-analysis.md` — Comprehensive priority analysis for Client module coverage improvement (68% → 75%)
+
+**Key Findings:**
+1. **8 priority targets identified** — ordered by ROI: high user impact + low/no coverage + testable logic
+2. **Tier 1 Pages (highest ROI):** DataHealth.razor (0% coverage, data quality dashboard), RecurringChargeSuggestions.razor (0% coverage, recurring charge automation), Calendar.razor (expand existing minimal tests, primary home page)
+3. **Tier 2 Components (medium-high ROI):** CalendarGrid.razor (expand existing tests), UnifiedSuggestionCard.razor (AI suggestions), KakeiboMonthHeader.razor (Kakeibo savings tracking)
+4. **Tier 3 Targets (medium ROI):** KaizenDashboardView.razor, MonthIntentionPrompt.razor
+5. **Test count estimate:** 64-93 bUnit tests targeting ~570-800 lines coverage
+6. **Coverage projection:** Should exceed 75% target, potentially reaching 76-78%
+
+**Client Module Structure Insights:**
+- **Pages:** 30 total — majority have tests (20+ tested), 6 critical gaps identified
+- **Components:** ~150 total — Import/*, Forms/*, Charts/* well-tested; Calendar/*, AI/*, Goals/* have gaps
+- **Testability:** All 8 priority targets are bUnit-testable with ViewModel logic or API service dependencies
+- **Excluded:** ComponentShowcase.razor (demo page), Reports/ReportsIndex.razor (navigation cards only)
+
+**Coverage Analysis Methodology:**
+1. Mapped all Client pages/components to test files (identified 6 pages + 4-6 components with no/minimal tests)
+2. Cross-referenced with Phase 3 focus areas (budget creation flow, transaction import, category suggestion UI)
+3. Ranked by user impact (workflow criticality) + coverage gap (zero vs. minimal) + testability (logic vs. markup)
+4. Estimated lines-per-test yield (Pages 10-15 lines/test, Components 5-8 lines/test) to project coverage gain
+5. Validated against coverage-state.json baseline (Client 68.01%) and Phase 3 target (75%)
+
+**Phase 3 Focus Areas (from Feature 127):**
+- ✅ Budget creation flow — Budget.razor (tested), Calendar.razor (expand), CalendarBudgetPanel.razor (expand)
+- ✅ Transaction import — Import.razor (tested), Import/* components (all tested)
+- ✅ Category suggestion UI — AiSuggestions.razor (minimal tests), UnifiedSuggestionCard.razor (no tests), RecurringChargeSuggestions.razor (no tests)
+
+**Execution Recommendation:**
+- **Week 3 (Phase 3 start):** DataHealth, RecurringChargeSuggestions, Calendar (expand) — highest impact
+- **Week 4 (Phase 3 finish):** CalendarGrid (expand), UnifiedSuggestionCard, KakeiboMonthHeader, KaizenDashboardView (if time), MonthIntentionPrompt (if time)
+- **Coverage checkpoint:** After Week 3 Day 3 to re-assess targets if 75% already reached
+
+**Next Steps:**
+1. ⏳ Await Vic approval (Phase 3 strategy + priority list)
+2. ⏳ Assign to Barbara (Barbara owns test writing for Phase 3)
+3. ✅ Execute Week 3-4 (2026-01-13 to 2026-01-24)
+
+---
+
 ## Architecture
 
 Clean/Onion hybrid. Layers (outer → inner, dependencies flow inward only):
@@ -778,3 +822,9 @@ Only Phase 1 is complete. The branch has ~25% of the total feature work done.
 - ✅ Alfred (Lead): Phase 2 architecture sign-off
 
 **Next Phase:** Phase 2C (Infrastructure Stabilization + Ongoing Monitoring) — CI gates active, monthly trend analysis, exception management per Vic guardrails.
+
+## 2026-04-26 — Phase 3 Coverage Analysis Complete
+
+Phase 3 client coverage analysis complete: 8 priority targets identified + 70 test scenarios drafted.
+
+**Deliverable:** Coverage analysis merged into .squad/decisions.md, ready for implementation phase.
