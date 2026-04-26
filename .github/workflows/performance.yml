@@ -2,12 +2,14 @@ name: Performance Tests
 
 on:
   # Scheduled: full load test suite weekly (Sunday 03:00 UTC)
-  schedule:
-    - cron: '0 3 * * 0'
+  # DISABLED: Performance tests moved to dedicated environment (Feature 113 Phase 4)
+  # schedule:
+  #   - cron: '0 3 * * 0'
 
   # PR: smoke profile as a lightweight gate
-  pull_request:
-    branches: [main]
+  # DISABLED: Performance tests moved to dedicated environment (Feature 113 Phase 4)
+  # pull_request:
+  #   branches: [main]
 
   # Manual: run any profile on-demand
   workflow_dispatch:
