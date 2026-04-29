@@ -12,6 +12,7 @@
 Removed the legacy BudgetScope concept (Personal/Shared split) from the UI and service layer. All accounts and transactions now operate under a unified Shared scope.
 
 **Key Points:**
+
 - `ScopeSwitcher` component removed from navigation
 - `ScopeService` locked to Shared; ignores any stored Personal value
 - `AccountForm` normalizes scope to Shared on render
@@ -28,6 +29,7 @@ Removed the legacy BudgetScope concept (Personal/Shared split) from the UI and s
 Established a tested model recommendation for the local AI backend using LLaMA.cpp. Documented configuration and hardware guidance for self-hosted deployments.
 
 **Key Points:**
+
 - Recommended model identified and validated for local inference
 - Configuration guidance added to `docs/162-local-llamacpp-model-recommendation.md`
 - Hardware requirements documented for Raspberry Pi and x86 targets
@@ -42,6 +44,7 @@ Established a tested model recommendation for the local AI backend using LLaMA.c
 Implemented AES-256-GCM encryption at rest for sensitive financial columns using EF Core value converters. All encrypted fields use a versioned ciphertext format. Plaintext fallback reads support safe rollout for existing rows.
 
 **Key Points:**
+
 - Encrypted fields: `Accounts.Name`, `Transactions.Description`, `Transactions.Amount.Amount`, `ChatMessages.Content`, `MonthlyReflections` (intention, gratitude, improvement), `KaizenGoals.Description`, `CategorizationRules.Pattern`
 - Encryption key loaded from `ENCRYPTION_MASTER_KEY` or `Encryption:MasterKey`; file-based `*_FILE` pattern preferred
 - Ciphertext uses versioned prefix `enc::v1:`; unknown versions throw `DomainException` explicitly
@@ -52,6 +55,7 @@ Implemented AES-256-GCM encryption at rest for sensitive financial columns using
 - Audit record: `docs/audit/2026-04-28-feature-163-quality-gate.md`
 
 **Deferred to backlog (not blockers):**
+
 - Automated key rotation workflow
 - Automated encrypted backup/restore scheduling
 - Published performance benchmark report
@@ -67,6 +71,7 @@ Implemented AES-256-GCM encryption at rest for sensitive financial columns using
 Established a repeatable, policy-driven package hygiene process for the full solution. Enforces stable package versions, gates on zero-vulnerability restore, and documents operational procedures for monthly audits and safe rollback.
 
 **Key Points:**
+
 - Package policy: all packages stable except `StyleCop.Analyzers`, which tracks latest preview
 - Restore authoritative gate: fails on any vulnerability advisory (direct or transitive)
 - CI policy validation: pre-release allowlist, `StyleCop.Analyzers` preview version check

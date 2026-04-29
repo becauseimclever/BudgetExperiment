@@ -16,11 +16,9 @@
 
 ## 2. Ownership and Accountability
 
-| Role | Accountability |
-|------|----------------|
-| Release Operations Owner | Accountable for monthly execution, triage completion, and runbook evidence quality. |
-| Operations Reviewer (secondary approver) | Reviews rollback decisions and confirms smoke validation evidence before closure. |
-| Feature Owner for active upgrade cycle | Delivers package update PRs and tracks remediation tasks to closure. |
+- Release Operations Owner: Accountable for monthly execution, triage completion, and runbook evidence quality.
+- Operations Reviewer (secondary approver): Reviews rollback decisions and confirms smoke validation evidence before closure.
+- Feature Owner for active upgrade cycle: Delivers package update PRs and tracks remediation tasks to closure.
 
 **Single-thread accountability rule:** One named Release Operations Owner must be assigned for each monthly cycle before triage begins.
 
@@ -28,12 +26,10 @@
 
 ## 3. SLA Targets for Vulnerability Remediation
 
-| Severity | Target Remediation SLA |
-|----------|-------------------------|
-| Critical (NU1904 / high-impact advisory) | Begin remediation same day; merged fix or approved rollback within 24 hours. |
-| High (NU1903) | Merged fix or approved rollback within 3 calendar days. |
-| Moderate (NU1902) | Merged fix or approved rollback within 7 calendar days. |
-| Low (NU1901) | Merged fix or approved rollback within 30 calendar days. |
+- Critical (NU1904 / high-impact advisory): Begin remediation same day; merged fix or approved rollback within 24 hours.
+- High (NU1903): Merged fix or approved rollback within 3 calendar days.
+- Moderate (NU1902): Merged fix or approved rollback within 7 calendar days.
+- Low (NU1901): Merged fix or approved rollback within 30 calendar days.
 
 If an SLA cannot be met, record the exception and compensating controls in release and operations notes before the SLA window closes.
 
@@ -56,6 +52,7 @@ dotnet build c:\ws\BudgetExperiment\BudgetExperiment.sln --no-restore
 ```
 
 Expected contract:
+
 - `dotnet restore` is the authoritative vulnerability gate and must return exit code 0.
 - Vulnerable/outdated reports must produce readable logs for triage.
 - Policy gate script must return a pass state for prerelease policy and latest StyleCop preview checks.
@@ -91,8 +88,8 @@ git -C c:\ws\BudgetExperiment diff --name-only <known-good-sha> HEAD -- "*.cspro
 Get-Content c:\ws\BudgetExperiment\artifacts\nuget-audit\rollback-package-files.txt | ForEach-Object { git -C c:\ws\BudgetExperiment checkout <known-good-sha> -- $_ }
 ```
 
-4. Review rollback scope with `git -C c:\ws\BudgetExperiment status --short` and keep only package-version rollback deltas.
-5. Commit with a rollback message that includes reason, affected advisories or regressions, and known-good SHA.
+1. Review rollback scope with `git -C c:\ws\BudgetExperiment status --short` and keep only package-version rollback deltas.
+2. Commit with a rollback message that includes reason, affected advisories or regressions, and known-good SHA.
 
 ---
 
@@ -109,6 +106,7 @@ dotnet test c:\ws\BudgetExperiment\BudgetExperiment.sln --filter "Category!=Perf
 ```
 
 Smoke pass criteria:
+
 - Restore gate passes with zero vulnerability audit errors.
 - Build succeeds with no restore step.
 - Non-performance tests pass.
@@ -120,7 +118,8 @@ Smoke pass criteria:
 For audit and compliance traceability, capture and log evidence artifacts consistently across all monthly cycles and rollback events:
 
 **Evidence Logging Structure:**
-```
+
+```text
 artifacts/nuget-audit/
   ├─ restore-pass.log          (restore audit passed)
   ├─ restore-failed.log        (restore audit failed, if applicable)
@@ -148,19 +147,12 @@ For each monthly cycle and rollback event:
    - remediation or rollback decision
    - links to artifact names (use evidence logging pattern from Section 8)
 2. Add a release note entry in CHANGELOG.md when remediation or rollback changes shipped behavior or dependency risk posture.
-3. If a rollback occurred, include:
-   - known-good SHA
-   - root cause summary
-   - smoke validation result summary
-   - follow-up task reference for re-upgrade planning
-   - references to rollback-evidence-failed-* and rollback-evidence-pass-* artifact folders for traceability
+3. If a rollback occurred, include known-good SHA, root cause summary, smoke validation result summary, a follow-up task reference for re-upgrade planning, and references to `rollback-evidence-failed-*` and `rollback-evidence-pass-*` artifact folders for traceability.
 
 ---
 
 ## Change Log
 
-| Date | Change | Author |
-|------|--------|--------|
-| 2026-04-28 | Corrected restore command contract to PowerShell-safe quoting for the `WarningsAsErrors` semicolon list, aligned with Feature 167 testing guidance. | GitHub Copilot |
+- 2026-04-28: Corrected restore command contract to PowerShell-safe quoting for the `WarningsAsErrors` semicolon list, aligned with Feature 167 testing guidance. (Author: GitHub Copilot)
 
 *Last updated: 2026-04-28.*
