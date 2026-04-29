@@ -56,3 +56,21 @@ Implemented AES-256-GCM encryption at rest for sensitive financial columns using
 - Automated encrypted backup/restore scheduling
 - Published performance benchmark report
 - GDPR compliance notes update
+
+---
+
+## Feature 167: NuGet Package Hygiene and Vulnerability Gate
+
+> **Status:** Done  
+> **Category:** DevOps / Quality Gate
+
+Established a repeatable, policy-driven package hygiene process for the full solution. Enforces stable package versions, gates on zero-vulnerability restore, and documents operational procedures for monthly audits and safe rollback.
+
+**Key Points:**
+- Package policy: all packages stable except `StyleCop.Analyzers`, which tracks latest preview
+- Restore authoritative gate: fails on any vulnerability advisory (direct or transitive)
+- CI policy validation: pre-release allowlist, `StyleCop.Analyzers` preview version check
+- Monthly cadence: documented runbook at `docs/operations/nuget-package-hygiene-monthly-runbook.md` with SLA targets and rollback procedures
+- Evidence artifacts: `restore-pass.log`, `restore-failed.log`, `prerelease-policy.log`, `stylecop-latest-preview.log`, `metadata.txt`
+- Automation: scheduled CI workflow runs monthly; watches Dependabot PRs; creates upgrade feature docs when needed
+- Operational checklist: restore/build/test smoke validation; documented rollback path with known-good SHA recovery

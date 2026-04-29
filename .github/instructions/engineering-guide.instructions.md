@@ -238,7 +238,10 @@ Keep this file lean—prune when obsolete. Update when architectural decisions s
 - Prefer explicit paths when creating, editing, or referencing solution/project files to ensure reproducibility across developer environments.
 
 ## 33. NuGet Package Management
-- Always add or update NuGet dependencies using the `dotnet` CLI, not by manually editing `.csproj` files.
+- **Stable-Only Policy**: All NuGet packages across the solution must use stable (release) versions. Pre-release packages are not permitted, with one exception: `StyleCop.Analyzers` must track the latest preview release from nuget.org.
+- **StyleCop.Analyzers Rule**: `StyleCop.Analyzers` is the only allowed pre-release package. It must always be pinned to the highest listed pre-release version on nuget.org (`https://api.nuget.org/v3/registration5-semver2/stylecop.analyzers/index.json`), evaluated using SemVer precedence. Monthly package hygiene audits include validation of this requirement (see `docs/operations/nuget-package-hygiene-monthly-runbook.md`).
+- **Policy Enforcement**: NuGet package governance is enforced via CI quality gates and monthly manual audits. Violations are caught by pre-release policy checks in the package hygiene workflow.
+- **Adding or Updating Packages**: Always use the `dotnet` CLI, not by manually editing `.csproj` files.
 - Preferred pattern (explicit paths + version pin):
     - `dotnet add c:\ws\BudgetExperiment\tests\BudgetExperiment.Api.Tests\BudgetExperiment.Api.Tests.csproj package Microsoft.AspNetCore.Mvc.Testing --version 10.0.0`
 - Do NOT hand-edit `<ItemGroup><PackageReference .../></ItemGroup>` blocks unless performing a mechanical conflict resolution that cannot be expressed via CLI (rare—document justification if needed).
