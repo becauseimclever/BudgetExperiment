@@ -189,6 +189,7 @@ public static class ObservabilityExtensions
                 tracing
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
+
                     // PostgreSQL stack: rely on built-in ActivitySource emitters from Npgsql/EF Core.
                     // This preserves DB trace coverage without adding SQL Server-specific instrumentation packages.
                     .AddSource("Npgsql")
