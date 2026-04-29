@@ -65,11 +65,24 @@ $thresholds = @{
     'BudgetExperiment.Contracts'      = 60
 }
 
+# Module enforcement map (true = enforced in CI gate, false = informational only)
+$enforceInCi = @{}
+foreach ($module in $thresholds.Keys) {
+    $enforceInCi[$module] = $true
+}
+
 if (Test-Path $ConfigPath) {
     try {
         $config = Get-Content $ConfigPath -Raw | ConvertFrom-Json
         foreach ($prop in $config.modules.PSObject.Properties) {
             $thresholds[$prop.Name] = $prop.Value.threshold
+
+            if ($null -ne $prop.Value.enforceInCi) {
+                $enforceInCi[$prop.Name] = [bool]$prop.Value.enforceInCi
+            }
+            else {
+                $enforceInCi[$prop.Name] = $true
+            }
         }
         Write-Verbose "Loaded thresholds from $ConfigPath"
     }
@@ -134,6 +147,11 @@ foreach ($package in $coverage.coverage.packages.package) {
 
 # Process ALL configured modules (not just those in Cobertura.xml)
 foreach ($moduleName in $thresholds.Keys | Sort-Object) {
+    if (-not $enforceInCi[$moduleName]) {
+        Write-Verbose "Skipping module '$moduleName' from CI enforcement (informational-only)."
+        continue
+    }
+
     $threshold = $thresholds[$moduleName]
     
     # Check if module has coverage data

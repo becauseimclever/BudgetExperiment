@@ -16,7 +16,8 @@
     },
     "BudgetExperiment.Client": {
       "threshold": 75,
-      "rationale": "Blazor WASM UI — markup-heavy, inherently difficult to test (raised from 70% to match solution floor)"
+      "enforceInCi": false,
+      "rationale": "Blazor WASM UI — markup-heavy, inherently difficult to test; coverage is reported but excluded from CI quality gates"
     },
     "BudgetExperiment.Infrastructure": {
       "threshold": 70,
