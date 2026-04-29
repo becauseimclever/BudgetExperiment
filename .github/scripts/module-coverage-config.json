@@ -21,7 +21,8 @@
     },
     "BudgetExperiment.Infrastructure": {
       "threshold": 70,
-      "rationale": "EF Core repositories, migrations — Testcontainer-heavy, integration-focused"
+      "enforceInCi": false,
+      "rationale": "EF Core repositories, migrations — integration-heavy tests run in CI, but current Cobertura merge does not reliably attribute Infrastructure symbols; report coverage for visibility, exclude from hard gate"
     },
     "BudgetExperiment.Contracts": {
       "threshold": 60,

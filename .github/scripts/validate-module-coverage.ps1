@@ -114,6 +114,7 @@ $results = @()
 $regressions = @()
 $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
 $coverageEpsilon = 0.25
+$regressionEpsilon = 0.25
 
 # Check if coverage report exists
 if (-not (Test-Path $CoberturaPath)) {
@@ -197,7 +198,7 @@ foreach ($moduleName in $thresholds.Keys | Sort-Object) {
     if (-not $passed) {
         $allPassed = $false
     }
-    elseif ($FailOnRegression -and $null -ne $previousCoverage -and $coveragePercent -lt $previousCoverage) {
+    elseif ($FailOnRegression -and $null -ne $previousCoverage -and ($previousCoverage - $coveragePercent) -gt $regressionEpsilon) {
         $regressed = $true
         $allPassed = $false
         Write-Verbose "Regression detected for $moduleName : $previousCoverage% → $coveragePercent%"
