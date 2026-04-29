@@ -32,7 +32,7 @@ internal sealed class KaizenGoalConfiguration : IEntityTypeConfiguration<KaizenG
 
         builder.Property(g => g.Description)
             .IsRequired()
-            .HasMaxLength(KaizenGoal.MaxDescriptionLength);
+            .HasColumnType("text");
 
         builder.Property(g => g.TargetAmount)
             .HasPrecision(19, 2)

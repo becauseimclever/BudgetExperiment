@@ -42,15 +42,15 @@ internal sealed class MonthlyReflectionConfiguration : IEntityTypeConfiguration<
             .IsRequired(false);
 
         builder.Property(r => r.IntentionText)
-            .HasMaxLength(MonthlyReflection.MaxIntentionLength)
+            .HasColumnType("text")
             .IsRequired(false);
 
         builder.Property(r => r.GratitudeText)
-            .HasMaxLength(MonthlyReflection.MaxJournalLength)
+            .HasColumnType("text")
             .IsRequired(false);
 
         builder.Property(r => r.ImprovementText)
-            .HasMaxLength(MonthlyReflection.MaxJournalLength)
+            .HasColumnType("text")
             .IsRequired(false);
 
         builder.Property(r => r.CreatedAtUtc)

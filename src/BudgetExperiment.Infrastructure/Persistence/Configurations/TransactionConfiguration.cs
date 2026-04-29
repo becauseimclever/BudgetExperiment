@@ -3,6 +3,7 @@
 // </copyright>
 
 using BudgetExperiment.Domain;
+using BudgetExperiment.Infrastructure.Persistence.Converters;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -32,7 +33,8 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
         {
             money.Property(m => m.Amount)
                 .HasColumnName("Amount")
-                .HasPrecision(18, 2)
+                .HasConversion(new DecimalToStringConverter())
+                .HasColumnType("text")
                 .IsRequired();
 
             money.Property(m => m.Currency)
@@ -46,7 +48,7 @@ internal sealed class TransactionConfiguration : IEntityTypeConfiguration<Transa
 
         builder.Property(t => t.Description)
             .IsRequired()
-            .HasMaxLength(500);
+            .HasColumnType("text");
 
         // Category FK (nullable)
         builder.Property(t => t.CategoryId);

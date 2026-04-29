@@ -39,25 +39,37 @@ public sealed class UnifiedTransactionFilterDto
         get; set;
     }
 
-    /// <summary>Gets or sets the optional description search (contains, case-insensitive).</summary>
+    /// <summary>
+    /// Gets or sets the optional description search (contains, case-insensitive).
+    /// In encrypted mode this filter is applied after materialization to preserve semantic correctness.
+    /// </summary>
     public string? Description
     {
         get; set;
     }
 
-    /// <summary>Gets or sets the optional minimum amount filter (absolute value).</summary>
+    /// <summary>
+    /// Gets or sets the optional minimum amount filter (absolute value).
+    /// In encrypted mode this filter is applied after materialization to preserve semantic correctness.
+    /// </summary>
     public decimal? MinAmount
     {
         get; set;
     }
 
-    /// <summary>Gets or sets the optional maximum amount filter (absolute value).</summary>
+    /// <summary>
+    /// Gets or sets the optional maximum amount filter (absolute value).
+    /// In encrypted mode this filter is applied after materialization to preserve semantic correctness.
+    /// </summary>
     public decimal? MaxAmount
     {
         get; set;
     }
 
-    /// <summary>Gets or sets the sort field: "date", "description", "amount", "category", "account" (default: "date").</summary>
+    /// <summary>
+    /// Gets or sets the sort field: "date", "description", "amount", "category", "account" (default: "date").
+    /// In encrypted mode, sorting by "description", "amount", and "account" is applied in-memory.
+    /// </summary>
     public string SortBy { get; set; } = "date";
 
     /// <summary>Gets or sets a value indicating whether to sort descending (default: true).</summary>

@@ -25,7 +25,26 @@ The connection string is stored in user secrets for security:
 dotnet user-secrets set "ConnectionStrings:AppDb" "Host=localhost;Database=budgetexperiment;Username=your_user;Password=your_password" --project src/BudgetExperiment.Api/BudgetExperiment.Api.csproj
 ```
 
-### 3. (Optional) Configure authentication for local development
+### 3. Configure the encryption master key
+
+Feature 163 requires a Base64-encoded 32-byte master key for encrypted persistence.
+
+Generate a key in PowerShell:
+
+```powershell
+$bytes = New-Object byte[] 32
+[System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+$key = [Convert]::ToBase64String($bytes)
+$key
+```
+
+Store it in user secrets:
+
+```powershell
+dotnet user-secrets set "Encryption:MasterKey" "<PASTE_BASE64_KEY>" --project src/BudgetExperiment.Api/BudgetExperiment.Api.csproj
+```
+
+### 4. (Optional) Configure authentication for local development
 
 Authentication uses Authentik OIDC. For local development without HTTPS:
 
@@ -33,7 +52,7 @@ Authentication uses Authentik OIDC. For local development without HTTPS:
 dotnet user-secrets set "Authentication:Authentik:RequireHttpsMetadata" "false" --project src/BudgetExperiment.Api/BudgetExperiment.Api.csproj
 ```
 
-### 4. Run the application
+### 5. Run the application
 
 **Important**: Only run the API project. The Blazor client is hosted by the API.
 
@@ -76,7 +95,7 @@ dotnet test tests/BudgetExperiment.E2E.Tests/BudgetExperiment.E2E.Tests.csproj
 
 This is an actively developed personal project. Here's how it's built and what to expect if you dig into the code:
 
-- **Philosophy First**: The calendar is the centerpiece. Every feature should deepen the Kakeibo + Kaizen rhythm — mindful recording, intentional categorization, and continuous small improvement. The design philosophy lives in [`docs/archive/`](../archive/).
+- **Philosophy First**: The calendar is the centerpiece. Every feature should deepen the Kakeibo (家計簿) + Kaizen (改善) rhythm — mindful recording, intentional categorization, and continuous small improvement. The design philosophy lives in [`docs/archive/`](../archive/).
 - **TDD First**: Write failing tests before implementation
 - **SOLID Principles**: Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, Dependency Inversion
 - **Clean Code**: Short methods, guard clauses, no commented code

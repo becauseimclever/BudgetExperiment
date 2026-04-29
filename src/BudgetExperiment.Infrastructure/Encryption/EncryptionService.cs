@@ -20,6 +20,8 @@ internal sealed class EncryptionService : IEncryptionService
     private const int KeySizeBytes = 32; // AES-256
     private const int NonceSizeBytes = 12; // GCM standard nonce size
     private const int TagSizeBytes = 16; // GCM authentication tag size
+    private const string CiphertextPrefix = "enc::v1:";
+    private const string AnyCiphertextPrefix = "enc::";
     private const string EnvironmentVariableName = "ENCRYPTION_MASTER_KEY";
     private const string ConfigurationKey = "Encryption:MasterKey";
 
@@ -91,7 +93,7 @@ internal sealed class EncryptionService : IEncryptionService
         Buffer.BlockCopy(tag, 0, combined, NonceSizeBytes, TagSizeBytes);
         Buffer.BlockCopy(ciphertext, 0, combined, NonceSizeBytes + TagSizeBytes, ciphertext.Length);
 
-        return Task.FromResult(Convert.ToBase64String(combined));
+        return Task.FromResult(CiphertextPrefix + Convert.ToBase64String(combined));
     }
 
     /// <inheritdoc />
@@ -102,16 +104,52 @@ internal sealed class EncryptionService : IEncryptionService
             return Task.FromResult(string.Empty);
         }
 
-        byte[] combined;
+        // Safe rollout support:
+        // - Prefixed values are encrypted and must decrypt successfully.
+        // - Non-prefixed values are treated as legacy plaintext unless they decode/decrypt as legacy ciphertext.
+        if (ciphertext.StartsWith(CiphertextPrefix, StringComparison.Ordinal))
+        {
+            return Task.FromResult(this.DecryptBase64Payload(ciphertext[CiphertextPrefix.Length..]));
+        }
+
+        if (ciphertext.StartsWith(AnyCiphertextPrefix, StringComparison.Ordinal))
+        {
+            throw new DomainException("Unsupported encrypted payload version. Only enc::v1: is supported by this runtime.");
+        }
+
+        if (!TryDecodeBase64(ciphertext, out var legacyPayload))
+        {
+            return Task.FromResult(ciphertext);
+        }
+
+        if (legacyPayload.Length < NonceSizeBytes + TagSizeBytes)
+        {
+            return Task.FromResult(ciphertext);
+        }
+
         try
         {
-            combined = Convert.FromBase64String(ciphertext);
+            return Task.FromResult(this.DecryptPayload(legacyPayload));
         }
-        catch (FormatException)
+        catch (DomainException)
+        {
+            // Legacy plaintext can occasionally resemble Base64.
+            return Task.FromResult(ciphertext);
+        }
+    }
+
+    private string DecryptBase64Payload(string payloadBase64)
+    {
+        if (!TryDecodeBase64(payloadBase64, out var payloadBytes))
         {
             throw new DomainException("Invalid encrypted data format.");
         }
 
+        return this.DecryptPayload(payloadBytes);
+    }
+
+    private string DecryptPayload(byte[] combined)
+    {
         if (combined.Length < NonceSizeBytes + TagSizeBytes)
         {
             throw new DomainException("Encrypted data is too short.");
@@ -137,6 +175,20 @@ internal sealed class EncryptionService : IEncryptionService
             throw new DomainException("Decryption failed. Data may be corrupted or tampered.", ex);
         }
 
-        return Task.FromResult(Encoding.UTF8.GetString(plaintext));
+        return Encoding.UTF8.GetString(plaintext);
+    }
+
+    private bool TryDecodeBase64(string value, out byte[] bytes)
+    {
+        try
+        {
+            bytes = Convert.FromBase64String(value);
+            return true;
+        }
+        catch (FormatException)
+        {
+            bytes = Array.Empty<byte>();
+            return false;
+        }
     }
 }

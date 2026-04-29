@@ -7,6 +7,7 @@ using BudgetExperiment.Domain.Services;
 using BudgetExperiment.Infrastructure.Persistence.Converters;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Infrastructure.Persistence;
@@ -22,6 +23,15 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
     /// Initializes a new instance of the <see cref="BudgetDbContext"/> class.
     /// </summary>
     /// <param name="options">DbContext options.</param>
+    public BudgetDbContext(DbContextOptions<BudgetDbContext> options)
+        : base(options)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BudgetDbContext"/> class.
+    /// </summary>
+    /// <param name="options">DbContext options.</param>
     /// <param name="serviceProvider">Service provider for accessing encryption service.</param>
     public BudgetDbContext(
         DbContextOptions<BudgetDbContext> options,
@@ -30,6 +40,11 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
     {
         _serviceProvider = serviceProvider;
     }
+
+    /// <summary>
+    /// Gets a value indicating whether this context can resolve the encryption service.
+    /// </summary>
+    public bool HasEncryptionService => _serviceProvider?.GetService<IEncryptionService>() is not null;
 
     /// <summary>
     /// Gets the accounts.
@@ -192,6 +207,13 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
     }
 
     /// <inheritdoc />
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        optionsBuilder.ReplaceService<IModelCacheKeyFactory, BudgetDbContextModelCacheKeyFactory>();
+        base.OnConfiguring(optionsBuilder);
+    }
+
+    /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BudgetDbContext).Assembly);
@@ -202,6 +224,7 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
         {
             var converter = new EncryptedStringConverter(encryptionService);
             var nullableConverter = new EncryptedNullableStringConverter(encryptionService);
+            var decimalConverter = new EncryptedDecimalConverter(encryptionService);
 
             // Account.Name (non-nullable)
             modelBuilder.Entity<Account>()
@@ -212,6 +235,15 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
             modelBuilder.Entity<Transaction>()
                 .Property(t => t.Description)
                 .HasConversion(converter);
+
+            // Transaction.Amount.Amount (non-nullable)
+            modelBuilder.Entity<Transaction>()
+                .OwnsOne(t => t.Amount, money =>
+                {
+                    money.Property(m => m.Amount)
+                        .HasConversion(decimalConverter)
+                        .HasColumnType("text");
+                });
 
             // ChatMessage.Content (non-nullable)
             modelBuilder.Entity<ChatMessage>()

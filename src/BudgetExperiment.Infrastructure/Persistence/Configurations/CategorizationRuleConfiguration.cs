@@ -35,7 +35,7 @@ internal sealed class CategorizationRuleConfiguration : IEntityTypeConfiguration
 
         builder.Property(r => r.Pattern)
             .IsRequired()
-            .HasMaxLength(CategorizationRule.MaxPatternLength);
+            .HasColumnType("text");
 
         builder.Property(r => r.CategoryId)
             .IsRequired();

@@ -277,6 +277,10 @@ Keep this file lean—prune when obsolete. Update when architectural decisions s
   - Set `Status` to `In Progress` when starting, `Done` when complete.
   - Check off completed acceptance criteria (`- [x]`) and implementation tasks.
   - After all work is finished, move the document to `docs/archive/` following the existing naming convention (group by number range, e.g., `081-090-*.md`).
+- **A feature doc must not be marked `Done` until all checklist todos are complete**, including documentation closure steps. If a todo remains open at sign-off, revert status to `In Progress (Pending Archive)` until it is finished.
+- **Audit findings go in `docs/audit/`, not in `docs/` root.** Audit files must follow the dated naming convention: `YYYY-MM-DD-<feature-slug>.md` (for example, `2026-04-28-feature-163-quality-gate.md`). Multiple related audit rounds must be consolidated into a single dated file rather than creating separate numbered feature docs. Delete any misplaced audit files from `docs/` after moving them.
+- **When a feature doc is complete, summarize it into the appropriate archive file and delete it from `docs/`.** Archive files group features by number range (e.g., `161-170-*.md`). Each entry must include: feature title, Status, Category, and Key Points. Create a new archive file for a range when none exists, following the format in `docs/archive/151-160-refactoring-performance-quality.md`.
+- **The Dotnet Documentation Steward agent has standing permission to delete obsolete files in `docs/`** as part of feature lifecycle management (archiving, audit relocation, and closure). No additional confirmation from the user is required for these deletions.
 
 ## 37. Culture-Sensitive Formatting in Tests
 - `ToString("C")`, `ToString("N")`, and other culture-dependent format strings produce different output depending on the host OS locale. CI runs on Linux with invariant culture, where `"C"` renders as `¤` instead of `$`.

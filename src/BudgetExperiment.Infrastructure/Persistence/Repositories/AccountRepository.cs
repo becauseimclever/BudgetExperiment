@@ -58,10 +58,20 @@ internal sealed class AccountRepository : IAccountRepository, IAccountTransactio
     /// <inheritdoc />
     public async Task<IReadOnlyList<Account>> GetAllAsync(CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(_context.Accounts)
-            .AsNoTracking()
+        var query = this.ApplyScopeFilter(_context.Accounts)
+            .AsNoTracking();
+
+        if (!_context.HasEncryptionService)
+        {
+            return await query
+                .OrderBy(a => a.Name)
+                .ToListAsync(cancellationToken);
+        }
+
+        var accounts = await query.ToListAsync(cancellationToken);
+        return accounts
             .OrderBy(a => a.Name)
-            .ToListAsync(cancellationToken);
+            .ToList();
     }
 
     /// <inheritdoc />
@@ -87,12 +97,24 @@ internal sealed class AccountRepository : IAccountRepository, IAccountTransactio
     /// <inheritdoc />
     public async Task<IReadOnlyList<Account>> ListAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
-        return await this.ApplyScopeFilter(_context.Accounts)
-            .AsNoTracking()
+        var query = this.ApplyScopeFilter(_context.Accounts)
+            .AsNoTracking();
+
+        if (!_context.HasEncryptionService)
+        {
+            return await query
+                .OrderBy(a => a.Name)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync(cancellationToken);
+        }
+
+        var accounts = await query.ToListAsync(cancellationToken);
+        return accounts
             .OrderBy(a => a.Name)
             .Skip(skip)
             .Take(take)
-            .ToListAsync(cancellationToken);
+            .ToList();
     }
 
     /// <inheritdoc />
