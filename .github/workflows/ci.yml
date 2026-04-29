@@ -26,6 +26,8 @@ jobs:
     env:
       # Dummy connection string for DI validation (tests use in-memory database)
       ConnectionStrings__AppDb: "Host=localhost;Database=test;Username=test;Password=test"
+      # Test-only encryption key so integration test hosts can initialize EncryptionService.
+      ENCRYPTION_MASTER_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
       # Coverage threshold (line / branch warning)
       COVERAGE_THRESHOLD: '75 90'
 
