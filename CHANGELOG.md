@@ -20,6 +20,7 @@ All notable changes to Budget Experiment.
 ### Miscellaneous
 
 - Clean up formatting and improve clarity in NuGet package hygiene runbook
+- **deps:** Complete April 2026 NuGet dependency remediation cycle; maintain stable-only policy compliance (StyleCop preview exception), clear vulnerability audit findings, and reduce shipped dependency risk posture
 - **ci:** Trigger CI on latest main
 
 ## [3.30.0] - 2026-04-25
