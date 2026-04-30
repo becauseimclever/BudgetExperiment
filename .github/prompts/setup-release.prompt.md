@@ -18,7 +18,8 @@ Version handling:
 Requirements:
 - Release branch must be `main` only.
 - Changelog must be fully up to date before tagging.
-- Tag push must trigger the release workflow automatically.
+- CI and CodeQL must already be green on the target `main` commit before tagging.
+- Tag push triggers `release.yml`, which calls `docker-build-publish.yml` (which calls `ci.yml` internally as a reusable workflow). If any stage fails, the release is blocked automatically.
 
 Steps:
 1. Resolve target version and normalize tag format:
@@ -31,6 +32,7 @@ Steps:
 - Fetch and fast-forward local `main` to `origin/main`.
 - Stop and report if working tree is not clean.
 - Stop and report if the target tag already exists locally or remotely.
+- Confirm CI and CodeQL are green for `HEAD`. If they cannot be checked automatically, stop and tell the user to verify them before continuing.
 
 3. Update `CHANGELOG.md` for this exact release tag:
 - Use `cliff.toml` and regenerate the release entry for the target tag.
@@ -61,7 +63,9 @@ Steps:
   - release tag
   - release commit SHA
   - whether changelog was updated
-  - confirmation that tag push should trigger `.github/workflows/release.yml`
+  - confirmation that tag push triggers `release.yml`, which calls `docker-build-publish.yml` via `workflow_call`, which in turn calls `ci.yml` via `workflow_call`
+- The chain fails automatically if CI fails — no separate gating needed. If any stage fails, inspect the workflow run logs, patch on a feature branch, merge to `main`, and retag from the updated commit.
+- If Docker or release fails after CI success, tell the user to inspect workflow logs, patch on a feature branch, merge, and retag from updated `main`.
 - If any step fails, stop immediately and report exact command/output needed to recover.
 
 Output style:

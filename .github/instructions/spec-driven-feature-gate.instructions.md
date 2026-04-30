@@ -11,6 +11,7 @@ Use this instruction for all feature and bug-fix coordination and execution.
 - A feature document must exist before any feature or bug-fix implementation begins.
 - If a feature or bug-fix request has no feature document, stop implementation work.
 - The only allowed action without an existing feature document is creating the new feature document.
+- Before creating a feature document or starting implementation, verify the current branch is not `main`. If the current branch is `main`, stop and instruct the user to create or switch to a working branch first. Release preparation from `main` is the only exception.
 
 ## Definition of Ready for Implementation Work
 Implementation can start only when all items below are true:
