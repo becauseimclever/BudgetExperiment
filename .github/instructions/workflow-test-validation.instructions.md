@@ -16,6 +16,7 @@ description: "Use when fixing bugs, regressions, broken workflows, release failu
 - Narrow checks are allowed during iteration, but final validation must match the workflow acceptance scope as closely as the local environment permits.
 - All checks in that scope that are runnable locally must pass before a fix can be claimed complete.
 - Unless the user explicitly narrows scope, validate against the full union of relevant workflow checks.
+- Final validation must be performed from a branch workflow context, not by treating direct commits to `main` as an acceptable development path. Merge-ready work is validated on a branch and then promoted to `main` via PR unless the workflow explicitly documents a release-only exception.
 
 ## Required Workflow Inspection
 - Identify and inspect all workflows relevant to the fix request. For this repository, this commonly includes:
