@@ -1,7 +1,7 @@
 # Feature XXX: [Feature Title]
-> **Status:** [Planning | In Progress | Complete]
+> **Status:** [Planning | In Progress | Done]
 
-> **Instructions:** Copy this template for new features. Replace `XXX` with the next feature number. Delete this instruction block and all `<!-- comments -->` after filling in.
+> **Instructions:** Copy this template for new features. Before choosing `XXX`, check open numbered feature docs in `docs/` and check archive summaries in `docs/archive/*.md` for feature entries/numbers, then use the next unused number across both sources. Do not reuse numbers already present in either source. If numbering is ambiguous or collisions are found, stop and ask for clarification before creating the file. Delete this instruction block and all `<!-- comments -->` after filling in.
 
 ## Overview
 

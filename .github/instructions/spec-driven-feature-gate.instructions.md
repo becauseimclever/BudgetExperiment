@@ -21,8 +21,13 @@ Implementation can start only when all items below are true:
 ## Required Behavior When Spec Is Missing
 1. Do not start coding, refactoring, migration work, or implementation testing for the requested change.
 2. Inform the user that implementation work is blocked until a feature document exists.
-3. Offer to create the feature document immediately using the repository template and numbering convention.
-4. Resume implementation only after the feature document is created and approved for execution.
+3. Before creating a new feature document, check both sources for existing feature numbers:
+	- open numbered feature documents in `docs/`
+	- archive summaries in `docs/archive/*.md` for feature entries/numbers
+4. Choose the next unused numeric identifier across both sources. Do not reuse any number already present in open docs or archive files.
+5. If numbering is ambiguous or a collision is found, stop and ask for clarification before creating the file.
+6. Offer to create the feature document immediately using the repository template and verified numbering convention.
+7. Resume implementation only after the feature document is created and approved for execution.
 
 ## Coordination and Handoff Rules
 - During multi-agent work, verify feature-doc existence before delegating implementation subtasks.

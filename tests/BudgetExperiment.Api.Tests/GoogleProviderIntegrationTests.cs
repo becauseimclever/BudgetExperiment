@@ -192,6 +192,7 @@ public sealed class GoogleProviderIntegrationTests
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["ConnectionStrings:AppDb"] = _dbFixture.ConnectionString,
+                    ["Encryption:MasterKey"] = Convert.ToBase64String(new byte[32]),
                     ["Authentication:Mode"] = "OIDC",
                     ["Authentication:Provider"] = "Google",
                     ["Authentication:Google:ClientId"] = "123456789-test.apps.googleusercontent.com",
@@ -285,6 +286,7 @@ public sealed class GoogleProviderIntegrationTests
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["ConnectionStrings:AppDb"] = _dbFixture.ConnectionString,
+                    ["Encryption:MasterKey"] = Convert.ToBase64String(new byte[32]),
                     ["Authentication:Authentik:Authority"] = "https://auth.example.com/application/o/budget/",
                     ["Authentication:Authentik:Audience"] = "budget-experiment",
                 });

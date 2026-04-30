@@ -100,6 +100,7 @@ public sealed class AuthEnabledWebApplicationFactory : WebApplicationFactory<Pro
                 ["ConnectionStrings:AppDb"] = _dbFixture.ConnectionString,
                 ["Authentication:Authentik:Enabled"] = "true",
                 ["Authentication:Authentik:Authority"] = "https://test.auth.local",
+                ["Encryption:MasterKey"] = Convert.ToBase64String(new byte[32]),
             });
         });
 

@@ -239,6 +239,7 @@ public sealed class NoAuthIntegrationTests : IAsyncLifetime
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["ConnectionStrings:AppDb"] = _dbFixture.ConnectionString,
+                    ["Encryption:MasterKey"] = Convert.ToBase64String(new byte[32]),
                     ["Authentication:Mode"] = "None",
                 });
             });
