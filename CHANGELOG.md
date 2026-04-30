@@ -2,6 +2,17 @@
 
 All notable changes to Budget Experiment.
 
+## [3.33.0] - 2026-04-30
+
+### Features
+
+- **docs:** Update feature documentation and validation instructions for clarity and consistency
+- **ci:** Add verify-ci gate to ensure successful CI run before release and Docker build
+
+### Miscellaneous
+
+- **deps:** Update NuGet dependencies across all projects for April 2026 cycle
+
 ## [3.32.0] - 2026-04-30
 
 ### Bug Fixes
