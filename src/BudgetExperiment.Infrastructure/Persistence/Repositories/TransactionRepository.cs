@@ -103,20 +103,28 @@ internal sealed class TransactionRepository : ITransactionRepository
             query = query.Where(t => t.AccountId == accountId.Value);
         }
 
-        // Group by date and calculate totals
-        // Note: This assumes all transactions use the same currency (USD)
-        // For multi-currency support, this would need to be grouped by currency too
-        var dailyTotals = await query
+        // Amount is stored as encrypted text at rest; perform numeric aggregation client-side.
+        var transactions = await query
+            .Select(t => new
+            {
+                t.Date,
+                Amount = t.Amount.Amount,
+                Currency = t.Amount.Currency,
+            })
+            .ToListAsync(cancellationToken);
+
+        // Group by date and calculate totals.
+        var dailyTotals = transactions
             .GroupBy(t => t.Date)
             .Select(g => new
             {
                 Date = g.Key,
-                TotalAmount = g.Sum(t => t.Amount.Amount),
-                Currency = g.First().Amount.Currency,
+                TotalAmount = g.Sum(t => t.Amount),
+                Currency = g.First().Currency,
                 Count = g.Count(),
             })
             .OrderBy(d => d.Date)
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         return dailyTotals
             .Select(d => new DailyTotalValue(
@@ -203,13 +211,17 @@ internal sealed class TransactionRepository : ITransactionRepository
             return MoneyValue.Create(CurrencyDefaults.DefaultCurrency, 0m);
         }
 
-        // Sum all spending (negative amounts represent expenses) with ownership filtering
-        var totalSpending = await this.ApplyScopeFilter(_context.Transactions)
+        var amounts = await this.ApplyScopeFilter(_context.Transactions)
             .Where(t => t.Date >= startDate
                 && t.Date <= endDate
-                && t.CategoryId == categoryId
-                && t.Amount.Amount < 0)
-            .SumAsync(t => Math.Abs(t.Amount.Amount), cancellationToken);
+                && t.CategoryId == categoryId)
+            .Select(t => t.Amount.Amount)
+            .ToListAsync(cancellationToken);
+
+        // Amount is stored as encrypted text at rest; perform numeric aggregation client-side.
+        var totalSpending = amounts
+            .Where(amount => amount < 0)
+            .Sum(amount => Math.Abs(amount));
 
         return MoneyValue.Create(CurrencyDefaults.DefaultCurrency, totalSpending);
     }
@@ -223,20 +235,26 @@ internal sealed class TransactionRepository : ITransactionRepository
         var startDate = new DateOnly(year, month, 1);
         var endDate = startDate.AddMonths(1).AddDays(-1);
 
-        return await this.ApplyScopeFilter(_context.Transactions)
+        var transactions = await this.ApplyScopeFilter(_context.Transactions)
             .AsNoTracking()
             .Where(t => t.Date >= startDate
                 && t.Date <= endDate
                 && t.TransferId == null
-                && t.CategoryId != null
-                && t.Amount.Amount < 0)
-            .GroupBy(t => t.CategoryId!.Value)
-            .Select(g => new
+                && t.CategoryId != null)
+            .Select(t => new
             {
-                CategoryId = g.Key,
-                Total = g.Sum(t => Math.Abs(t.Amount.Amount)),
+                CategoryId = t.CategoryId,
+                Amount = t.Amount.Amount,
             })
-            .ToDictionaryAsync(x => x.CategoryId, x => x.Total, cancellationToken);
+            .ToListAsync(cancellationToken);
+
+        // Amount is stored as encrypted text at rest; perform numeric aggregation client-side.
+        return transactions
+            .Where(t => t.Amount < 0)
+            .GroupBy(t => t.CategoryId!.Value)
+            .ToDictionary(
+                group => group.Key,
+                group => group.Sum(t => Math.Abs(t.Amount)));
     }
 
     /// <inheritdoc />
@@ -258,6 +276,24 @@ internal sealed class TransactionRepository : ITransactionRepository
         int maxCount = 500,
         CancellationToken cancellationToken = default)
     {
+        if (_context.HasEncryptionService)
+        {
+            // AES-GCM produces unique ciphertexts per encrypt, so SQL DISTINCT/ORDER BY on
+            // encrypted columns never deduplicates or sorts correctly. Materialize the raw
+            // encrypted rows and apply deduplication and ordering over decrypted values.
+            var raw = await this.ApplyScopeFilter(_context.Transactions)
+                .AsNoTracking()
+                .Where(t => t.CategoryId == null)
+                .Select(t => t.Description)
+                .ToListAsync(cancellationToken);
+
+            return raw
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(d => d, StringComparer.OrdinalIgnoreCase)
+                .Take(maxCount)
+                .ToList();
+        }
+
         return await this.ApplyScopeFilter(_context.Transactions)
             .AsNoTracking()
             .Where(t => t.CategoryId == null)
@@ -286,6 +322,8 @@ internal sealed class TransactionRepository : ITransactionRepository
             .AsNoTracking()
             .Where(t => t.CategoryId == null);
 
+        var hasEncryptedConverters = _context.HasEncryptionService;
+
         // Apply filters
         if (startDate.HasValue)
         {
@@ -297,22 +335,10 @@ internal sealed class TransactionRepository : ITransactionRepository
             query = query.Where(t => t.Date <= endDate.Value);
         }
 
-        // Amount filters use absolute value comparison (handles both positive and negative amounts)
-        if (minAmount.HasValue)
+        var normalizedDescriptionFilter = descriptionContains?.Trim();
+        if (!hasEncryptedConverters && !string.IsNullOrWhiteSpace(normalizedDescriptionFilter))
         {
-            var min = minAmount.Value;
-            query = query.Where(t => (t.Amount.Amount >= 0 ? t.Amount.Amount : -t.Amount.Amount) >= min);
-        }
-
-        if (maxAmount.HasValue)
-        {
-            var max = maxAmount.Value;
-            query = query.Where(t => (t.Amount.Amount >= 0 ? t.Amount.Amount : -t.Amount.Amount) <= max);
-        }
-
-        if (!string.IsNullOrWhiteSpace(descriptionContains))
-        {
-            query = query.Where(t => t.Description.ToLower().Contains(descriptionContains.ToLower()));
+            query = query.Where(t => t.Description.ToLower().Contains(normalizedDescriptionFilter.ToLower()));
         }
 
         if (accountId.HasValue)
@@ -320,28 +346,47 @@ internal sealed class TransactionRepository : ITransactionRepository
             query = query.Where(t => t.AccountId == accountId.Value);
         }
 
-        // Get total count before paging
-        var totalCount = await query.CountAsync(cancellationToken);
+        var uncategorized = await query.ToListAsync(cancellationToken);
 
-        // Apply sorting (absolute value for amounts)
-        query = sortBy.ToUpperInvariant() switch
+        // Amount is stored as encrypted text at rest; perform sensitive filters/sort client-side.
+        IEnumerable<Transaction> filtered = uncategorized;
+
+        if (hasEncryptedConverters && !string.IsNullOrWhiteSpace(normalizedDescriptionFilter))
+        {
+            filtered = filtered.Where(t => t.Description.Contains(normalizedDescriptionFilter, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (minAmount.HasValue)
+        {
+            var min = minAmount.Value;
+            filtered = filtered.Where(t => Math.Abs(t.Amount.Amount) >= min);
+        }
+
+        if (maxAmount.HasValue)
+        {
+            var max = maxAmount.Value;
+            filtered = filtered.Where(t => Math.Abs(t.Amount.Amount) <= max);
+        }
+
+        filtered = sortBy.ToUpperInvariant() switch
         {
             "AMOUNT" => sortDescending
-                ? query.OrderByDescending(t => t.Amount.Amount >= 0 ? t.Amount.Amount : -t.Amount.Amount).ThenByDescending(t => t.Date)
-                : query.OrderBy(t => t.Amount.Amount >= 0 ? t.Amount.Amount : -t.Amount.Amount).ThenBy(t => t.Date),
+                ? filtered.OrderByDescending(t => Math.Abs(t.Amount.Amount)).ThenByDescending(t => t.Date)
+                : filtered.OrderBy(t => Math.Abs(t.Amount.Amount)).ThenBy(t => t.Date),
             "DESCRIPTION" => sortDescending
-                ? query.OrderByDescending(t => t.Description).ThenByDescending(t => t.Date)
-                : query.OrderBy(t => t.Description).ThenBy(t => t.Date),
+                ? filtered.OrderByDescending(t => t.Description).ThenByDescending(t => t.Date)
+                : filtered.OrderBy(t => t.Description).ThenBy(t => t.Date),
             _ => sortDescending
-                ? query.OrderByDescending(t => t.Date).ThenByDescending(t => t.CreatedAtUtc)
-                : query.OrderBy(t => t.Date).ThenBy(t => t.CreatedAtUtc),
+                ? filtered.OrderByDescending(t => t.Date).ThenByDescending(t => t.CreatedAtUtc)
+                : filtered.OrderBy(t => t.Date).ThenBy(t => t.CreatedAtUtc),
         };
 
-        // Apply paging
-        var items = await query
+        var materialized = filtered.ToList();
+        var totalCount = materialized.Count;
+        var items = materialized
             .Skip(skip)
             .Take(take)
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         return (items, totalCount);
     }
@@ -363,6 +408,30 @@ internal sealed class TransactionRepository : ITransactionRepository
         int maxResults = 100,
         CancellationToken cancellationToken = default)
     {
+        if (_context.HasEncryptionService)
+        {
+            // SQL StartsWith on encrypted ciphertext will never match plaintext prefixes.
+            // Materialize all descriptions (decrypted by the EF converter) and apply
+            // deduplication, prefix filter, and ordering on the decrypted values.
+            var raw = await this.ApplyScopeFilter(_context.Transactions)
+                .AsNoTracking()
+                .Select(t => t.Description)
+                .ToListAsync(cancellationToken);
+
+            IEnumerable<string> decrypted = raw
+                .Distinct(StringComparer.OrdinalIgnoreCase);
+
+            if (!string.IsNullOrWhiteSpace(searchPrefix))
+            {
+                decrypted = decrypted.Where(d => d.StartsWith(searchPrefix, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return decrypted
+                .OrderBy(d => d, StringComparer.OrdinalIgnoreCase)
+                .Take(maxResults)
+                .ToList();
+        }
+
         var query = this.ApplyScopeFilter(_context.Transactions)
             .AsNoTracking()
             .Select(t => t.Description)
@@ -504,10 +573,23 @@ internal sealed class TransactionRepository : ITransactionRepository
             query = query.Where(t => t.Date <= upToDate.Value);
         }
 
-        var result = await query
-            .GroupBy(t => t.Amount.Currency)
-            .Select(g => new { Currency = g.Key, Total = g.Sum(t => t.Amount.Amount) })
-            .FirstOrDefaultAsync(ct);
+        var amounts = await query
+            .Select(t => new
+            {
+                Currency = t.Amount.Currency,
+                Amount = t.Amount.Amount,
+            })
+            .ToListAsync(ct);
+
+        // Amount is stored as encrypted text at rest; perform numeric aggregation client-side.
+        var result = amounts
+            .GroupBy(t => t.Currency)
+            .Select(group => new
+            {
+                Currency = group.Key,
+                Total = group.Sum(x => x.Amount),
+            })
+            .FirstOrDefault();
 
         return result is null
             ? MoneyValue.Create(CurrencyDefaults.DefaultCurrency, 0m)
@@ -543,6 +625,7 @@ internal sealed class TransactionRepository : ITransactionRepository
         KakeiboCategory? kakeiboCategory = null,
         CancellationToken cancellationToken = default)
     {
+        var hasEncryptedConverters = _context.HasEncryptionService;
         IQueryable<Transaction> query = this.ApplyScopeFilter(_context.Transactions)
             .Include(t => t.Category)
             .AsNoTrackingWithIdentityResolution();
@@ -573,18 +656,19 @@ internal sealed class TransactionRepository : ITransactionRepository
             query = query.Where(t => t.Date <= endDate.Value);
         }
 
-        if (!string.IsNullOrWhiteSpace(descriptionContains))
+        var normalizedDescriptionFilter = descriptionContains?.Trim();
+        if (!hasEncryptedConverters && !string.IsNullOrWhiteSpace(normalizedDescriptionFilter))
         {
-            query = query.Where(t => t.Description.ToLower().Contains(descriptionContains.ToLower()));
+            query = query.Where(t => t.Description.ToLower().Contains(normalizedDescriptionFilter.ToLower()));
         }
 
-        if (minAmount.HasValue)
+        if (!hasEncryptedConverters && minAmount.HasValue)
         {
             var min = minAmount.Value;
             query = query.Where(t => (t.Amount.Amount >= 0 ? t.Amount.Amount : -t.Amount.Amount) >= min);
         }
 
-        if (maxAmount.HasValue)
+        if (!hasEncryptedConverters && maxAmount.HasValue)
         {
             var max = maxAmount.Value;
             query = query.Where(t => (t.Amount.Amount >= 0 ? t.Amount.Amount : -t.Amount.Amount) <= max);
@@ -598,43 +682,101 @@ internal sealed class TransactionRepository : ITransactionRepository
                 (t.KakeiboOverride == null && t.Category != null && t.Category.KakeiboCategory == kc));
         }
 
-        // Get total count before paging
-        var totalCount = await query.CountAsync(cancellationToken);
+        if (!hasEncryptedConverters)
+        {
+            // Get total count before paging.
+            var totalCount = await query.CountAsync(cancellationToken);
 
-        // Apply sorting
-        IOrderedQueryable<Transaction> orderedQuery = sortBy.ToUpperInvariant() switch
+            // Apply sorting.
+            IOrderedQueryable<Transaction> orderedQuery = sortBy.ToUpperInvariant() switch
+            {
+                "AMOUNT" => sortDescending
+                    ? query.OrderByDescending(t => t.Amount.Amount >= 0 ? t.Amount.Amount : -t.Amount.Amount)
+                    : query.OrderBy(t => t.Amount.Amount >= 0 ? t.Amount.Amount : -t.Amount.Amount),
+                "DESCRIPTION" => sortDescending
+                    ? query.OrderByDescending(t => t.Description)
+                    : query.OrderBy(t => t.Description),
+                "CATEGORY" => sortDescending
+                    ? query.OrderByDescending(t => t.Category != null ? t.Category.Name : string.Empty)
+                    : query.OrderBy(t => t.Category != null ? t.Category.Name : string.Empty),
+                "ACCOUNT" => sortDescending
+                    ? query.OrderByDescending(t => _context.Accounts
+                        .Where(a => a.Id == t.AccountId)
+                        .Select(a => a.Name)
+                        .FirstOrDefault())
+                    : query.OrderBy(t => _context.Accounts
+                        .Where(a => a.Id == t.AccountId)
+                        .Select(a => a.Name)
+                        .FirstOrDefault()),
+                _ => sortDescending
+                    ? query.OrderByDescending(t => t.Date)
+                    : query.OrderBy(t => t.Date),
+            };
+
+            // Secondary sort for stability.
+            var items = await orderedQuery
+                .ThenByDescending(t => t.CreatedAtUtc)
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync(cancellationToken);
+
+            return (items, totalCount);
+        }
+
+        // In encrypted mode, apply sensitive filters and account-name sorting in-memory.
+        IEnumerable<Transaction> filtered = await query.ToListAsync(cancellationToken);
+
+        if (!string.IsNullOrWhiteSpace(normalizedDescriptionFilter))
+        {
+            filtered = filtered.Where(t => t.Description.Contains(normalizedDescriptionFilter, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (minAmount.HasValue)
+        {
+            var min = minAmount.Value;
+            filtered = filtered.Where(t => Math.Abs(t.Amount.Amount) >= min);
+        }
+
+        if (maxAmount.HasValue)
+        {
+            var max = maxAmount.Value;
+            filtered = filtered.Where(t => Math.Abs(t.Amount.Amount) <= max);
+        }
+
+        var accountNames = await this.ApplyAccountScopeFilter(_context.Accounts)
+            .AsNoTracking()
+            .ToDictionaryAsync(a => a.Id, a => a.Name, cancellationToken);
+
+        var ordered = sortBy.ToUpperInvariant() switch
         {
             "AMOUNT" => sortDescending
-                ? query.OrderByDescending(t => t.Amount.Amount >= 0 ? t.Amount.Amount : -t.Amount.Amount)
-                : query.OrderBy(t => t.Amount.Amount >= 0 ? t.Amount.Amount : -t.Amount.Amount),
+                ? filtered.OrderByDescending(t => Math.Abs(t.Amount.Amount))
+                : filtered.OrderBy(t => Math.Abs(t.Amount.Amount)),
             "DESCRIPTION" => sortDescending
-                ? query.OrderByDescending(t => t.Description)
-                : query.OrderBy(t => t.Description),
+                ? filtered.OrderByDescending(t => t.Description)
+                : filtered.OrderBy(t => t.Description),
             "CATEGORY" => sortDescending
-                ? query.OrderByDescending(t => t.Category != null ? t.Category.Name : string.Empty)
-                : query.OrderBy(t => t.Category != null ? t.Category.Name : string.Empty),
+                ? filtered.OrderByDescending(t => t.Category?.Name ?? string.Empty)
+                : filtered.OrderBy(t => t.Category?.Name ?? string.Empty),
             "ACCOUNT" => sortDescending
-                ? query.OrderByDescending(t => _context.Accounts
-                    .Where(a => a.Id == t.AccountId)
-                    .Select(a => a.Name)
-                    .FirstOrDefault())
-                : query.OrderBy(t => _context.Accounts
-                    .Where(a => a.Id == t.AccountId)
-                    .Select(a => a.Name)
-                    .FirstOrDefault()),
+                ? filtered.OrderByDescending(t => accountNames.GetValueOrDefault(t.AccountId, string.Empty))
+                : filtered.OrderBy(t => accountNames.GetValueOrDefault(t.AccountId, string.Empty)),
             _ => sortDescending
-                ? query.OrderByDescending(t => t.Date)
-                : query.OrderBy(t => t.Date),
+                ? filtered.OrderByDescending(t => t.Date)
+                : filtered.OrderBy(t => t.Date),
         };
 
-        // Secondary sort for stability
-        var items = await orderedQuery
+        var materialized = ordered
             .ThenByDescending(t => t.CreatedAtUtc)
+            .ToList();
+
+        var inMemoryTotalCount = materialized.Count;
+        var pagedItems = materialized
             .Skip(skip)
             .Take(take)
-            .ToListAsync(cancellationToken);
+            .ToList();
 
-        return (items, totalCount);
+        return (pagedItems, inMemoryTotalCount);
     }
 
     /// <inheritdoc />
@@ -693,5 +835,17 @@ internal sealed class TransactionRepository : ITransactionRepository
         }
 
         return query.Where(t => t.OwnerUserId == null || t.OwnerUserId == userId);
+    }
+
+    private IQueryable<Account> ApplyAccountScopeFilter(IQueryable<Account> query)
+    {
+        var userId = _userContext.UserIdAsGuid;
+
+        if (userId is null)
+        {
+            return query.Where(a => a.OwnerUserId == null);
+        }
+
+        return query.Where(a => a.OwnerUserId == null || a.OwnerUserId == userId);
     }
 }

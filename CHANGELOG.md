@@ -2,6 +2,26 @@
 
 All notable changes to Budget Experiment.
 
+## [3.32.0] - 2026-04-30
+
+### Bug Fixes
+
+- **ci:** Provide test encryption key for API integration hosts
+- **ci:** Align per-module coverage gate with policy
+- **ci:** Aggregate module coverage and add epsilon tolerance
+- **ci:** Make module gate resilient to infra attribution gaps
+
+### Features
+
+- Add PostgreSQL instrumentation to observability pipeline
+- Add encryption master key configuration for API integration tests
+- **ci:** Add script to check latest CI and Docker run statuses
+
+### Miscellaneous
+
+- Clean up formatting and improve clarity in NuGet package hygiene runbook
+- **ci:** Trigger CI on latest main
+
 ## [3.30.0] - 2026-04-25
 
 ### Features

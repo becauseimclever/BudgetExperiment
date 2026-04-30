@@ -9,6 +9,7 @@
 #
 # Example .env file additions:
 #   DB_CONNECTION_STRING_2=Host=your-db-server;Port=5432;Database=budgetexperiment2;Username=your-user;Password=your-password
+#   ENCRYPTION_MASTER_KEY_2=base64-encoded-32-byte-key
 
 services:
   budgetexperiment-2:
@@ -23,6 +24,9 @@ services:
       
       # Database connection (use DB_CONNECTION_STRING_2 for separate DB, or DB_CONNECTION_STRING to share)
       - ConnectionStrings__AppDb=${DB_CONNECTION_STRING_2:-${DB_CONNECTION_STRING}}
+
+      # Feature 163 encryption key (required; supports per-instance override)
+      - ENCRYPTION_MASTER_KEY=${ENCRYPTION_MASTER_KEY_2:-${ENCRYPTION_MASTER_KEY:?ENCRYPTION_MASTER_KEY must be set for production deployments}}
       
       # Authentication (Authentik OIDC)
       - Authentication__Authentik__Enabled=${AUTHENTIK_ENABLED_2:-${AUTHENTIK_ENABLED:-false}}

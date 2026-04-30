@@ -26,6 +26,17 @@ public sealed class DomainException : Exception
     }
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="DomainException"/> class with an inner exception.
+    /// </summary>
+    /// <param name="message">Exception message.</param>
+    /// <param name="innerException">The inner exception.</param>
+    public DomainException(string message, Exception innerException)
+        : base(message, innerException)
+    {
+        ExceptionType = DomainExceptionType.Validation;
+    }
+
+    /// <summary>
     /// Gets the classification of this domain exception.
     /// </summary>
     public DomainExceptionType ExceptionType

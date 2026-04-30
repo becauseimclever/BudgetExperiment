@@ -1,7 +1,11 @@
+using BudgetExperiment.Domain.Services;
+using BudgetExperiment.Infrastructure.Encryption;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.UserSecrets;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Infrastructure.Persistence;
 
@@ -37,8 +41,14 @@ public sealed class DesignTimeBudgetDbContextFactory : IDesignTimeDbContextFacto
             throw new InvalidOperationException("Design-time connection string 'AppDb' not found. Add it via user secrets or appsettings.");
         }
 
+        // Build a minimal service provider for design-time
+        var services = new ServiceCollection();
+        services.AddSingleton<IConfiguration>(configuration);
+        services.AddScoped<IEncryptionService, EncryptionService>();
+        var serviceProvider = services.BuildServiceProvider();
+
         var optionsBuilder = new DbContextOptionsBuilder<BudgetDbContext>();
         optionsBuilder.UseNpgsql(cs);
-        return new BudgetDbContext(optionsBuilder.Options);
+        return new BudgetDbContext(optionsBuilder.Options, serviceProvider);
     }
 }

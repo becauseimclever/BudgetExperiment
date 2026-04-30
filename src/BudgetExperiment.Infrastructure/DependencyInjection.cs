@@ -1,5 +1,7 @@
 using BudgetExperiment.Application.Location;
 using BudgetExperiment.Domain;
+using BudgetExperiment.Domain.Services;
+using BudgetExperiment.Infrastructure.Encryption;
 using BudgetExperiment.Infrastructure.ExternalServices.AI;
 using BudgetExperiment.Infrastructure.ExternalServices.Geocoding;
 using BudgetExperiment.Infrastructure.Persistence;
@@ -74,6 +76,9 @@ public static class DependencyInjection
 
         // Geocoding Service - Nominatim (OpenStreetMap) reverse geocoding
         services.AddHttpClient<IGeocodingService, NominatimGeocodingService>();
+
+        // Encryption service
+        services.AddScoped<IEncryptionService, EncryptionService>();
 
         return services;
     }

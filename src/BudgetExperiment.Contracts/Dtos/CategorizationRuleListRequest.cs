@@ -15,7 +15,10 @@ public sealed class CategorizationRuleListRequest
     /// <summary>Gets or sets the page size.</summary>
     public int PageSize { get; set; } = 25;
 
-    /// <summary>Gets or sets the search text to filter by rule name or pattern.</summary>
+    /// <summary>
+    /// Gets or sets the search text to filter by rule name or pattern.
+    /// In encrypted mode, pattern matching is applied in-memory after base filters.
+    /// </summary>
     public string? Search
     {
         get; set;

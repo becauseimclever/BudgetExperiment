@@ -132,9 +132,11 @@ internal sealed class CategorizationRuleRepository : ICategorizationRuleReposito
             .AsNoTrackingWithIdentityResolution()
             .AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(search))
+        var normalizedSearch = search?.Trim();
+
+        if (!_context.HasEncryptionService && !string.IsNullOrWhiteSpace(normalizedSearch))
         {
-            var searchLower = search.ToUpperInvariant();
+            var searchLower = normalizedSearch.ToUpperInvariant();
             query = query.Where(r =>
                 r.Name.ToUpper().Contains(searchLower) ||
                 r.Pattern.ToUpper().Contains(searchLower));
@@ -150,16 +152,37 @@ internal sealed class CategorizationRuleRepository : ICategorizationRuleReposito
             query = query.Where(r => r.IsActive == isActive.Value);
         }
 
-        var totalCount = await query.CountAsync(cancellationToken);
+        if (!_context.HasEncryptionService)
+        {
+            var totalCount = await query.CountAsync(cancellationToken);
 
-        query = ApplySort(query, sortBy, sortDirection);
+            query = ApplySort(query, sortBy, sortDirection);
 
-        var items = await query
+            var items = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+
+            return (items, totalCount);
+        }
+
+        IEnumerable<CategorizationRule> filtered = await query.ToListAsync(cancellationToken);
+
+        if (!string.IsNullOrWhiteSpace(normalizedSearch))
+        {
+            filtered = filtered.Where(r =>
+                r.Name.Contains(normalizedSearch, StringComparison.OrdinalIgnoreCase) ||
+                r.Pattern.Contains(normalizedSearch, StringComparison.OrdinalIgnoreCase));
+        }
+
+        var sorted = ApplySort(filtered, sortBy, sortDirection).ToList();
+        var inMemoryCount = sorted.Count;
+        var pageItems = sorted
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .ToListAsync(cancellationToken);
+            .ToList();
 
-        return (items, totalCount);
+        return (pageItems, inMemoryCount);
     }
 
     /// <inheritdoc />
@@ -193,6 +216,30 @@ internal sealed class CategorizationRuleRepository : ICategorizationRuleReposito
             "CATEGORY" => descending
                 ? query.OrderByDescending(r => r.Category!.Name).ThenBy(r => r.Priority)
                 : query.OrderBy(r => r.Category!.Name).ThenBy(r => r.Priority),
+            "CREATEDAT" => descending
+                ? query.OrderByDescending(r => r.CreatedAtUtc)
+                : query.OrderBy(r => r.CreatedAtUtc),
+            _ => descending
+                ? query.OrderByDescending(r => r.Priority).ThenByDescending(r => r.Name)
+                : query.OrderBy(r => r.Priority).ThenBy(r => r.Name),
+        };
+    }
+
+    private static IOrderedEnumerable<CategorizationRule> ApplySort(
+        IEnumerable<CategorizationRule> query,
+        string? sortBy,
+        string? sortDirection)
+    {
+        var descending = string.Equals(sortDirection, "desc", StringComparison.OrdinalIgnoreCase);
+
+        return sortBy?.ToUpperInvariant() switch
+        {
+            "NAME" => descending
+                ? query.OrderByDescending(r => r.Name)
+                : query.OrderBy(r => r.Name),
+            "CATEGORY" => descending
+                ? query.OrderByDescending(r => r.Category?.Name ?? string.Empty).ThenBy(r => r.Priority)
+                : query.OrderBy(r => r.Category?.Name ?? string.Empty).ThenBy(r => r.Priority),
             "CREATEDAT" => descending
                 ? query.OrderByDescending(r => r.CreatedAtUtc)
                 : query.OrderBy(r => r.CreatedAtUtc),
