@@ -242,9 +242,10 @@ Keep this file lean—prune when obsolete. Update when architectural decisions s
 - Prefer explicit paths when creating, editing, or referencing solution/project files to ensure reproducibility across developer environments.
 
 ## 33. NuGet Package Management
-- **Stable-Only Policy**: All NuGet packages across the solution must use stable (release) versions. Pre-release packages are not permitted, with one exception: `StyleCop.Analyzers` must track the latest preview release from nuget.org.
-- **StyleCop.Analyzers Rule**: `StyleCop.Analyzers` is the only allowed pre-release package. It must always be pinned to the highest listed pre-release version on nuget.org (`https://api.nuget.org/v3/registration5-semver2/stylecop.analyzers/index.json`), evaluated using SemVer precedence. Monthly package hygiene audits include validation of this requirement (see `docs/operations/nuget-package-hygiene-monthly-runbook.md`).
-- **Policy Enforcement**: NuGet package governance is enforced via CI quality gates and monthly manual audits. Violations are caught by pre-release policy checks in the package hygiene workflow.
+- **Current Enforcement**: `Directory.Build.props` sets `NuGetAudit=true`, `NuGetAuditMode=all`, and `NuGetAuditLevel=low` globally. This makes `dotnet restore` fail on vulnerable direct or transitive packages in local work and in CI. Do not repeat these audit properties in individual project files unless you are debugging a one-off local reproduction.
+- **Upgrade Discovery**: Dependabot is the default source of NuGet upgrade discovery and PR creation. Current grouped NuGet updates are `aspnetcore`, `extensions`, `efcore`, and `testing` as defined in `.github/dependabot.yml`.
+- **Auto-Merge Policy**: Only eligible patch-level NuGet Dependabot PRs may be auto-merged, and only after required checks pass. Minor, major, and security-related updates require manual review.
+- **Pre-release Packages**: Prefer stable NuGet packages by default. `StyleCop.Analyzers` is currently pinned centrally in `Directory.Build.props` to a preview version. The repository does not currently have a workflow or script that enforces a pre-release allowlist or checks for the latest StyleCop preview, so treat any pre-release package change as a manual PR review item.
 - **Adding or Updating Packages**: Always use the `dotnet` CLI, not by manually editing `.csproj` files.
 - Preferred pattern (explicit paths + version pin):
     - `dotnet add c:\ws\BudgetExperiment\tests\BudgetExperiment.Api.Tests\BudgetExperiment.Api.Tests.csproj package Microsoft.AspNetCore.Mvc.Testing --version 10.0.0`

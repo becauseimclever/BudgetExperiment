@@ -193,7 +193,10 @@ Three-scenario prompt:
 - [ ] **T-165-11** Update `workflow-test-validation.instructions.md` with vulnerability failure location.
 - [ ] **T-165-12** Update `docs/ci-cd-deployment.md` NuGet section.
 - [ ] **T-165-13** Validate: run `dotnet restore` against a branch with a pinned vulnerable package version; confirm build fails with `NU190x` error.
+  - Validation evidence (2026-04-30): `dotnet add c:\ws\BudgetExperiment\tests\BudgetExperiment.Domain.Tests\BudgetExperiment.Domain.Tests.csproj package Newtonsoft.Json --version 9.0.1` failed during restore with `NU1903` for `Newtonsoft.Json 9.0.1` (`GHSA-5crp-9r3c-p9vr`). A follow-up `dotnet restore c:\ws\BudgetExperiment\BudgetExperiment.sln` reproduced the failure on the workflow-equivalent solution restore path.
+  - Temporary probe scope: added only to `BudgetExperiment.Domain.Tests`, then fully removed so the validation-only package pin does not remain in git diff.
 - [ ] **T-165-14** Validate: confirm CI passes cleanly after all deletions.
+  - Validation evidence (2026-04-30): after reverting the temporary package reference, `dotnet restore c:\ws\BudgetExperiment\BudgetExperiment.sln` completed successfully.
 
 ---
 

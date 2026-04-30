@@ -4,7 +4,9 @@ This document explains the automated build and deployment pipeline for BudgetExp
 
 ## Overview
 
-BudgetExperiment uses a **CI/CD-first approach** where Docker images are built automatically in GitHub Actions and deployed to target environments (like Raspberry Pi) by pulling pre-built images.
+BudgetExperiment uses a **CI/CD-first approach** where GitHub Actions validates the .NET solution, builds Docker images for releases, and deploys target environments by pulling pre-built images.
+
+NuGet package updates follow a Dependabot-first model. Upgrade discovery starts with Dependabot, and the .NET SDK audit settings in `Directory.Build.props` make `dotnet restore` fail when a direct or transitive package has a known vulnerability.
 
 ### Key Principles
 
@@ -12,10 +14,11 @@ BudgetExperiment uses a **CI/CD-first approach** where Docker images are built a
 2. **CI builds everything** - GitHub Actions builds multi-architecture Docker images
 3. **Deploy by pulling** - Target servers pull images from GitHub Container Registry
 4. **Separation of concerns** - Development workflow is distinct from deployment workflow
+5. **Dependabot-first NuGet updates** - Dependency discovery starts with Dependabot, while CI blocks vulnerable packages at restore time
 
 ## Architecture Diagram
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                         DEVELOPMENT                              │
 │                                                                   │
@@ -52,7 +55,7 @@ BudgetExperiment uses a **CI/CD-first approach** where Docker images are built a
 │                     ▼                                             │
 │  ┌─────────────────────────────────────────┐                    │
 │  │  GitHub Container Registry               │                    │
-│  │  ghcr.io/fortinbra/budgetexpirement     │                    │
+│  │  ghcr.io/<owner>/budgetexperiment       │                    │
 │  │                                          │                    │
 │  │  Tags:                                   │                    │
 │  │  - latest                                │                    │
@@ -93,18 +96,21 @@ BudgetExperiment uses a **CI/CD-first approach** where Docker images are built a
 **Location**: Developer workstations
 
 **Tools**:
+
 - .NET 10 SDK
 - Visual Studio / VS Code
 - PostgreSQL (local or remote)
 - User secrets for configuration
 
 **Workflow**:
+
 ```powershell
 # Standard .NET development
 dotnet run --project src/BudgetExperiment.Api/BudgetExperiment.Api.csproj
 ```
 
 **Key Points**:
+
 - NO Docker required
 - API project serves both REST API and Blazor WebAssembly client
 - Database connection via user secrets (never committed)
@@ -115,28 +121,44 @@ dotnet run --project src/BudgetExperiment.Api/BudgetExperiment.Api.csproj
 **Location**: GitHub Actions
 
 **Trigger Events**:
+
 - Push to `main` branch
 - Creation of version tags (`v*`)
 - Pull requests (build only, no publish)
 
-**Workflow File**: `.github/workflows/docker-build-publish.yml`
+**Workflow Files**:
 
-**Steps**:
+- `.github/workflows/ci.yml`
+- `.github/workflows/dependabot-automerge.yml`
+- `.github/workflows/docker-build-publish.yml`
+- `.github/workflows/release.yml`
+
+**Core CI Steps**:
+
 1. Checkout repository
-2. Setup QEMU (for cross-architecture builds)
-3. Setup Docker Buildx (multi-platform builder)
-4. Login to GitHub Container Registry
-5. Extract metadata (tags, labels)
-6. Build Docker image for `linux/amd64` and `linux/arm64`
-7. Push to `ghcr.io/fortinbra/budgetexpirement`
+2. Setup .NET 10 SDK
+3. Run `dotnet restore BudgetExperiment.sln`
+4. Run `dotnet build BudgetExperiment.sln --configuration Release --no-restore`
+5. Run `dotnet test BudgetExperiment.sln` with the repository test filters and coverage settings
+6. Fail early if restore finds a vulnerable direct or transitive package
+
+**Release Build Steps**:
+
+1. Reuse `ci.yml` through `workflow_call`
+2. Setup Docker Buildx
+3. Login to GitHub Container Registry
+4. Build Docker images for `linux/amd64` and `linux/arm64`
+5. Push release images to `ghcr.io/<owner>/budgetexperiment`
 
 **Build Process**:
+
 - Uses multi-stage Dockerfile
 - Stage 1: Build from source using .NET SDK
 - Stage 2: Create runtime image with only published output
 - Supports both amd64 (x86_64) and arm64 (Raspberry Pi) architectures
 
 **Image Tags**:
+
 - `latest` - Always points to most recent main build
 - `main` - Same as latest
 - `v1.0.0` - Specific version (when tagged)
@@ -148,9 +170,10 @@ dotnet run --project src/BudgetExperiment.Api/BudgetExperiment.Api.csproj
 
 **Location**: GitHub Container Registry (ghcr.io)
 
-**Image**: `ghcr.io/fortinbra/budgetexpirement`
+**Image**: `ghcr.io/<owner>/budgetexperiment`
 
 **Access**:
+
 - Public read access (default for public repos)
 - Requires authentication with Personal Access Token (PAT) with `read:packages` scope
 - Use: `docker login ghcr.io -u USERNAME -p PAT`
@@ -160,6 +183,7 @@ dotnet run --project src/BudgetExperiment.Api/BudgetExperiment.Api.csproj
 **Target**: Raspberry Pi (or any Linux server)
 
 **Prerequisites**:
+
 - Docker and Docker Compose installed
 - Access to PostgreSQL database
 - GitHub PAT with `read:packages` scope
@@ -168,6 +192,7 @@ dotnet run --project src/BudgetExperiment.Api/BudgetExperiment.Api.csproj
 **Deployment File**: `docker-compose.pi.yml`
 
 **Configuration**:
+
 - Environment variables from `.env` file
 - Database connection string: `ConnectionStrings__AppDb`
 - Port mapping: 5099:8080
@@ -176,6 +201,7 @@ dotnet run --project src/BudgetExperiment.Api/BudgetExperiment.Api.csproj
 - Restart policy
 
 **Deployment Steps**:
+
 ```bash
 # 1. Authenticate
 docker login ghcr.io -u USERNAME -p PAT
@@ -197,9 +223,11 @@ docker compose -f docker-compose.pi.yml logs -f
 
 1. Developer clones repository
 2. Sets up user secrets for local database:
+
    ```powershell
    dotnet user-secrets set "ConnectionStrings:AppDb" "..." --project src/BudgetExperiment.Api
    ```
+
 3. Runs API: `dotnet run --project src/BudgetExperiment.Api/BudgetExperiment.Api.csproj`
 4. Makes code changes
 5. Tests locally
@@ -215,17 +243,39 @@ docker compose -f docker-compose.pi.yml logs -f
 5. Image is pushed to ghcr.io with appropriate tags
 6. Deployment environments can now pull the new image
 
+### NuGet Update Workflow
+
+1. Dependabot checks NuGet dependencies on the weekly Monday schedule configured in `.github/dependabot.yml`.
+2. NuGet PRs are grouped by `aspnetcore`, `extensions`, `efcore`, and `testing` when package names match those patterns.
+3. CI runs `dotnet restore` first. Global audit settings in `Directory.Build.props` enforce `NuGetAudit=true`, `NuGetAuditMode=all`, and `NuGetAuditLevel=low` for the whole solution.
+4. Because warnings are treated as errors, known package vulnerabilities break the restore step instead of waiting for a separate audit workflow.
+5. Eligible Dependabot NuGet PRs can have auto-merge enabled only when all of these are true:
+
+   - The PR is opened by `dependabot[bot]`
+   - The update is a NuGet patch release only
+   - The PR is not a draft
+   - The PR is not labeled `security`
+   - The PR title does not contain `security`
+   - Required checks pass under branch protection
+
+6. Minor updates, major updates, and security-related updates still require manual review.
+
 ### Update Deployment Workflow
 
 1. On Raspberry Pi, pull latest image:
+
    ```bash
    docker compose -f docker-compose.pi.yml pull
    ```
+
 2. Restart with new image:
+
    ```bash
    docker compose -f docker-compose.pi.yml up -d
    ```
+
 3. Verify deployment:
+
    ```bash
    curl http://localhost:5099/health
    ```
@@ -233,24 +283,27 @@ docker compose -f docker-compose.pi.yml logs -f
 ## File Structure
 
 ### CI/CD Files
-```
+
+```text
 .github/
   workflows/
-    docker-build-publish.yml    # Docker image build and publish workflow
-    build-test-release.yml       # .NET build and test workflow (separate)
-    pr-build-test.yml           # PR validation workflow
+      ci.yml                      # Restore, build, test, and coverage validation
+      dependabot-automerge.yml    # Enables auto-merge for eligible patch NuGet PRs
+      docker-build-publish.yml    # Docker image build and publish workflow
+      release.yml                 # Release flow triggered by version tags
 ```
 
 ### Deployment Files
-```
+
+```text
 Dockerfile                      # Multi-stage build from source
 docker-compose.pi.yml           # Raspberry Pi deployment config
 .env.example                    # Example environment variables
 ```
 
 ### Documentation
-```
-README.Docker.md                # Comprehensive deployment guide
+
+```text
 DEPLOY-QUICKSTART.md           # Quick start for Raspberry Pi
 docs/
   ci-cd-deployment.md          # This file - architecture overview
@@ -258,29 +311,33 @@ docs/
 
 ### Deprecated Files
 
-All legacy local build/deploy scripts have been removed from the repository to avoid confusion. Use CI/CD-built images and pull-based deployments only.
+All legacy local build/deploy scripts and the old custom NuGet audit workflows have been removed from the repository to avoid confusion. Use CI/CD-built images, Dependabot-driven upgrade discovery, and pull-based deployments only.
 
 ## Security Considerations
 
 ### Secrets Management
 
 **Development**:
+
 - Database connection strings stored in user secrets
 - Never committed to repository
 - Per-developer configuration
 
 **CI/CD**:
+
 - GitHub Actions uses `GITHUB_TOKEN` (auto-provided)
 - No additional secrets required for ghcr.io push
 - Repository visibility controls access
 
 **Deployment**:
+
 - Database connection in `.env` file on server
 - File permissions: `chmod 600 .env`
 - `.env` in `.gitignore`
 - Never logged or exposed in container output
 
 **Feature 163 encryption key**:
+
 - Set `ENCRYPTION_MASTER_KEY` in the deployment `.env` file for every production-like environment.
 - Generate keys with a cryptographically secure method and store them outside Git.
 - Use a different key per environment (dev/staging/production).
@@ -348,17 +405,20 @@ The restore script verifies the `.sha256` checksum and blocks execution if confi
 ### Monitoring
 
 **Container Health**:
+
 ```bash
 docker compose -f docker-compose.pi.yml ps
 docker stats budgetexperiment
 ```
 
 **Application Health**:
+
 ```bash
 curl http://localhost:5099/health
 ```
 
 **Logs**:
+
 ```bash
 docker compose -f docker-compose.pi.yml logs -f
 ```
@@ -368,22 +428,26 @@ docker compose -f docker-compose.pi.yml logs -f
 ### Common Issues
 
 **Can't pull image from ghcr.io**:
+
 - Solution: Verify GitHub PAT has `read:packages` scope
 - Solution: Check internet connectivity
 - Solution: Re-authenticate: `docker login ghcr.io`
 
 **Container starts but can't connect to database**:
+
 - Solution: Verify `.env` file connection string
 - Solution: Test connectivity from container to database server
 - Solution: Check firewall rules
 - Solution: Verify PostgreSQL allows remote connections
 
 **Build fails in GitHub Actions**:
+
 - Solution: Check workflow run logs in GitHub
 - Solution: Verify Dockerfile syntax
 - Solution: Check for .NET build errors
 
 **Image works on amd64 but fails on arm64 (or vice versa)**:
+
 - Solution: Check architecture-specific dependencies
 - Solution: Verify .NET runtime for target architecture
 - Solution: Test locally with Docker buildx
@@ -429,6 +493,7 @@ docker compose -f docker-compose.pi.yml logs -f
 ## Conclusion
 
 This architecture provides:
+
 - **Simplicity**: Clear separation between development and deployment
 - **Automation**: No manual build or deploy steps
 - **Flexibility**: Multi-architecture support

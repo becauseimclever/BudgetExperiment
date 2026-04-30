@@ -1,158 +1,95 @@
 # NuGet Package Hygiene Monthly Runbook
 
-**Purpose:** Define the minimum monthly operating procedure for NuGet package hygiene in BudgetExperiment.
+Purpose: review package health once a month using the current Dependabot-first workflow and the .NET SDK restore audit.
 
-**Applies to:** Monthly scheduled run and any manual or Dependabot-triggered hygiene run that needs triage, remediation, or rollback.
+This runbook replaces the old custom NuGet scripts and workflows. Those files were removed in Feature 165. Do not look for a monthly GitHub Actions hygiene job or any `scripts/operations/invoke-nuget-*.ps1` package policy script.
 
----
+## 1. What This Runbook Covers
 
-## 1. Cadence
+- Dependabot is the default source for NuGet upgrade discovery and PR creation.
+- `Directory.Build.props` enables the .NET SDK audit, so `dotnet restore` fails on known vulnerable direct or transitive packages.
+- Patch-only Dependabot NuGet PRs can auto-merge after required checks pass.
+- Minor, major, and security-related updates still need manual review.
 
-- Minimum cadence: once per calendar month.
-- Scheduled workflow baseline: first day of month.
-- Additional runs are required after major dependency merges, failed audit gates, or critical vulnerability advisories.
+For the wider workflow overview, see `docs/ci-cd-deployment.md`. For step-by-step PR handling, see `.github/prompts/nuget-upgrade.prompt.md`.
 
----
+## 2. Cadence and Ownership
 
-## 2. Ownership and Accountability
+- Run this review at least once per calendar month.
+- Run it again when CI fails at the restore step for a package advisory.
+- One owner should complete the review and record the outcome.
 
-- Release Operations Owner: Accountable for monthly execution, triage completion, and runbook evidence quality.
-- Operations Reviewer (secondary approver): Reviews rollback decisions and confirms smoke validation evidence before closure.
-- Feature Owner for active upgrade cycle: Delivers package update PRs and tracks remediation tasks to closure.
+## 3. Monthly Review Steps
 
-**Single-thread accountability rule:** One named Release Operations Owner must be assigned for each monthly cycle before triage begins.
-
----
-
-## 3. SLA Targets for Vulnerability Remediation
-
-- Critical (NU1904 / high-impact advisory): Begin remediation same day; merged fix or approved rollback within 24 hours.
-- High (NU1903): Merged fix or approved rollback within 3 calendar days.
-- Moderate (NU1902): Merged fix or approved rollback within 7 calendar days.
-- Low (NU1901): Merged fix or approved rollback within 30 calendar days.
-
-If an SLA cannot be met, record the exception and compensating controls in release and operations notes before the SLA window closes.
-
----
-
-## 4. Command Contract (Windows, Full Paths)
-
-Run these commands exactly from PowerShell:
+1. Review open Dependabot NuGet PRs in GitHub.
+2. Check whether any package-related CI runs failed at the `Restore dependencies` step.
+3. Run the local verification commands from PowerShell:
 
 ```powershell
-dotnet restore c:\ws\BudgetExperiment\BudgetExperiment.sln -p:NuGetAudit=true -p:NuGetAuditMode=all -p:NuGetAuditLevel=low "-p:WarningsAsErrors=NU1901;NU1902;NU1903;NU1904"
-
+dotnet restore c:\ws\BudgetExperiment\BudgetExperiment.sln
 dotnet list c:\ws\BudgetExperiment\BudgetExperiment.sln package --vulnerable --include-transitive
+dotnet build c:\ws\BudgetExperiment\BudgetExperiment.sln --configuration Release --no-restore
+dotnet test c:\ws\BudgetExperiment\BudgetExperiment.sln --configuration Release --filter "FullyQualifiedName!~E2E&Category!=Performance"
+```
 
+1. If you need a manual view of pending updates outside Dependabot, run this optional report:
+
+```powershell
 dotnet list c:\ws\BudgetExperiment\BudgetExperiment.sln package --outdated --include-transitive
-
-pwsh -NoLogo -NoProfile -File c:\ws\BudgetExperiment\scripts\operations\invoke-nuget-package-policy-gates.ps1 -RepositoryRoot c:\ws\BudgetExperiment -ArtifactDirectory c:\ws\BudgetExperiment\artifacts\nuget-audit -StyleCopRegistrationUrl https://api.nuget.org/v3/registration5-semver2/stylecop.analyzers/index.json
-
-dotnet build c:\ws\BudgetExperiment\BudgetExperiment.sln --no-restore
 ```
 
-Expected contract:
+1. Triage what you found:
+   - Let eligible patch Dependabot PRs continue through the normal CI and auto-merge path.
+   - Review minor, major, and security-related updates manually.
+   - If `dotnet restore` fails, treat that as the main vulnerability gate and fix the affected package before merge or release.
 
-- `dotnet restore` is the authoritative vulnerability gate and must return exit code 0.
-- Vulnerable/outdated reports must produce readable logs for triage.
-- Policy gate script must return a pass state for prerelease policy and latest StyleCop preview checks.
+## 4. Expected Results
 
----
-
-## 5. Artifact Retention Expectation
-
-- Retain package hygiene artifacts for at least 30 days.
-- Required artifact set:
-  - restore audit log
-  - vulnerable package report
-  - outdated package report
-  - policy gate output
-  - metadata summary (trigger source, commit SHA, timestamp, exit codes)
-- If a run fails, do not delete artifacts early.
-
----
-
-## 6. Rollback Procedure to Prior Known-Good Package Set
-
-Use this when package updates cause build, test, or runtime regression.
-
-1. Identify the last known-good commit SHA that passed package hygiene checks and smoke validation.
-2. Create a rollback branch from the active integration branch.
-3. Restore package definitions from known-good commit:
-
-```powershell
-dotnet list c:\ws\BudgetExperiment\BudgetExperiment.sln package > c:\ws\BudgetExperiment\artifacts\nuget-audit\rollback-package-baseline.txt
-
-git -C c:\ws\BudgetExperiment diff --name-only <known-good-sha> HEAD -- "*.csproj" "Directory.Build.props" > c:\ws\BudgetExperiment\artifacts\nuget-audit\rollback-package-files.txt
-
-Get-Content c:\ws\BudgetExperiment\artifacts\nuget-audit\rollback-package-files.txt | ForEach-Object { git -C c:\ws\BudgetExperiment checkout <known-good-sha> -- $_ }
-```
-
-1. Review rollback scope with `git -C c:\ws\BudgetExperiment status --short` and keep only package-version rollback deltas.
-2. Commit with a rollback message that includes reason, affected advisories or regressions, and known-good SHA.
-
----
-
-## 7. Post-Rollback Smoke Validation
-
-Run the following in sequence and capture output in operations notes:
-
-```powershell
-dotnet restore c:\ws\BudgetExperiment\BudgetExperiment.sln -p:NuGetAudit=true -p:NuGetAuditMode=all -p:NuGetAuditLevel=low "-p:WarningsAsErrors=NU1901;NU1902;NU1903;NU1904"
-
-dotnet build c:\ws\BudgetExperiment\BudgetExperiment.sln --no-restore
-
-dotnet test c:\ws\BudgetExperiment\BudgetExperiment.sln --filter "Category!=Performance"
-```
-
-Smoke pass criteria:
-
-- Restore gate passes with zero vulnerability audit errors.
-- Build succeeds with no restore step.
+- `dotnet restore` exits with code `0`.
+- `dotnet list ... --vulnerable --include-transitive` shows no unresolved vulnerable packages.
+- Build succeeds without another restore.
 - Non-performance tests pass.
 
----
+If any of these checks fail, open or update a package fix PR before closing the monthly review.
 
-## 8. Evidence Logging Pattern
+## 5. Handling Failures
 
-For audit and compliance traceability, capture and log evidence artifacts consistently across all monthly cycles and rollback events:
+### Restore Fails on a Vulnerable Package
 
-**Evidence Logging Structure:**
+1. Read the package name, version, and advisory from the restore output.
+2. Check whether Dependabot already opened a PR for that package or group.
+3. If no PR exists, trigger a Dependabot update job from GitHub or create a manual upgrade branch.
+4. Re-run the verification commands after the package change.
 
-```text
-artifacts/nuget-audit/
-  ├─ restore-pass.log          (restore audit passed)
-  ├─ restore-failed.log        (restore audit failed, if applicable)
-  ├─ prerelease-policy.log     (pre-release policy validation output)
-  ├─ stylecop-latest-preview.log (StyleCop preview version check)
-  └─ metadata.txt              (cycle month, commit SHA, timestamp, exit codes)
-```
+### A Dependabot PR Needs Manual Review
 
-**Naming Convention**: Use ISO 8601 format for cycle dates in `metadata.txt` (e.g., `2026-04-28`).
+1. Check the update scope.
+2. Read package release notes and breaking changes.
+3. Run the local verification commands.
+4. Merge only after CI passes.
 
-**Mandatory Capture**: Every monthly cycle must record restore pass/fail state, pre-release policy validation, StyleCop preview check, and metadata. If a rollback occurs, capture both failed and post-rollback pass evidence with clear artifact naming for traceability.
+## 6. Evidence to Record
 
-This pattern ensures future cycles can easily locate and reference evidence without ambiguity.
+Keep the record lightweight. A short note in the tracking issue, PR, or operations log is enough.
 
----
+Record:
 
-## 9. Release and Operations Notes Tracking
+- review date
+- owner
+- whether restore passed
+- whether vulnerable packages were found
+- open follow-up PRs or issues
 
-For each monthly cycle and rollback event:
+There is no required `artifacts/nuget-audit/` evidence bundle in the current model.
 
-1. Add an operations note entry to the active feature document in docs with:
-   - cycle month
-   - owner name
-   - audit result summary
-   - remediation or rollback decision
-   - links to artifact names (use evidence logging pattern from Section 8)
-2. Add a release note entry in CHANGELOG.md when remediation or rollback changes shipped behavior or dependency risk posture.
-3. If a rollback occurred, include known-good SHA, root cause summary, smoke validation result summary, a follow-up task reference for re-upgrade planning, and references to `rollback-evidence-failed-*` and `rollback-evidence-pass-*` artifact folders for traceability.
+## 7. Notes About Current Policy
 
----
+- The repo currently pins `StyleCop.Analyzers` centrally in `Directory.Build.props`.
+- The repo no longer has a separate script or workflow that enforces a pre-release allowlist or checks for the latest StyleCop preview.
+- Review any pre-release package change manually in the PR.
 
 ## Change Log
 
-- 2026-04-28: Corrected restore command contract to PowerShell-safe quoting for the `WarningsAsErrors` semicolon list, aligned with Feature 167 testing guidance. (Author: GitHub Copilot)
+- 2026-04-30: Rewrote the runbook for the current Dependabot plus SDK audit model and removed references to deleted scripts, workflows, and artifact requirements.
 
-*Last updated: 2026-04-28.*
+Last updated: 2026-04-30.
