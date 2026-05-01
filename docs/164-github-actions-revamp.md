@@ -1,71 +1,71 @@
 # Feature 164: GitHub Actions Revamp
 
-> **Status:** In Progress
+> **Status:** Implementation Complete, Pending GitHub Runtime Verification
 
 ## Overview
 
-The current GitHub Actions setup has accumulated redundancy and inefficiency across the CI, Docker build, and release pipelines. `docker-build-publish.yml` historically duplicated the full build-and-test path already handled by `ci.yml`, release gating logic was split across workflows instead of relying on branch protection, and action versions had drifted across delivery workflows. This feature consolidates the delivery pipeline into a clear three-stage flow: **CI -> Docker -> Release**, with Docker explicitly triggering and waiting for a CI run before image publishing.
+Feature 164 removes duplicate pipeline work and aligns release automation to the reusable workflow chain that exists today:
 
-## Problem Statement
+1. A tag push matching `v*` triggers `release.yml`.
+2. `release.yml` calls `docker-build-publish.yml` through `workflow_call`.
+3. `docker-build-publish.yml` calls `ci.yml` through `workflow_call` as its first job.
+4. If CI or Docker fails, release creation is blocked automatically.
 
-### Current State
+This design keeps CI and CodeQL enforcement centered on `main` branch protection and keeps Docker workflow jobs artifact-only.
 
-- `docker-build-publish.yml` re-runs restore, build, test, and publish independently of `ci.yml`.
-- Releases were gated inside workflows instead of relying on branch protection on `main`.
-- No path filtering existed on `ci.yml`, so documentation-only changes still triggered the full build matrix.
-- The Docker workflow recalculated the version instead of reusing CI-owned version information and the CI publish artifact.
-- Delivery workflow action versions drifted across `ci.yml`, `docker-build-publish.yml`, `release.yml`, and `performance.yml`.
-- CodeQL is managed through GitHub Default Setup rather than a repository workflow file, so enforcement depends on branch protection configuration.
+## Source of Truth Reviewed
 
-### Target State
-
-- A single `ci.yml` handles build, test, coverage, and publish steps and produces the reusable app artifact.
-- A lean `docker-build-publish.yml` is triggered by successful CI completion, then consumes the CI publish artifact for image builds.
-- `release.yml` runs only after successful Docker publication for the tagged commit.
-- Branch protection on `main` enforces CI and CodeQL rather than workflow-local `verify-ci` jobs.
-- `ci.yml` uses path filters so docs-only pushes skip the build matrix.
-- Delivery workflows document and pin consistent action versions.
-- NuGet audit workflows are handled by Feature 165 and are not modified here.
-- Squad automation workflows are out of scope and may be removed by a future feature.
+- `.github/workflows/ci.yml`
+- `.github/workflows/docker-build-publish.yml`
+- `.github/workflows/release.yml`
+- `.github/workflows/performance.yml`
+- `.github/prompts/setup-release.prompt.md`
+- `.github/agents/dotnet-devops-specialist.agent.md`
+- `.github/instructions/engineering-guide.instructions.md`
+- `.github/instructions/spec-driven-feature-gate.instructions.md`
+- `.github/instructions/workflow-test-validation.instructions.md`
+- `.github/instructions/agent-handoff-coordination.instructions.md`
+- User-provided fact (May 1, 2026): CodeQL is now configured as a required check on `main` branch protection.
 
 ---
 
-## User Stories
+## User Stories and Acceptance Criteria
 
-### Pipeline Efficiency
-
-#### US-164-001: Eliminate Duplicate Build-and-Test on Tag Push
+### US-164-001: Eliminate Duplicate Build-and-Test on Tag Push
 
 **As a** maintainer  
-**I want** the Docker build workflow to run only after CI succeeds and consume the resulting publish artifact  
-**So that** release images are built only after a successful, up-to-date CI validation.
+**I want** Docker publishing to depend on CI and reuse CI output  
+**So that** release images are built only from validated artifacts.
 
 **Acceptance Criteria:**
 
-- [x] `docker-build-publish.yml` only runs for successful CI workflow runs on tagged commits.
-- [x] `docker-build-publish.yml` has no `dotnet restore`, `dotnet build`, `dotnet test`, or `dotnet publish` steps.
-- [x] Docker consumes the `app-publish` artifact from the gated CI run.
-- [ ] CI minutes per release are compared before and after the change and noted in the PR.
+- [x] `docker-build-publish.yml` is reusable-only (`on: workflow_call`) and does not run independently on tag push.
+- [x] `docker-build-publish.yml` contains no `dotnet restore`, `dotnet build`, `dotnet test`, or `dotnet publish` steps.
+- [x] Docker jobs download and use the `app-publish` artifact produced by `ci.yml`.
+- [ ] CI minutes per release are compared before and after the change.
+  - **Blocker (May 1, 2026):** A valid post-Feature-164 safe tag run is not yet available, so an honest before/after release-path CI duration comparison cannot be completed.
+  - **Manual Step Required:** After one successful post-change safe tag run, compare CI elapsed duration for that run versus a pre-change release-path CI sample and record both run links and elapsed times.
 
-#### US-164-002: Path Filtering on CI Workflow
+### US-164-002: Path Filtering on CI Workflow
 
 **As a** developer  
-**I want** docs-only and config-only commits to skip the full build matrix  
-**So that** documentation PRs do not consume CI runner time needlessly.
+**I want** docs-only/config-only changes to skip CI build/test work  
+**So that** non-code changes do not consume full CI time.
 
 **Acceptance Criteria:**
 
-- [x] `ci.yml` `push` and `pull_request` triggers use path filters excluding `docs/**`, `*.md`, `nginx/**`, and `sample data/**`.
-- [ ] A commit touching only `docs/` does not trigger the build job.
-- [ ] Source code changes still trigger CI as expected in GitHub.
+- [x] `ci.yml` `push` and `pull_request` use `paths-ignore` for `docs/**`, `**/*.md`, `nginx/**`, and `sample data/**`.
+- [ ] A docs-only commit is verified in GitHub to skip CI.
+  - **Blocker (May 1, 2026):** No post-Feature-164 docs-only push commit exists yet to validate `paths-ignore` behavior in the new runtime chain. The available docs-only candidate commit (`9bc442ac4b5fed634696408d992dcbabce8d45af`) is also a release-tag commit (`v3.33.0`) and did start CI through the tag-driven release chain, so it is not valid evidence for docs-only push skip behavior.
+  - **Manual Step Required:** Push a new commit that changes only ignored paths (`docs/**`, `**/*.md`, `nginx/**`, or `sample data/**`) on a normal branch push, then confirm no `CI` run exists for that commit SHA in Actions run history.
+- [x] A source-code commit is verified in GitHub to trigger CI.
+  - **Evidence (May 1, 2026):** Source/workflow change commit `ebbbc4b8181549e3a7b91e36beb94416cccdae03` triggered CI push run `25148643513` (success): <https://github.com/becauseimclever/BudgetExperiment/actions/runs/25148643513>
 
-### Action Version Consistency
-
-#### US-164-003: Standardize and Pin Action Versions
+### US-164-003: Standardize and Pin Action Versions
 
 **As a** maintainer  
-**I want** the delivery workflows (`ci.yml`, `docker-build-publish.yml`, `release.yml`, and `performance.yml`) to use the same versions of shared actions  
-**So that** the delivery pipeline dependency surface is smaller and version drift does not introduce silent behavior differences.
+**I want** consistent action versions in delivery workflows  
+**So that** drift and surprise behavior are reduced.
 
 **Acceptance Criteria:**
 
@@ -73,255 +73,188 @@ The current GitHub Actions setup has accumulated redundancy and inefficiency acr
 - [x] `ci.yml` and `performance.yml` use `actions/setup-dotnet@v4`.
 - [x] `ci.yml` and `performance.yml` use `actions/cache@v4`.
 - [x] Delivery workflows use `actions/upload-artifact@v4` and `actions/download-artifact@v4` where needed.
-- [x] A comment block at the top of each delivery workflow lists the pinned versions it uses.
+- [x] Top-of-file action-version comment blocks exist in these workflows.
 
-#### US-164-004: NuGet Workflow Removal
+### US-164-004: NuGet Workflow Removal
 
-> **Moved to Feature 165.** NuGet vulnerability enforcement and workflow removal are fully scoped in `docs/165-nuget-package-management.md`.
+> **Moved to Feature 165.** NuGet vulnerability enforcement and workflow removal are tracked in `docs/165-nuget-package-management.md`.
 
-### Docker Best Practices
-
-#### US-164-005: Separate Publish from Test in CI
+### US-164-005: Separate Publish from Test in CI
 
 **As a** maintainer  
-**I want** `dotnet publish` to be its own step that runs only after tests pass  
-**So that** publish artifacts are only produced on green builds.
+**I want** publish to run only after tests pass  
+**So that** artifacts are produced only from green CI runs.
 
 **Acceptance Criteria:**
 
-- [x] `ci.yml` has a separate publish step after test execution succeeds.
-- [x] The `app-publish` artifact includes only the published output directory.
-- [x] `docker-build-publish.yml` downloads the `app-publish` artifact from the CI run it triggered and gated on.
+- [x] `ci.yml` has a distinct publish step after successful build/test steps.
+- [x] `app-publish` artifact uploads only the publish output directory.
+- [x] Docker workflow downloads `app-publish` for image build.
 
-#### US-164-006: Version Calculation Owned by CI, Consumed by Docker
+### US-164-006: Version Calculation Owned by CI and Consumed by Docker
 
 **As a** maintainer  
-**I want** version ownership to stay in the CI/release path without redundant version drift  
-**So that** both workflows agree on the version string for the same commit while Docker remains artifact-only.
+**I want** CI to own version calculation once  
+**So that** Docker tags stay deterministic for the same commit.
 
 **Acceptance Criteria:**
 
-- [x] `ci.yml` calculates and exports a version as a job output.
-- [x] `docker-build-publish.yml` does not install MinVer CLI independently.
-- [x] The Docker image tag is derived deterministically from the tagged commit.
+- [x] `ci.yml` calculates and outputs version via MinVer.
+- [x] `docker-build-publish.yml` does not install or run MinVer.
+- [x] Docker image tags use `needs.ci.outputs.version` from the CI reusable job.
 
-### Gate Enforcement
-
-#### US-164-007: CodeQL Analysis Gate Before Docker Publish
+### US-164-007: CodeQL Gate Before Docker Publish
 
 **As a** maintainer  
-**I want** CodeQL static analysis to pass on the tagged commit before Docker images are built and published  
-**So that** images with known security findings are never shipped to the container registry.
+**I want** CodeQL enforced before release tagging proceeds from `main`  
+**So that** known security findings are blocked before release activity.
 
 **Acceptance Criteria:**
 
-- [ ] GitHub Default Setup for CodeQL is confirmed enabled on the repository.
-- [ ] The CodeQL status check name is identified and added to `main` branch protection as a required status check.
-- [ ] Branch protection on `main` includes CodeQL as a required status check alongside CI.
-- [x] `docker-build-publish.yml` does not explicitly wait for CodeQL; branch protection remains the enforcement point.
+- [x] GitHub Default Setup for CodeQL is confirmed enabled.
+  - **Evidence (May 1, 2026):** GitHub API `repos/becauseimclever/BudgetExperiment/code-scanning/default-setup` returned `state: configured` with languages including `csharp`.
+- [x] CodeQL status check is configured as required on `main` branch protection.
+  - **Evidence (May 1, 2026):** GitHub API `repos/becauseimclever/BudgetExperiment/branches/main/protection` returned required checks including `CodeQL`.
+- [x] CI status check on `main` branch protection is reconfirmed in the same evidence capture.
+  - **Evidence (May 1, 2026):** Same branch-protection API response lists required checks `CodeQL` and `Build & Test`.
+- [x] `docker-build-publish.yml` does not add workflow-local CodeQL gating logic.
 
-#### US-164-008: Enforce Correct Gate Order for Release
+### US-164-008: Enforce Correct Gate Order for Release
 
 **As a** maintainer  
-**I want** the release workflow to gate on Docker image publication before creating the GitHub Release  
-**So that** a GitHub Release never exists without a corresponding published Docker image.
+**I want** release creation to depend on Docker publication  
+**So that** no release is created without container artifacts.
 
 **Acceptance Criteria:**
 
-- [x] `release.yml` waits on successful completion of `docker-build-publish.yml` via `workflow_run`.
-- [x] If Docker publish fails, the GitHub Release is not created.
-- [ ] The acceptance criteria is validated end to end with a non-production tag run or captured as a manual validation step.
+- [x] `release.yml` calls `docker-build-publish.yml` as a reusable workflow job.
+- [x] `release` job depends on `docker-build`; if Docker fails, release creation does not run.
+- [ ] End-to-end behavior is verified with a safe non-production tag.
+  - **Blocker (May 1, 2026):** No release tag has been pushed after Feature 164 workflow changes were merged, so chain runtime proof for the new design is not yet obtainable.
+  - **Manual Step Required:** Push a safe non-production tag from `main` (for example, `vX.Y.Z-rc1`) and capture Actions links for CI, Docker, and Release runs for the same tag SHA.
 
-### Branch Workflow Policy
-
-#### US-164-009: Enforce Feature Branch Workflow in Agent Instructions
+### US-164-009: Enforce Feature Branch Workflow in Agent Instructions
 
 **As a** developer using Copilot agents  
-**I want** all agents and instructions to require a feature branch before starting work  
-**So that** no implementation changes, feature docs, or refactors are committed directly to `main`.
+**I want** branch-first policy in instructions  
+**So that** implementation changes are not made directly on `main`.
 
 **Acceptance Criteria:**
 
-- [x] `engineering-guide.instructions.md` states that all work must happen on a branch and direct commits to `main` are forbidden.
-- [x] `spec-driven-feature-gate.instructions.md` includes a pre-work branch check.
-- [x] `agent-handoff-coordination.instructions.md` includes active branch context in handoffs.
-- [x] `workflow-test-validation.instructions.md` states final validation must occur from a branch workflow context.
+- [x] `engineering-guide.instructions.md` requires branch-based implementation work.
+- [x] `spec-driven-feature-gate.instructions.md` requires pre-work branch validation.
+- [x] `agent-handoff-coordination.instructions.md` includes active-branch handoff context.
+- [x] `workflow-test-validation.instructions.md` requires branch-context final validation.
 
-#### US-164-010: Update Setup-Release Prompt for New Pipeline
+### US-164-010: Update Setup-Release Prompt for New Pipeline
 
 **As a** maintainer  
-**I want** `setup-release.prompt.md` to reflect the new workflow architecture  
-**So that** running the prompt produces a release correctly under the branch-protection and tag-time rebuild model.
+**I want** the setup-release prompt to describe the real release chain  
+**So that** tagged releases follow current automation behavior.
 
 **Acceptance Criteria:**
 
-- [x] The prompt makes clear that `main` is the only valid release branch.
-- [x] The prompt documents the automated post-tag flow.
-- [x] The prompt no longer references a workflow-local `verify-ci` gate.
-- [x] The prompt describes what to monitor after tagging.
-- [x] The prompt notes that Docker runs after successful CI and reuses CI artifacts.
+- [x] Prompt states release preparation is from `main` only.
+- [x] Prompt describes post-tag chain: `release.yml` -> `docker-build-publish.yml` -> `ci.yml` via reusable calls.
+- [x] Prompt does not use workflow-local `verify-ci` messaging.
+- [x] Prompt explains what to monitor after tagging.
 
-#### US-164-011: Update DevOps Agent Scope
+### US-164-011: Update DevOps Agent Scope
 
 **As a** maintainer  
-**I want** `dotnet-devops-specialist.agent.md` to reflect the new workflow structure  
-**So that** the agent understands the three-workflow pipeline and does not regenerate the removed `build-and-test` job in `docker-build-publish.yml`.
+**I want** agent scope to enforce the reusable chain and artifact-only Docker workflow  
+**So that** future edits do not reintroduce duplicate build/test jobs.
 
 **Acceptance Criteria:**
 
-- [x] The agent scope references the three-workflow pipeline and branch-protection model.
-- [x] The agent instructions state that `docker-build-publish.yml` must never contain `dotnet` build or test steps.
-- [x] The agent instructions state that tags originate from `main` only.
+- [x] Agent scope describes the three-stage reusable workflow chain.
+- [x] Agent scope forbids adding `dotnet` build/test/publish back into `docker-build-publish.yml`.
+- [x] Agent scope states tags originate from `main` only.
 
 ---
 
-## Technical Design
+## Technical Design (Current Implementation)
 
-### Architecture Changes
-
-#### Revised `ci.yml` Job Graph
+### Workflow Architecture
 
 ```text
-checkout -> setup-dotnet -> restore -> build -> test -> coverage -> publish -> upload-artifact
+Tag push (v*)
+  -> release.yml
+      -> job: docker-build (uses docker-build-publish.yml via workflow_call)
+          -> job: ci (uses ci.yml via workflow_call)
+          -> job: docker-build (matrix per platform)
+          -> job: docker-merge
+      -> job: release (needs docker-build)
 ```
 
-- Path filters on push and pull request triggers.
-- Publish runs only after successful build and test execution.
-- Exports `version` and `artifact-name` as job outputs.
+### CI (`ci.yml`)
 
-#### Revised `docker-build-publish.yml` Job Graph
+- Handles restore, build, test, coverage, publish, and artifact upload.
+- Applies `paths-ignore` for docs and non-code locations.
+- Exposes `version` output consumed by Docker workflow.
 
-```text
-ci-completed(success, tagged) -> docker-build(matrix: artifact-only) -> docker-merge
-```
+### Docker (`docker-build-publish.yml`)
 
-- Triggered by successful completion of `ci.yml`.
-- Resolves the release tag from `workflow_run.head_sha`.
-- Downloads `app-publish` from that gated CI run.
-- Builds multi-arch images from the CI publish output.
+- Reusable-only workflow.
+- First job is CI reusable call.
+- No `dotnet` build/test/publish commands.
+- Builds amd64 and arm64 images from `Dockerfile.prebuilt` using downloaded publish artifact.
+- Merges per-arch images into a multi-arch manifest.
 
-#### Revised `release.yml` Job Graph
+### Release (`release.yml`)
 
-```text
-workflow_run(docker-build-publish) -> resolve-tag -> create-release
-```
+- Trigger: `push` tags `v*`.
+- Calls Docker reusable workflow first.
+- Creates GitHub Release only after Docker workflow success.
 
-- No `verify-ci` job.
-- Triggered by successful completion of `docker-build-publish.yml`.
-- Resolves the `v*` tag associated with `workflow_run.head_sha` before creating the GitHub Release.
+### Gate Model
 
-### Branch Workflow Policy Enforcement
-
-The following files are updated as part of this feature:
-
-| File | Change |
-| --- | --- |
-| `.github/instructions/engineering-guide.instructions.md` | Add branch policy language forbidding direct commits to `main`. |
-| `.github/instructions/spec-driven-feature-gate.instructions.md` | Add a pre-work branch check. |
-| `.github/instructions/agent-handoff-coordination.instructions.md` | Add `active-branch` context to the handoff package. |
-| `.github/instructions/workflow-test-validation.instructions.md` | Add a branch-validation note. |
-| `.github/prompts/setup-release.prompt.md` | Rewrite release steps for the CI -> Docker -> Release pipeline. |
-| `.github/agents/dotnet-devops-specialist.agent.md` | Update scope to reference the three-workflow delivery pipeline. |
-
-#### Branch Naming Convention
-
-- Feature work: `feature/NNN-short-description`
-- Bug fixes: `fix/NNN-short-description`
-- Chore and docs: `chore/short-description`
-- Releases are tagged from `main` after branch work is merged.
-
-#### Updated `setup-release.prompt.md` Outline
-
-1. Validate branch is `main` and working tree is clean.
-2. Confirm CI and CodeQL are green on `HEAD`.
-3. Resolve and confirm the target version.
-4. Run `git cliff` to update `CHANGELOG.md`.
-5. Commit `CHANGELOG.md` with `chore(release): vX.Y.Z`.
-6. Create annotated tag on `main`.
-7. Push commit and tag.
-8. Explain that tag push triggers `ci.yml`; successful CI then triggers `docker-build-publish.yml`, which reuses the CI publish artifact.
-9. Explain that `release.yml` runs after successful Docker publication.
-10. Report outcome and provide links to monitor workflow runs.
-
-#### NuGet Workflow Delineation
-
-> **Delegated to Feature 165.** Both `nuget-package-hygiene.yml` and `nuget-upgrade-cycle-audit.yml` are deleted by Feature 165. This feature takes no action on those workflows.
-
-### Release Flow: End to End
-
-**Trigger:** Tag pushed to `main` matching `v*`.
-
-#### Step 1: CI and CodeQL Run on `main`
-
-- `ci.yml` runs on pushes to `main` and must pass before a commit lands.
-- CodeQL is enforced via branch protection rather than a repository workflow file.
-- By the time a release tag is pushed from `main`, CI and CodeQL should already be green.
-
-#### Step 2: Docker Build and Publish
-
-- `ci.yml` is triggered by the tag push.
-- `docker-build-publish.yml` is triggered by successful completion of that CI run.
-- It downloads the publish artifact from that CI run before Docker image build.
-- It builds amd64 and arm64 images and merges them into a multi-arch manifest in `ghcr.io`.
-
-#### Step 3: GitHub Release
-
-- `release.yml` is triggered by successful completion of `docker-build-publish.yml`.
-- The workflow resolves the release tag pointing at the completed commit SHA.
-- `git-cliff` extracts the changelog body for that tag.
-- The workflow creates the GitHub Release only after Docker publication succeeds.
-
-### Action Version Standard
-
-| Action | Version |
-| --- | --- |
-| `actions/checkout` | `v4` |
-| `actions/setup-dotnet` | `v4` |
-| `actions/cache` | `v4` |
-| `actions/upload-artifact` | `v4` |
-| `actions/download-artifact` | `v4` |
-| `actions/github-script` | `v9` |
-| `docker/setup-buildx-action` | `v3` |
-| `docker/login-action` | `v3` |
-| `docker/build-push-action` | `v6` |
-| `docker/metadata-action` | `v5` |
-
-Versions are reviewed quarterly alongside Dependabot action PRs. The deleted NuGet workflows and future squad-removal work are out of scope for this standardization pass.
+- CI and CodeQL are enforcement checks on `main` branch protection.
+- Tag creation is expected from `main` after protected checks pass.
+- No workflow-local `verify-ci` job is used.
 
 ---
 
 ## Implementation Tasks
 
-- [ ] **T-164-01** Confirm CodeQL Default Setup is enabled and identify the exact required status check name on `main`.
-- [x] **T-164-02** Add path filters to `ci.yml` push and pull request triggers.
-- [x] **T-164-03** Add a separate publish step to `ci.yml` and expose `app-publish` for CI visibility.
-- [x] **T-164-04** Replace the duplicate Docker pipeline with a CI-dependent artifact-consumption flow.
-- [x] **T-164-05** Remove MinVer installation from `docker-build-publish.yml` and derive the image version from the tag.
-- [x] **T-164-06** Standardize action versions across `ci.yml`, `docker-build-publish.yml`, `release.yml`, and `performance.yml`.
-- [x] **T-164-07** Add a pinned-action comment block at the top of each delivery workflow.
-- [x] **T-164-10** Update `engineering-guide.instructions.md` with branch policy guidance.
-- [x] **T-164-11** Update `spec-driven-feature-gate.instructions.md` with a pre-work branch check.
-- [x] **T-164-12** Update `agent-handoff-coordination.instructions.md` to include active branch context.
-- [x] **T-164-13** Update `workflow-test-validation.instructions.md` with branch-validation guidance.
-- [x] **T-164-14** Rewrite `setup-release.prompt.md` for the new delivery pipeline.
-- [x] **T-164-15** Update `dotnet-devops-specialist.agent.md` scope for the new pipeline.
-- [ ] **T-164-16** Validate the pipeline end to end with a safe tag or equivalent GitHub-side verification.
+- [x] **T-164-01** Confirm CodeQL Default Setup enabled and capture exact required-check names from branch protection.
+  - **Evidence (May 1, 2026):**
+    - CodeQL Default Setup API: `repos/becauseimclever/BudgetExperiment/code-scanning/default-setup` -> `state: configured`.
+    - Branch protection API: `repos/becauseimclever/BudgetExperiment/branches/main/protection` -> required checks `CodeQL` and `Build & Test`.
+- [x] **T-164-02** Add `paths-ignore` filters to CI push/pull_request triggers.
+- [x] **T-164-03** Keep publish as a separate CI step and upload `app-publish` artifact.
+- [x] **T-164-04** Keep Docker workflow artifact-only and CI-dependent via reusable workflow call.
+- [x] **T-164-05** Keep MinVer out of Docker workflow and consume CI version output.
+- [x] **T-164-06** Standardize action major versions across delivery workflows.
+- [x] **T-164-07** Maintain top-level pinned-action comment blocks in delivery workflows.
+- [x] **T-164-10** Enforce branch policy in engineering guide instructions.
+- [x] **T-164-11** Enforce pre-work branch check in spec-driven gate instructions.
+- [x] **T-164-12** Include active branch context in handoff instructions.
+- [x] **T-164-13** Require branch-context final validation in workflow test validation instructions.
+- [x] **T-164-14** Update setup-release prompt to current reusable chain.
+- [x] **T-164-15** Update Dotnet DevOps Specialist agent scope to current reusable chain.
+- [ ] **T-164-16** Run and capture a safe tag-based end-to-end verification.
 
 ---
 
-## Open Questions
+## Pending Verification Checklist
 
-1. **Artifact retention strategy:** Is three days sufficient for `app-publish`, or should manual recovery always require a fresh CI run?
-2. **CodeQL required check name:** What exact status check label should be enforced on `main` branch protection?
-3. **Action SHA pinning:** Should a later hardening feature pin actions by full commit SHA rather than version tags?
+These items remain open because they require new GitHub-hosted runtime events that are not yet present in available run history:
+
+1. Docs-only commit verification showing CI skipped.
+  - **Why blocked now:** No qualifying post-Feature-164 docs-only branch push commit is available.
+  - **Manual step:** Push a docs-only commit and confirm zero CI runs for that commit SHA.
+2. Safe tag run verification showing the full chain and gate order.
+  - **Why blocked now:** No release tag has been pushed after Feature 164 workflow changes were merged.
+  - **Manual step:** Push a safe non-production tag from `main` (for example, `vX.Y.Z-rc1`) and capture Actions links for CI run, Docker workflow run, and Release run for the same tag SHA.
+3. Before/after CI minute comparison for release path efficiency.
+  - **Why blocked now:** A valid post-change tag-run sample for the new chain is missing, so an honest before/after comparison cannot be completed.
+  - **Manual step:** After one successful post-change safe tag run, compare its CI elapsed duration against a pre-change release-path CI sample and record both run links and elapsed times.
 
 ---
 
-## Assumptions
+## Completion Statement
 
-- All implementation work occurs on a feature branch and is merged before release.
-- Releases originate from `main` only.
-- The `app-publish` artifact produced by `ci.yml` is architecture-neutral for the Docker build flow used here.
-- CodeQL remains managed by GitHub Default Setup rather than a repository workflow file.
-- GitHub Container Registry remains the image registry.
-- Squad automation workflows are intentionally out of scope for this feature because they are planned for future removal.
+Feature 164 implementation and documentation are aligned with current repository workflows and instruction files. Runtime governance evidence for CodeQL Default Setup, branch protection required checks, and source-change CI trigger is now captured. However, this feature **cannot be honestly marked fully Complete yet** because required post-change runtime event evidence is still pending.
+
+Once the pending verification checklist above is captured and linked, the feature can move to Complete with sign-off.
