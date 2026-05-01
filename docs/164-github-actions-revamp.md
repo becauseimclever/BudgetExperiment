@@ -1,6 +1,14 @@
 # Feature 164: GitHub Actions Revamp
 
-> **Status:** Complete
+> **Status:** Archived (Done)
+
+This standalone record is archived.
+
+Canonical summary: `docs/archive/161-170-scope-ai-encryption.md` (Feature 164).
+
+---
+
+Historical detail retained below.
 
 ## Overview
 
