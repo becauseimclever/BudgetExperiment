@@ -1,6 +1,6 @@
 # Feature 164: GitHub Actions Revamp
 
-> **Status:** Implementation Complete, Pending Safe-Tag Docker/Release Completion
+> **Status:** Complete
 
 ## Overview
 
@@ -132,14 +132,15 @@ This design keeps CI and CodeQL enforcement centered on `main` branch protection
 
 - [x] `release.yml` calls `docker-build-publish.yml` as a reusable workflow job.
 - [x] `release` job depends on `docker-build`; if Docker fails, release creation does not run.
-- [ ] End-to-end behavior is verified with a safe non-production tag.
+- [x] End-to-end behavior is verified with a safe non-production tag.
   - **Evidence (May 1, 2026):** Safe tag `v3.33.1-rc1` was pushed from `main` commit `ebbbc4b8181549e3a7b91e36beb94416cccdae03`.
   - **Evidence (May 1, 2026):** Release workflow run `25204841243` started from tag push: <https://github.com/becauseimclever/BudgetExperiment/actions/runs/25204841243>
   - **Evidence (May 1, 2026):** Nested CI job `Docker Build & Publish / CI / Build & Test` completed `success` first inside the release chain (job `73903215281`): <https://github.com/becauseimclever/BudgetExperiment/actions/runs/25204841243/job/73903215281>
-  - **Evidence (May 1, 2026):** Docker matrix jobs started after CI success and were still in progress at update time:
+  - **Evidence (May 1, 2026):** Docker matrix jobs completed `success`:
     - `Docker Build & Publish / Docker Build (linux/arm64)` job `73903554358`: <https://github.com/becauseimclever/BudgetExperiment/actions/runs/25204841243/job/73903554358>
     - `Docker Build & Publish / Docker Build (linux/amd64)` job `73903554362`: <https://github.com/becauseimclever/BudgetExperiment/actions/runs/25204841243/job/73903554362>
-  - **Remaining blocker (May 1, 2026):** End-to-end verification remains open until Docker matrix, docker-merge, and release jobs all complete successfully for run `25204841243`.
+  - **Evidence (May 1, 2026):** Docker merge job `Docker Build & Publish / Create Multi-Arch Manifest` completed `success` (job `73903615282`): <https://github.com/becauseimclever/BudgetExperiment/actions/runs/25204841243/job/73903615282>
+  - **Evidence (May 1, 2026):** Release job `Create Release` completed `success` (job `73903642001`): <https://github.com/becauseimclever/BudgetExperiment/actions/runs/25204841243/job/73903642001>
 
 ### US-164-009: Enforce Feature Branch Workflow in Agent Instructions
 
@@ -241,23 +242,18 @@ Tag push (v*)
 - [x] **T-164-13** Require branch-context final validation in workflow test validation instructions.
 - [x] **T-164-14** Update setup-release prompt to current reusable chain.
 - [x] **T-164-15** Update Dotnet DevOps Specialist agent scope to current reusable chain.
-- [ ] **T-164-16** Run and capture a safe tag-based end-to-end verification.
-  - **In progress (May 1, 2026):** Safe tag `v3.33.1-rc1` triggered run `25204841243`; nested CI job `73903215281` completed successfully and Docker/release completion evidence is still pending.
+- [x] **T-164-16** Run and capture a safe tag-based end-to-end verification.
+  - **Done (May 1, 2026):** Safe tag `v3.33.1-rc1` run `25204841243` completed with `success` for CI (`73903215281`), docker arm64 (`73903554358`), docker amd64 (`73903554362`), docker-merge (`73903615282`), and release (`73903642001`).
 
 ---
 
-## Pending Verification Checklist
-
-This item remains open because it requires new GitHub-hosted runtime events that are not yet complete:
+## Verification Checklist
 
 1. Safe tag run verification showing full-chain completion (CI -> Docker -> Release).
-  - **Why blocked now:** Safe tag run `25204841243` has CI complete, but Docker matrix, docker-merge, and release jobs are not yet completed at documentation update time.
-  - **Manual step:** After completion, append final outcomes and direct links for release run, nested CI job, Docker build/merge jobs, and release job in this document.
+  - **Complete (May 1, 2026):** Safe tag run `25204841243` finished with full-chain success and evidence links captured in US-164-008 and T-164-16.
 
 ---
 
 ## Completion Statement
 
-Feature 164 implementation and documentation are aligned with current repository workflows and instruction files. Runtime governance evidence for CodeQL Default Setup, branch protection required checks, source-change CI trigger, docs-only CI-skip behavior, and CI before/after timing comparison is now captured. However, this feature **cannot be honestly marked fully Complete yet** because safe-tag Docker/release completion evidence is still pending.
-
-Once the safe-tag run completes and timing evidence is appended, the feature can move to Complete with sign-off.
+Feature 164 implementation and documentation are aligned with current repository workflows and instruction files. Runtime governance evidence for CodeQL Default Setup, branch protection required checks, source-change CI trigger, docs-only CI-skip behavior, CI timing comparison, and safe-tag full-chain completion is captured. This feature is now complete and ready for sign-off.
