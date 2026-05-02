@@ -113,7 +113,7 @@ This audit evaluates whether **Feature 161 Phase 1** can be honestly marked as c
 | `.squad/decisions.md` | Modified | Squad state — expected |
 | `.squad/agents/barbara/history.md` | Modified | Squad state — expected |
 | `.squad/skills/hidden-model-normalization/` | Untracked | Squad state — expected |
-| `docs/162-local-llamacpp-model-recommendation.md` | Untracked | Separate feature — unrelated to 161 |
+| Feature 162 model recommendation doc (archived) | Untracked | Separate feature — unrelated to 161 |
 
 **Classification:**
 - **No uncommitted product code** in src/ or tests/

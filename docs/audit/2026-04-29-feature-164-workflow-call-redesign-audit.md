@@ -3,7 +3,7 @@
 **Date:** 2026-04-29  
 **Auditor:** Dotnet Auditor Reviewer (automated)  
 **Scope:** `.github/workflows/ci.yml`, `.github/workflows/docker-build-publish.yml`, `.github/workflows/release.yml`  
-**Reference:** `docs/164-github-actions-revamp.md`
+**Reference:** `docs/archive/161-170-scope-ai-encryption.md` (Feature 164 entry)
 
 ## Context
 
@@ -22,7 +22,7 @@ This audit verifies all acceptance criteria from the redesign spec against the l
 ### ci.yml
 
 | # | Criterion | Status |
-|---|-----------|--------|
+| --- | --------- | ------ |
 | CI-1 | No `tags:` key in `push:` trigger | PASS |
 | CI-2 | `workflow_call:` present in `on:` block | PASS |
 | CI-3 | `workflow_call.outputs.version` declared and maps to `jobs.build-and-test.outputs.version` | PASS |
@@ -32,7 +32,7 @@ This audit verifies all acceptance criteria from the redesign spec against the l
 ### docker-build-publish.yml
 
 | # | Criterion | Status |
-|---|-----------|--------|
+| --- | --------- | ------ |
 | DB-1 | Only `workflow_call:` trigger | PASS |
 | DB-2 | First job is `ci:` with `uses: ./.github/workflows/ci.yml` and `secrets: inherit` | PASS |
 | DB-3 | `docker-build` job has `needs: ci` | PASS |
@@ -46,7 +46,7 @@ This audit verifies all acceptance criteria from the redesign spec against the l
 ### release.yml
 
 | # | Criterion | Status |
-|---|-----------|--------|
+| --- | --------- | ------ |
 | R-1 | Trigger is `push: tags: ['v*']`; no `workflow_run:` | PASS |
 | R-2 | First job calls `docker-build-publish.yml` via `uses:` with `secrets: inherit` | PASS |
 | R-3 | `release` job has `needs: docker-build` | PASS |
@@ -58,7 +58,7 @@ This audit verifies all acceptance criteria from the redesign spec against the l
 ### Additional Checks
 
 | Check | Status |
-|-------|--------|
+| ----- | ------ |
 | YAML syntactically valid (indentation, colons, list markers) | PASS |
 | No workflow_run-era artifacts (`head_sha`, `head_branch`, `Checkout release commit` with old SHA) | PASS |
 | `release` job has `contents: write` declared at job level | PASS |
