@@ -1,0 +1,151 @@
+name: NuGet Package Hygiene and Upgrade Cycle
+
+on:
+  schedule:
+    - cron: '17 3 1 * *'
+  pull_request_target:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: nuget-hygiene-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  package-hygiene:
+    if: ${{ github.event_name != 'pull_request_target' || (github.actor == 'dependabot[bot]' && github.event.pull_request.head.repo.full_name == github.repository) }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout base branch
+        if: ${{ github.event_name != 'pull_request_target' }}
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Checkout Dependabot PR branch
+        if: ${{ github.event_name == 'pull_request_target' }}
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Run NuGet package audits
+        id: audits
+        shell: bash
+        run: |
+          set +e
+
+          REPO_ROOT="${{ github.workspace }}"
+          ARTIFACT_DIR="${REPO_ROOT}/artifacts/nuget-hygiene"
+          SOLUTION_PATH="${REPO_ROOT}/BudgetExperiment.sln"
+
+          mkdir -p "${ARTIFACT_DIR}"
+
+          dotnet restore "${SOLUTION_PATH}" -p:NuGetAudit=true -p:NuGetAuditMode=all -p:NuGetAuditLevel=low -p:WarningsAsErrors=NU1901\;NU1902\;NU1903\;NU1904 > "${ARTIFACT_DIR}/restore-audit.log" 2>&1
+          restore_exit=$?
+
+          dotnet list "${SOLUTION_PATH}" package --vulnerable --include-transitive > "${ARTIFACT_DIR}/vulnerable-packages.log" 2>&1
+          vulnerable_exit=$?
+
+          dotnet list "${SOLUTION_PATH}" package --outdated --include-transitive > "${ARTIFACT_DIR}/outdated-packages.log" 2>&1
+          outdated_exit=$?
+
+          {
+            echo "trigger_event=${{ github.event_name }}"
+            echo "trigger_actor=${{ github.actor }}"
+            echo "run_id=${{ github.run_id }}"
+            echo "run_attempt=${{ github.run_attempt }}"
+            echo "commit_sha=${{ github.sha }}"
+            echo "restore_exit=${restore_exit}"
+            echo "vulnerable_exit=${vulnerable_exit}"
+            echo "outdated_exit=${outdated_exit}"
+            echo "generated_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          } > "${ARTIFACT_DIR}/metadata.txt"
+
+          {
+            echo "# NuGet Package Hygiene Run"
+            echo
+            echo "- Event: ${{ github.event_name }}"
+            echo "- Actor: ${{ github.actor }}"
+            echo "- Commit: ${{ github.sha }}"
+            echo "- Restore gate exit code: ${restore_exit}"
+            echo "- Vulnerable report exit code: ${vulnerable_exit}"
+            echo "- Outdated report exit code: ${outdated_exit}"
+          } > "${ARTIFACT_DIR}/summary.md"
+
+          echo "restore_exit=${restore_exit}" >> "$GITHUB_OUTPUT"
+          echo "vulnerable_exit=${vulnerable_exit}" >> "$GITHUB_OUTPUT"
+          echo "outdated_exit=${outdated_exit}" >> "$GITHUB_OUTPUT"
+
+      - name: Determine trigger source
+        id: source
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            trigger_source="scheduled-workflow"
+          elif [ "${{ github.event_name }}" = "pull_request_target" ]; then
+            trigger_source="dependabot-pr"
+          else
+            trigger_source="manual-workflow"
+          fi
+
+          echo "trigger_source=${trigger_source}" >> "$GITHUB_OUTPUT"
+          echo "cycle=$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
+
+      - name: Create upgrade cycle feature doc
+        id: cycle_doc
+        shell: pwsh
+        run: |
+          $scriptPath = Join-Path -Path "${{ github.workspace }}" -ChildPath "scripts/operations/new-nuget-upgrade-feature-doc.ps1"
+          & $scriptPath `
+            -RepositoryRoot "${{ github.workspace }}" `
+            -TriggerSource "${{ steps.source.outputs.trigger_source }}" `
+            -Cycle "${{ steps.source.outputs.cycle }}"
+
+      - name: Commit generated feature doc
+        if: ${{ steps.cycle_doc.outputs.doc_created == 'true' }}
+        shell: bash
+        run: |
+          set -e
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add "${{ steps.cycle_doc.outputs.doc_path }}"
+          git commit -m "docs: add NuGet upgrade cycle feature doc (${{ steps.cycle_doc.outputs.doc_cycle }})"
+
+          if [ "${{ github.event_name }}" = "pull_request_target" ]; then
+            git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
+          else
+            git push origin "HEAD:${{ github.ref_name }}"
+          fi
+
+      - name: Upload package hygiene artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-package-hygiene-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ github.workspace }}/artifacts/nuget-hygiene
+          if-no-files-found: error
+
+      - name: Enforce audit gate
+        shell: bash
+        run: |
+          if [ "${{ steps.audits.outputs.restore_exit }}" != "0" ] || [ "${{ steps.audits.outputs.vulnerable_exit }}" != "0" ] || [ "${{ steps.audits.outputs.outdated_exit }}" != "0" ]; then
+            echo "NuGet package hygiene gate failed. See artifact logs."
+            exit 1
+          fi

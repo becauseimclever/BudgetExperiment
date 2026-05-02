@@ -212,6 +212,7 @@ public sealed class GenericOidcProviderIntegrationTests
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["ConnectionStrings:AppDb"] = _dbFixture.ConnectionString,
+                    ["Encryption:MasterKey"] = Convert.ToBase64String(new byte[32]),
                     ["Authentication:Mode"] = "OIDC",
                     ["Authentication:Provider"] = "OIDC",
                     ["Authentication:Oidc:Authority"] = "https://keycloak.example.com/realms/master",
@@ -306,6 +307,7 @@ public sealed class GenericOidcProviderIntegrationTests
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["ConnectionStrings:AppDb"] = _dbFixture.ConnectionString,
+                    ["Encryption:MasterKey"] = Convert.ToBase64String(new byte[32]),
                     ["Authentication:Mode"] = "OIDC",
                     ["Authentication:Provider"] = "OIDC",
                     ["Authentication:Oidc:Authority"] = "https://myapp.us.auth0.com/",
@@ -400,6 +402,7 @@ public sealed class GenericOidcProviderIntegrationTests
                 config.AddInMemoryCollection(new Dictionary<string, string?>
                 {
                     ["ConnectionStrings:AppDb"] = _dbFixture.ConnectionString,
+                    ["Encryption:MasterKey"] = Convert.ToBase64String(new byte[32]),
                     ["Authentication:Authentik:Authority"] = "https://auth.example.com/application/o/budget/",
                     ["Authentication:Authentik:Audience"] = "budget-experiment",
                 });

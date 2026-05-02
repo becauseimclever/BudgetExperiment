@@ -3,8 +3,12 @@ using BudgetExperiment.Domain.FeatureFlags;
 using BudgetExperiment.Domain.Kaizen;
 using BudgetExperiment.Domain.Reconciliation;
 using BudgetExperiment.Domain.Reflection;
+using BudgetExperiment.Domain.Services;
+using BudgetExperiment.Infrastructure.Persistence.Converters;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BudgetExperiment.Infrastructure.Persistence;
 
@@ -13,6 +17,8 @@ namespace BudgetExperiment.Infrastructure.Persistence;
 /// </summary>
 public sealed class BudgetDbContext : DbContext, IUnitOfWork
 {
+    private readonly IServiceProvider? _serviceProvider;
+
     /// <summary>
     /// Initializes a new instance of the <see cref="BudgetDbContext"/> class.
     /// </summary>
@@ -21,6 +27,24 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
         : base(options)
     {
     }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BudgetDbContext"/> class.
+    /// </summary>
+    /// <param name="options">DbContext options.</param>
+    /// <param name="serviceProvider">Service provider for accessing encryption service.</param>
+    public BudgetDbContext(
+        DbContextOptions<BudgetDbContext> options,
+        IServiceProvider serviceProvider)
+        : base(options)
+    {
+        _serviceProvider = serviceProvider;
+    }
+
+    /// <summary>
+    /// Gets a value indicating whether this context can resolve the encryption service.
+    /// </summary>
+    public bool HasEncryptionService => _serviceProvider?.GetService<IEncryptionService>() is not null;
 
     /// <summary>
     /// Gets the accounts.
@@ -183,9 +207,72 @@ public sealed class BudgetDbContext : DbContext, IUnitOfWork
     }
 
     /// <inheritdoc />
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        optionsBuilder.ReplaceService<IModelCacheKeyFactory, BudgetDbContextModelCacheKeyFactory>();
+        base.OnConfiguring(optionsBuilder);
+    }
+
+    /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(BudgetDbContext).Assembly);
+
+        // Apply encryption converters to sensitive fields
+        var encryptionService = _serviceProvider?.GetService<IEncryptionService>();
+        if (encryptionService is not null)
+        {
+            var converter = new EncryptedStringConverter(encryptionService);
+            var nullableConverter = new EncryptedNullableStringConverter(encryptionService);
+            var decimalConverter = new EncryptedDecimalConverter(encryptionService);
+
+            // Account.Name (non-nullable)
+            modelBuilder.Entity<Account>()
+                .Property(a => a.Name)
+                .HasConversion(converter);
+
+            // Transaction.Description (non-nullable)
+            modelBuilder.Entity<Transaction>()
+                .Property(t => t.Description)
+                .HasConversion(converter);
+
+            // Transaction.Amount.Amount (non-nullable)
+            modelBuilder.Entity<Transaction>()
+                .OwnsOne(t => t.Amount, money =>
+                {
+                    money.Property(m => m.Amount)
+                        .HasConversion(decimalConverter)
+                        .HasColumnType("text");
+                });
+
+            // ChatMessage.Content (non-nullable)
+            modelBuilder.Entity<ChatMessage>()
+                .Property(m => m.Content)
+                .HasConversion(converter);
+
+            // MonthlyReflection text fields (nullable)
+            modelBuilder.Entity<MonthlyReflection>()
+                .Property(r => r.IntentionText)
+                .HasConversion(nullableConverter);
+
+            modelBuilder.Entity<MonthlyReflection>()
+                .Property(r => r.GratitudeText)
+                .HasConversion(nullableConverter);
+
+            modelBuilder.Entity<MonthlyReflection>()
+                .Property(r => r.ImprovementText)
+                .HasConversion(nullableConverter);
+
+            // KaizenGoal.Description (non-nullable)
+            modelBuilder.Entity<KaizenGoal>()
+                .Property(g => g.Description)
+                .HasConversion(converter);
+
+            // CategorizationRule.Pattern (non-nullable, MerchantPattern)
+            modelBuilder.Entity<CategorizationRule>()
+                .Property(r => r.Pattern)
+                .HasConversion(converter);
+        }
 
         // Apply PostgreSQL-specific xmin configuration for optimistic concurrency.
         // Entity configurations mark shadow property "xmin" as IsConcurrencyToken();

@@ -280,6 +280,13 @@ All legacy local build/deploy scripts have been removed from the repository to a
 - `.env` in `.gitignore`
 - Never logged or exposed in container output
 
+**Feature 163 encryption key**:
+- Set `ENCRYPTION_MASTER_KEY` in the deployment `.env` file for every production-like environment.
+- Generate keys with a cryptographically secure method and store them outside Git.
+- Use a different key per environment (dev/staging/production).
+- Treat key loss as unrecoverable data-loss risk for encrypted fields.
+- Reference: `docs/SECURITY-ENCRYPTION.md`
+
 ### Container Security
 
 - **.NET runtime**: Microsoft `noble-chiseled` images — distroless Ubuntu, non-root by default (UID 1654), no shell or package manager, ~50% smaller attack surface
@@ -295,6 +302,31 @@ All legacy local build/deploy scripts have been removed from the repository to a
 - Only necessary port exposed (5099)
 - SSL/TLS for database connections (recommended)
 - Reverse proxy with HTTPS recommended for production
+
+## Encrypted Backup Lifecycle (Feature 163)
+
+Use encrypted backups for PostgreSQL dumps to protect data at rest outside the live database.
+
+### Backup Command Path
+
+1. Prefer `DB_CONNECTION_STRING_FILE` and `BACKUP_GPG_RECIPIENT_FILE` on the deployment host (file paths with restricted permissions).
+2. Run `./scripts/operations/backup-encrypted.sh`.
+3. Store both `.sql.gz.gpg` and `.sha256` outputs in your approved backup location.
+
+### Restore Command Path
+
+1. Set `TARGET_DB_CONNECTION_STRING_FILE` and required guardrail variables (`RESTORE_ENVIRONMENT`, `RESTORE_ALLOW_DESTRUCTIVE=true`, and `RESTORE_CONFIRM_TARGET=<host>/<database>`).
+2. For production restores, also set `ALLOW_PRODUCTION_RESTORE=true`.
+3. Run `./scripts/operations/restore-encrypted.sh <backup-file>`.
+4. Validate app health and sample read operations after restore.
+
+The restore script verifies the `.sha256` checksum and blocks execution if confirmation variables are missing or mismatched.
+
+### Operational Policy
+
+- Run encrypted backups on a fixed schedule.
+- Perform at least quarterly restore drills.
+- Keep backup encryption and runtime encryption key governance documented in `docs/SECURITY-ENCRYPTION.md`.
 
 ## Maintenance
 

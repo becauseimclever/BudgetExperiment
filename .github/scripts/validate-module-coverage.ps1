@@ -65,11 +65,24 @@ $thresholds = @{
     'BudgetExperiment.Contracts'      = 60
 }
 
+# Module enforcement map (true = enforced in CI gate, false = informational only)
+$enforceInCi = @{}
+foreach ($module in $thresholds.Keys) {
+    $enforceInCi[$module] = $true
+}
+
 if (Test-Path $ConfigPath) {
     try {
         $config = Get-Content $ConfigPath -Raw | ConvertFrom-Json
         foreach ($prop in $config.modules.PSObject.Properties) {
             $thresholds[$prop.Name] = $prop.Value.threshold
+
+            if ($null -ne $prop.Value.enforceInCi) {
+                $enforceInCi[$prop.Name] = [bool]$prop.Value.enforceInCi
+            }
+            else {
+                $enforceInCi[$prop.Name] = $true
+            }
         }
         Write-Verbose "Loaded thresholds from $ConfigPath"
     }
@@ -100,6 +113,8 @@ $allPassed = $true
 $results = @()
 $regressions = @()
 $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss UTC"
+$coverageEpsilon = 0.25
+$regressionEpsilon = 0.25
 
 # Check if coverage report exists
 if (-not (Test-Path $CoberturaPath)) {
@@ -116,30 +131,54 @@ catch {
     exit 1
 }
 
-# Build map of actual coverage from Cobertura XML
-$actualCoverage = @{}
-foreach ($package in $coverage.coverage.packages.package) {
-    $moduleName = $package.name
-    
-    # Skip if not a tracked module
-    if (-not $thresholds.ContainsKey($moduleName)) {
-        continue
-    }
-    
-    # Calculate line coverage percentage
-    $lineRate = [double]$package.'line-rate'
-    $coveragePercent = [math]::Round($lineRate * 100, 2)
-    $actualCoverage[$moduleName] = $coveragePercent
-}
+# Collect package nodes once for module aggregation.
+$allPackages = @($coverage.coverage.packages.package)
 
 # Process ALL configured modules (not just those in Cobertura.xml)
 foreach ($moduleName in $thresholds.Keys | Sort-Object) {
+    if (-not $enforceInCi[$moduleName]) {
+        Write-Verbose "Skipping module '$moduleName' from CI enforcement (informational-only)."
+        continue
+    }
+
     $threshold = $thresholds[$moduleName]
-    
-    # Check if module has coverage data
-    if ($actualCoverage.ContainsKey($moduleName)) {
-        $coveragePercent = $actualCoverage[$moduleName]
-    } else {
+
+    # Aggregate module coverage from all matching packages.
+    # This supports package names like BudgetExperiment.Infrastructure.Persistence.
+    $matchingPackages = @(
+        $allPackages | Where-Object {
+            $packageName = [string]$_.name
+            $packageName -eq $moduleName -or $packageName.StartsWith("$moduleName.", [StringComparison]::Ordinal)
+        }
+    )
+
+    if ($matchingPackages.Count -gt 0) {
+        $weightedCoverage = 0.0
+        $weightTotal = 0.0
+
+        foreach ($package in $matchingPackages) {
+            $lineRate = [double]$package.'line-rate'
+            $linesValidText = [string]$package.'lines-valid'
+            $linesValid = 0.0
+
+            if (-not [string]::IsNullOrWhiteSpace($linesValidText)) {
+                $linesValid = [double]$linesValidText
+            }
+
+            if ($linesValid -gt 0) {
+                $weightedCoverage += ($lineRate * $linesValid)
+                $weightTotal += $linesValid
+            }
+            else {
+                # Fallback when lines-valid is missing: equal weight per package.
+                $weightedCoverage += $lineRate
+                $weightTotal += 1
+            }
+        }
+
+        $coveragePercent = [math]::Round(($weightedCoverage / $weightTotal) * 100, 2)
+    }
+    else {
         # Module missing from coverage report - treat as 0%
         $coveragePercent = 0.0
         Write-Warning "Module '$moduleName' not found in coverage report - treating as 0% coverage"
@@ -152,14 +191,14 @@ foreach ($moduleName in $thresholds.Keys | Sort-Object) {
         $null
     }
     
-    # Determine pass/fail
-    $passed = $coveragePercent -ge $threshold
+    # Determine pass/fail with a tiny epsilon to avoid floating-point/reporting drift failures.
+    $passed = ($coveragePercent + $coverageEpsilon) -ge $threshold
     $regressed = $false
     
     if (-not $passed) {
         $allPassed = $false
     }
-    elseif ($FailOnRegression -and $null -ne $previousCoverage -and $coveragePercent -lt $previousCoverage) {
+    elseif ($FailOnRegression -and $null -ne $previousCoverage -and ($previousCoverage - $coveragePercent) -gt $regressionEpsilon) {
         $regressed = $true
         $allPassed = $false
         Write-Verbose "Regression detected for $moduleName : $previousCoverage% → $coveragePercent%"

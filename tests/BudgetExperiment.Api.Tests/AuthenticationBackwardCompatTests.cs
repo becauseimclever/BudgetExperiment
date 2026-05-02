@@ -206,6 +206,7 @@ public sealed class AuthenticationBackwardCompatTests
             _config = new Dictionary<string, string?>(config)
             {
                 ["ConnectionStrings:AppDb"] = _dbFixture.ConnectionString,
+                ["Encryption:MasterKey"] = Convert.ToBase64String(new byte[32]),
             };
         }
 

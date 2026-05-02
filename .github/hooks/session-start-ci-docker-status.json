@@ -1,0 +1,11 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "pwsh -NoProfile -File ./.github/hooks/scripts/check-latest-ci-docker-runs.ps1",
+        "timeout": 20
+      }
+    ]
+  }
+}

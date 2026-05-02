@@ -89,6 +89,7 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
             {
                 ["ConnectionStrings:AppDb"] = _dbFixture.ConnectionString,
                 ["Authentication:Authentik:Enabled"] = "true",
+                ["Encryption:MasterKey"] = Convert.ToBase64String(new byte[32]),
             });
         });
 

@@ -66,6 +66,7 @@ When ready for production, see [DEPLOY-QUICKSTART.md](DEPLOY-QUICKSTART.md) for 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - System design, project structure, domain model
 - [docs/API.md](docs/API.md) - REST API reference and CSV import
 - [docs/AI.md](docs/AI.md) - AI features (chat assistant + rule suggestions)
+- [docs/SECURITY-ENCRYPTION.md](docs/SECURITY-ENCRYPTION.md) - Encryption-at-rest architecture and key management
 - [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md) - Logging and observability configuration
 - [docs/AUTH-PROVIDERS.md](docs/AUTH-PROVIDERS.md) - Authentication provider setup
 - [DEPLOY-QUICKSTART.md](DEPLOY-QUICKSTART.md) - Raspberry Pi deployment guide
