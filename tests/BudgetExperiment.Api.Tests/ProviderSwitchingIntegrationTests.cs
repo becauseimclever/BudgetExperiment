@@ -270,6 +270,8 @@ public sealed class ProviderSwitchingIntegrationTests
             {
                 _configValues["ConnectionStrings:AppDb"] = _dbFixture.ConnectionString;
             }
+
+            _configValues["Encryption:MasterKey"] = Convert.ToBase64String(new byte[32]);
         }
 
         /// <summary>

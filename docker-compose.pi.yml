@@ -14,6 +14,7 @@
 #
 # Example .env file:
 #   DB_CONNECTION_STRING=Host=your-db-server;Port=5432;Database=budgetexperiment;Username=your-user;Password=your-password
+#   ENCRYPTION_MASTER_KEY=base64-encoded-32-byte-key
 #   AUTHENTIK_ENABLED=true
 #   AUTHENTIK_AUTHORITY=https://auth.example.com/application/o/budget-experiment/
 #   AUTHENTIK_AUDIENCE=budget-experiment
@@ -32,6 +33,9 @@ services:
       
       # Database connection (from .env file or Docker secrets)
       - ConnectionStrings__AppDb=${DB_CONNECTION_STRING}
+
+      # Feature 163 encryption key (required for encrypted financial data)
+      - ENCRYPTION_MASTER_KEY=${ENCRYPTION_MASTER_KEY:?ENCRYPTION_MASTER_KEY must be set for production deployments}
       
       # Authentication (Authentik OIDC)
       - Authentication__Authentik__Enabled=${AUTHENTIK_ENABLED:-false}

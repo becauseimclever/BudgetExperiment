@@ -189,7 +189,11 @@ public static class ObservabilityExtensions
                 tracing
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
-                    .AddEntityFrameworkCoreInstrumentation()
+
+                    // PostgreSQL stack: rely on built-in ActivitySource emitters from Npgsql/EF Core.
+                    // This preserves DB trace coverage without adding SQL Server-specific instrumentation packages.
+                    .AddSource("Npgsql")
+                    .AddSource("Microsoft.EntityFrameworkCore")
                     .AddOtlpExporter(o =>
                     {
                         o.Endpoint = new Uri(otlpEndpoint);

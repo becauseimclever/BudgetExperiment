@@ -26,7 +26,7 @@ internal sealed class AccountConfiguration : IEntityTypeConfiguration<Account>
 
         builder.Property(a => a.Name)
             .IsRequired()
-            .HasMaxLength(200);
+            .HasColumnType("text");
 
         builder.Property(a => a.Type)
             .IsRequired()

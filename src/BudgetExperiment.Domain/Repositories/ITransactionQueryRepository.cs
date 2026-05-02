@@ -122,6 +122,8 @@ public interface ITransactionQueryRepository
     /// <summary>
     /// Gets transactions with filtering, sorting, and paging for the unified transaction list.
     /// Includes Category navigation property. Supports sorting by account name and category name.
+    /// In encrypted persistence mode, description/amount filters and account-name sorting are
+    /// applied in-memory after base server-side filters to preserve business semantics.
     /// </summary>
     /// <param name="accountId">Optional account filter.</param>
     /// <param name="categoryId">Optional category filter.</param>
