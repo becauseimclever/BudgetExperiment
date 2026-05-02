@@ -129,7 +129,6 @@ dotnet run --project src/BudgetExperiment.Api/BudgetExperiment.Api.csproj
 **Workflow Files**:
 
 - `.github/workflows/ci.yml`
-- `.github/workflows/dependabot-automerge.yml`
 - `.github/workflows/docker-build-publish.yml`
 - `.github/workflows/release.yml`
 
@@ -249,16 +248,8 @@ docker compose -f docker-compose.pi.yml logs -f
 2. NuGet PRs are grouped by `aspnetcore`, `extensions`, `efcore`, and `testing` when package names match those patterns.
 3. CI runs `dotnet restore` first. Global audit settings in `Directory.Build.props` enforce `NuGetAudit=true`, `NuGetAuditMode=all`, and `NuGetAuditLevel=low` for the whole solution.
 4. Because warnings are treated as errors, known package vulnerabilities break the restore step instead of waiting for a separate audit workflow.
-5. Eligible Dependabot NuGet PRs can have auto-merge enabled only when all of these are true:
-
-   - The PR is opened by `dependabot[bot]`
-   - The update is a NuGet patch release only
-   - The PR is not a draft
-   - The PR is not labeled `security`
-   - The PR title does not contain `security`
-   - Required checks pass under branch protection
-
-6. Minor updates, major updates, and security-related updates still require manual review.
+5. Dependabot NuGet PRs are reviewed and merged manually.
+6. Minor, major, and security-related updates always require manual review.
 
 ### Update Deployment Workflow
 
@@ -288,7 +279,6 @@ docker compose -f docker-compose.pi.yml logs -f
 .github/
   workflows/
       ci.yml                      # Restore, build, test, and coverage validation
-      dependabot-automerge.yml    # Enables auto-merge for eligible patch NuGet PRs
       docker-build-publish.yml    # Docker image build and publish workflow
       release.yml                 # Release flow triggered by version tags
 ```

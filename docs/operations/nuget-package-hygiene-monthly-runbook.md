@@ -8,8 +8,8 @@ This runbook replaces the old custom NuGet scripts and workflows. Those files we
 
 - Dependabot is the default source for NuGet upgrade discovery and PR creation.
 - `Directory.Build.props` enables the .NET SDK audit, so `dotnet restore` fails on known vulnerable direct or transitive packages.
-- Patch-only Dependabot NuGet PRs can auto-merge after required checks pass.
-- Minor, major, and security-related updates still need manual review.
+- Dependabot NuGet PRs are reviewed and merged manually.
+- Minor, major, and security-related updates always need manual review.
 
 For the wider workflow overview, see `docs/ci-cd-deployment.md`. For step-by-step PR handling, see `.github/prompts/nuget-upgrade.prompt.md`.
 
@@ -39,7 +39,7 @@ dotnet list c:\ws\BudgetExperiment\BudgetExperiment.sln package --outdated --inc
 ```
 
 1. Triage what you found:
-   - Let eligible patch Dependabot PRs continue through the normal CI and auto-merge path.
+   - Review and merge Dependabot PRs manually after normal CI passes.
    - Review minor, major, and security-related updates manually.
    - If `dotnet restore` fails, treat that as the main vulnerability gate and fix the affected package before merge or release.
 

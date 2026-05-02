@@ -244,7 +244,7 @@ Keep this file lean—prune when obsolete. Update when architectural decisions s
 ## 33. NuGet Package Management
 - **Current Enforcement**: `Directory.Build.props` sets `NuGetAudit=true`, `NuGetAuditMode=all`, and `NuGetAuditLevel=low` globally. This makes `dotnet restore` fail on vulnerable direct or transitive packages in local work and in CI. Do not repeat these audit properties in individual project files unless you are debugging a one-off local reproduction.
 - **Upgrade Discovery**: Dependabot is the default source of NuGet upgrade discovery and PR creation. Current grouped NuGet updates are `aspnetcore`, `extensions`, `efcore`, and `testing` as defined in `.github/dependabot.yml`.
-- **Auto-Merge Policy**: Only eligible patch-level NuGet Dependabot PRs may be auto-merged, and only after required checks pass. Minor, major, and security-related updates require manual review.
+- **PR Review Policy**: Dependabot NuGet PRs are reviewed and merged manually. Auto-merge workflow automation is intentionally not used.
 - **Pre-release Packages**: Prefer stable NuGet packages by default. `StyleCop.Analyzers` is currently pinned centrally in `Directory.Build.props` to a preview version. The repository does not currently have a workflow or script that enforces a pre-release allowlist or checks for the latest StyleCop preview, so treat any pre-release package change as a manual PR review item.
 - **Adding or Updating Packages**: Always use the `dotnet` CLI, not by manually editing `.csproj` files.
 - Preferred pattern (explicit paths + version pin):

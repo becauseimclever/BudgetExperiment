@@ -10,7 +10,7 @@ Repository rules:
 - Dependabot is the default source for NuGet upgrade discovery and pull requests.
 - NuGet groups in `.github/dependabot.yml`: `aspnetcore`, `extensions`, `efcore`, `testing`.
 - `Directory.Build.props` enables global SDK audit checks, so `dotnet restore` fails when a direct or transitive package has a known vulnerability.
-- Patch-only Dependabot NuGet PRs can be set to auto-merge after required checks pass. Minor, major, and security-related updates still need human review.
+- Dependabot NuGet PRs are reviewed and merged manually, including patch, minor, major, and security-related updates.
 
 Use these local verification commands:
 
@@ -27,14 +27,13 @@ Goal: review a Dependabot NuGet PR and decide whether it can merge.
 1. Confirm the PR is a NuGet update from `dependabot[bot]`.
 2. Check whether the PR matches one of the repository's NuGet groups: `aspnetcore`, `extensions`, `efcore`, or `testing`.
 3. Check the update scope:
-   - Patch updates can be eligible for auto-merge after CI passes.
+   - Patch updates still require manual review and merge.
    - Minor and major updates always need manual review.
    - Security-related PRs should be reviewed by a human even if the version bump is small.
 4. Run the local verification commands.
 5. Review CI results, package release notes, and any breaking-change notes.
 6. If everything is green:
-   - Approve and merge the PR when manual review is required.
-   - Or leave auto-merge enabled for eligible patch-only PRs.
+   - Approve and merge the PR manually.
 
 ## Scenario 2: CI failure due to a vulnerable package
 

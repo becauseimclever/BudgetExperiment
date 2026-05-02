@@ -30,9 +30,9 @@ Established a tested model recommendation for the local AI backend using LLaMA.c
 
 **Key Points:**
 
-- Recommended model identified and validated for local inference
-- Configuration guidance added to `docs/162-local-llamacpp-model-recommendation.md`
-- Hardware requirements documented for Raspberry Pi and x86 targets
+- Primary recommendation: `Qwen/Qwen3-14B-GGUF:Q5_K_M` for 32 GB RAM / 16 GB VRAM class hardware
+- Runner-up guidance documented for `Qwen2.5-14B-Instruct`, `Meta-Llama-3.1-8B-Instruct`, and `Mistral-Small-3.1-24B` with explicit tradeoffs
+- Quantization and context guidance captured for practical local operation (`Q4_K_M`/`Q5_K_M`/`Q6_K`, 8K-16K default context)
 
 ---
 
@@ -77,7 +77,7 @@ Completed the workflow-call release chain redesign and validated end-to-end rele
 - CI path filtering skips docs-only and non-code paths while preserving code-change validation
 - Action versions are pinned consistently across delivery workflows
 - Runtime evidence captured in feature documentation before archiving includes safe-tag chain success and branch-protection/CodeQL checks
-- Canonical detail: `docs/164-github-actions-revamp.md`
+- Historical standalone feature file removed from top-level `docs/` after archive capture
 
 ---
 
@@ -92,10 +92,10 @@ Closed NuGet package hygiene simplification by removing custom NuGet audit workf
 
 - Global NuGet audit enforcement is set in `Directory.Build.props` (`NuGetAudit=true`, `NuGetAuditMode=all`, `NuGetAuditLevel=low`)
 - Legacy workflows and supporting operations scripts for NuGet hygiene were removed from the repository
-- Dependabot grouping remains active (`aspnetcore`, `extensions`, `efcore`, `testing`) with patch-only NuGet auto-merge workflow support
+- Dependabot grouping remains active (`aspnetcore`, `extensions`, `efcore`, `testing`), and NuGet PRs are reviewed and merged manually
 - Maintainer guidance exists in `.github/prompts/nuget-upgrade.prompt.md` and `docs/operations/nuget-package-hygiene-monthly-runbook.md`
 - Validation evidence includes a historical local `NU1903` vulnerable-package probe plus current workflow-equivalent restore/build/test pass
-- Canonical detail: `docs/165-nuget-package-management.md`
+- Historical standalone feature file removed from top-level `docs/` after archive capture
 
 ---
 
@@ -111,7 +111,7 @@ Final audit for Feature 165 is closed after reconciliation against current repos
 - Final closeout validated current repository truth for workflows, docs, and governance files
 - Workflow-equivalent local validation (`restore`, `build`, `test` with repository filter) passed during final audit
 - Final verdict is **Go**, with explicit residual risk only for external GitHub runtime settings not provable from local workspace
-- Canonical detail: `docs/166-feature-165-final-audit.md`
+- Historical standalone feature file removed from top-level `docs/` after archive capture
 
 ---
 
@@ -147,3 +147,19 @@ Closed a validation gap in API integration testing after `Encryption:MasterKey` 
 - Identified isolated host patterns (`config.Sources.Clear()` and in-memory-only config rebuilds) as risk points for required-key drift
 - Standardized expectation that startup-sensitive changes require full `BudgetExperiment.Api.Tests` project validation, with targeted reruns used only for diagnosis
 - Captured regression context from release workflow behavior to prevent repeat misses
+
+---
+
+## Feature 169: Dependabot Auto-Merge Security Signal Hardening
+
+> **Status:** Superseded  
+> **Category:** DevOps / Dependency Governance
+
+Marked superseded after repository policy shifted away from Dependabot NuGet auto-merge automation to manual review and merge.
+
+**Key Points:**
+
+- NuGet auto-merge workflow is no longer present in the repository
+- Dependabot NuGet pull requests are reviewed and merged manually
+- CI/CD documentation reflects manual-review policy instead of workflow-level auto-merge hardening
+- Historical standalone feature file removed from top-level `docs/` after archive capture
