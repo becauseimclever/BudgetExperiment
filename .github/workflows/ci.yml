@@ -1,14 +1,35 @@
 name: CI
 
+# Action versions:
+# - actions/checkout@v4
+# - actions/setup-dotnet@v4
+# - actions/cache@v4
+# - actions/upload-artifact@v4
+# Triggers: push (main/develop), pull_request, workflow_call (called by docker-build-publish)
 on:
   push:
     branches:
       - main
       - develop
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - 'nginx/**'
+      - 'sample data/**'
   pull_request:
     branches:
       - main
       - develop
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - 'nginx/**'
+      - 'sample data/**'
+  workflow_call:
+    outputs:
+      version:
+        description: "Calculated version from MinVer"
+        value: ${{ jobs.build-and-test.outputs.version }}
 
 # Cancel in-progress runs for the same branch/PR
 concurrency:
@@ -19,6 +40,9 @@ jobs:
   build-and-test:
     name: Build & Test
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      artifact-name: app-publish
     permissions:
       contents: read
       checks: write
@@ -33,22 +57,30 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
 
       - name: Cache NuGet packages
-        uses: actions/cache@v5
+        uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Build.props') }}
           restore-keys: |
             ${{ runner.os }}-nuget-
+
+      - name: Calculate version using MinVer
+        id: version
+        run: |
+          dotnet tool install --global minver-cli
+          VERSION=$(minver --tag-prefix v --default-pre-release-identifiers preview)
+          echo "Calculated version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Restore dependencies
         run: dotnet restore BudgetExperiment.sln
@@ -89,7 +121,7 @@ jobs:
 
       # Restore previous coverage state for retroactive drop detection
       - name: Restore coverage state
-        uses: actions/cache@v5
+        uses: actions/cache@v4
         with:
           path: coverage-state.json
           key: coverage-state-${{ github.ref }}-${{ github.sha }}
@@ -140,7 +172,7 @@ jobs:
       # Save coverage state for next run (only on push events to persist history)
       - name: Save coverage state
         if: github.event_name == 'push' && (success() || failure())
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v4
         with:
           path: coverage-state.json
           key: coverage-state-${{ github.ref }}-${{ github.sha }}
@@ -161,7 +193,7 @@ jobs:
           path: module-coverage-results.md
 
       - name: Upload test results
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results
@@ -169,12 +201,30 @@ jobs:
           retention-days: 7
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: coverage-report
           path: ./CoverageReport/Cobertura.xml
           retention-days: 30
+
+      - name: Publish application
+        if: success()
+        run: |
+          dotnet publish src/BudgetExperiment.Api/BudgetExperiment.Api.csproj \
+            --configuration Release \
+            --no-build \
+            --output ./publish \
+            /p:UseAppHost=false \
+            /p:MinVerVersionOverride=${{ steps.version.outputs.version }}
+
+      - name: Upload publish artifact
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: app-publish
+          path: ./publish
+          retention-days: 3
 
       - name: Test Summary
         uses: dorny/test-reporter@v3
@@ -201,10 +251,10 @@ jobs:
   #
   #   steps:
   #     - name: Checkout repository
-  #       uses: actions/checkout@v6
+  #       uses: actions/checkout@v4
   #
   #     - name: Setup .NET
-  #       uses: actions/setup-dotnet@v5
+  #       uses: actions/setup-dotnet@v4
   #       with:
   #         dotnet-version: '10.0.x'
   #
@@ -221,7 +271,7 @@ jobs:
   #           --results-directory ./TestResults
   #
   #     - name: Upload performance results
-  #       uses: actions/upload-artifact@v7
+  #       uses: actions/upload-artifact@v4
   #       if: always()
   #       with:
 #         name: performance-results

@@ -173,8 +173,12 @@ root
 ```
 
 ## 22. Git / Branching
-- Main: stable.
-- Feature branches: `feature/<short-desc>`.
+- Main: stable and protected.
+- All implementation work must happen on a branch, never directly on `main`.
+- Feature branches: `feature/<number>-<short-desc>`.
+- Fix branches: `fix/<number>-<short-desc>`.
+- Chore or docs branches: `chore/<short-desc>`.
+- Release tags are created from `main` only after the branch workflow has completed.
 - Always include tests in same PR; failing tests block merge.
 
 ## 23. PR Checklist (Enforced Culturally)
@@ -260,7 +264,8 @@ Keep this file lean—prune when obsolete. Update when architectural decisions s
 ## 35. Docker & Deployment (CI/CD Only)
 - **Local Development**: NEVER use Docker locally. Use standard `dotnet run` workflow (see section 33).
 - **Docker is for deployment only**: Raspberry Pi and production servers pull pre-built images.
-- **CI/CD Pipeline**: GitHub Actions (`.github/workflows/docker-build-publish.yml`) automatically builds multi-architecture (amd64, arm64) Docker images on push to `main` or version tags.
+- **CI/CD Pipeline**: A tag push triggers `release.yml`, which calls `docker-build-publish.yml` (Docker multi-arch build, amd64 + arm64) via `workflow_call`, which calls `ci.yml` via `workflow_call`. Images are published to GHCR only after the full chain succeeds. `ci.yml` runs independently on branch pushes and PRs.
+- **Branch Protection (CodeQL enforcement)**: Branch protection on `main` must require the `CodeQL` status check (GitHub Default Setup, analysis job name `CodeQL / Analyze (csharp)`) so that every commit reachable by a release tag has a passing CodeQL scan. Treat branch protection as the enforcement point — do not add workflow-local `verify-ci` or API-polling steps.
 - **Image Registry**: Images published to `ghcr.io/becauseimclever/budgetexperiment` (GitHub Container Registry).
 - **Dockerfile**: Multi-stage build (`Dockerfile`) - builds from source, no pre-build required.
 - **Deployment**: Raspberry Pi uses `docker-compose.pi.yml` to pull and run images from ghcr.io.

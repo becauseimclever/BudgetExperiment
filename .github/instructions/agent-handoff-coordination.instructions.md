@@ -23,6 +23,7 @@ Use this instruction when a task requires more than one specialist agent or when
 ## Required Handoff Package
 Every handoff must include:
 - Task objective: what outcome is required.
+- Active branch: confirm the current branch name and whether branch policy constraints affect the task.
 - Scope boundaries: what is in scope and out of scope.
 - Input context: files, constraints, standards, and assumptions.
 - Deliverables: exact expected outputs.

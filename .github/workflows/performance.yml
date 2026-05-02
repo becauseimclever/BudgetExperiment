@@ -1,5 +1,10 @@
 name: Performance Tests
 
+# Action versions:
+# - actions/checkout@v4
+# - actions/setup-dotnet@v4
+# - actions/cache@v4
+# - actions/upload-artifact@v4
 on:
   # Scheduled: full load test suite weekly (Sunday 03:00 UTC)
   # DISABLED: Performance tests moved to dedicated environment (Feature 113 Phase 4)
@@ -42,12 +47,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
 

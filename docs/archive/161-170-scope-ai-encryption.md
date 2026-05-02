@@ -79,3 +79,19 @@ Established a repeatable, policy-driven package hygiene process for the full sol
 - Evidence artifacts: `restore-pass.log`, `restore-failed.log`, `prerelease-policy.log`, `stylecop-latest-preview.log`, `metadata.txt`
 - Automation: scheduled CI workflow runs monthly; watches Dependabot PRs; creates upgrade feature docs when needed
 - Operational checklist: restore/build/test smoke validation; documented rollback path with known-good SHA recovery
+
+---
+
+## Feature 168: API Test Host Configuration Validation Gap
+
+> **Status:** Done  
+> **Category:** Testing / Validation
+
+Closed a validation gap in API integration testing after `Encryption:MasterKey` became mandatory at startup. The work focused on custom API test hosts that isolate configuration and could miss newly required keys.
+
+**Key Points:**
+
+- Reviewed custom `WebApplicationFactory<Program>` usage as a startup-configuration validation surface
+- Identified isolated host patterns (`config.Sources.Clear()` and in-memory-only config rebuilds) as risk points for required-key drift
+- Standardized expectation that startup-sensitive changes require full `BudgetExperiment.Api.Tests` project validation, with targeted reruns used only for diagnosis
+- Captured regression context from release workflow behavior to prevent repeat misses
