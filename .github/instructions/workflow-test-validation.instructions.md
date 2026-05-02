@@ -23,6 +23,7 @@ description: "Use when fixing bugs, regressions, broken workflows, release failu
 	- `.github/workflows/ci.yml`
 	- `.github/workflows/docker-build-publish.yml`
 	- `.github/workflows/release.yml`
+- NuGet vulnerability gating is enforced in `.github/workflows/ci.yml` at the `Restore dependencies` step (`dotnet restore`) via global `Directory.Build.props` audit properties; do not expect a separate NuGet audit workflow.
 - Include any additional workflow that can gate the requested fix path.
 
 ## Handling Blockers
