@@ -3,6 +3,7 @@
 // </copyright>
 
 using System.Net;
+using System.Text;
 
 using BudgetExperiment.Application.Settings;
 using BudgetExperiment.Infrastructure.ExternalServices.AI;
@@ -63,7 +64,8 @@ public sealed class BackendSelectingAiServiceTests : IDisposable
         // Assert
         Assert.True(status.IsAvailable);
         Assert.Equal("http://localhost:8080/health", _llamaHandler.LastRequestUri?.ToString());
-        Assert.Null(_ollamaHandler.LastRequestUri);
+        Assert.Equal(1, _llamaHandler.RequestCount);
+        Assert.Equal(0, _ollamaHandler.RequestCount);
     }
 
     [Fact]
@@ -89,7 +91,8 @@ public sealed class BackendSelectingAiServiceTests : IDisposable
         // Assert
         Assert.True(status.IsAvailable);
         Assert.Equal("http://localhost:11434/api/version", _ollamaHandler.LastRequestUri?.ToString());
-        Assert.Null(_llamaHandler.LastRequestUri);
+        Assert.Equal(1, _ollamaHandler.RequestCount);
+        Assert.Equal(0, _llamaHandler.RequestCount);
     }
 
     [Fact]
@@ -112,7 +115,172 @@ public sealed class BackendSelectingAiServiceTests : IDisposable
         // Assert
         Assert.True(status.IsAvailable);
         Assert.Equal("http://localhost:11434/api/version", _ollamaHandler.LastRequestUri?.ToString());
-        Assert.Null(_llamaHandler.LastRequestUri);
+        Assert.Equal(1, _ollamaHandler.RequestCount);
+        Assert.Equal(0, _llamaHandler.RequestCount);
+    }
+
+    [Fact]
+    public async Task GetAvailableModelsAsync_When_SettingsSpecify_LlamaCpp_Uses_LlamaCpp_Service_Only()
+    {
+        // Arrange
+        var settingsService = new FakeAppSettingsService(new AiSettingsData(
+            EndpointUrl: "http://localhost:8080",
+            ModelName: "llama",
+            Temperature: 0.3m,
+            MaxTokens: 200,
+            TimeoutSeconds: 30,
+            IsEnabled: true,
+            BackendType: AiBackendType.LlamaCpp));
+        var service = CreateService(settingsService, CreateConfiguration());
+
+        _llamaHandler.ResponseFactory = (_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = CreateJsonContent("""
+                { "data": [ { "id": "llama-model" } ] }
+                """),
+        });
+
+        // Act
+        var models = await service.GetAvailableModelsAsync();
+
+        // Assert
+        var model = Assert.Single(models);
+        Assert.Equal("llama-model", model.Name);
+        Assert.Equal("http://localhost:8080/v1/models", _llamaHandler.LastRequestUri?.ToString());
+        Assert.Equal(1, _llamaHandler.RequestCount);
+        Assert.Equal(0, _ollamaHandler.RequestCount);
+    }
+
+    [Fact]
+    public async Task GetAvailableModelsAsync_When_SettingsSpecify_Ollama_Uses_Ollama_Service_Only()
+    {
+        // Arrange
+        var settingsService = new FakeAppSettingsService(new AiSettingsData(
+            EndpointUrl: "http://localhost:11434",
+            ModelName: "llama",
+            Temperature: 0.3m,
+            MaxTokens: 200,
+            TimeoutSeconds: 30,
+            IsEnabled: true,
+            BackendType: AiBackendType.Ollama));
+        var service = CreateService(settingsService, CreateConfiguration(new Dictionary<string, string?>
+        {
+            ["AiSettings:BackendType"] = nameof(AiBackendType.LlamaCpp),
+        }));
+
+        _ollamaHandler.ResponseFactory = (_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = CreateJsonContent("""
+                {
+                  "models": [
+                    {
+                      "name": "ollama-model",
+                      "modified_at": "2026-01-01T00:00:00Z",
+                      "size": 1024
+                    }
+                  ]
+                }
+                """),
+        });
+
+        // Act
+        var models = await service.GetAvailableModelsAsync();
+
+        // Assert
+        var model = Assert.Single(models);
+        Assert.Equal("ollama-model", model.Name);
+        Assert.Equal("http://localhost:11434/api/tags", _ollamaHandler.LastRequestUri?.ToString());
+        Assert.Equal(1, _ollamaHandler.RequestCount);
+        Assert.Equal(0, _llamaHandler.RequestCount);
+    }
+
+    [Fact]
+    public async Task CompleteAsync_When_SettingsSpecify_LlamaCpp_Uses_LlamaCpp_Service_Only()
+    {
+        // Arrange
+        var settingsService = new FakeAppSettingsService(new AiSettingsData(
+            EndpointUrl: "http://localhost:8080",
+            ModelName: "llama",
+            Temperature: 0.3m,
+            MaxTokens: 200,
+            TimeoutSeconds: 30,
+            IsEnabled: true,
+            BackendType: AiBackendType.LlamaCpp));
+        var service = CreateService(settingsService, CreateConfiguration());
+
+        _llamaHandler.ResponseFactory = (_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = CreateJsonContent("""
+                {
+                  "choices": [
+                    {
+                      "message": {
+                        "content": "llama completion"
+                      }
+                    }
+                  ],
+                  "usage": {
+                    "total_tokens": 12
+                  }
+                }
+                """),
+        });
+
+        // Act
+        var response = await service.CompleteAsync(new AiPrompt("system", "user", 0.3m, 128));
+
+        // Assert
+        Assert.True(response.Success);
+        Assert.Equal("llama completion", response.Content);
+        Assert.Equal("http://localhost:8080/v1/chat/completions", _llamaHandler.LastRequestUri?.ToString());
+        Assert.Equal(1, _llamaHandler.RequestCount);
+        Assert.Equal(0, _ollamaHandler.RequestCount);
+    }
+
+    [Fact]
+    public async Task CompleteAsync_When_SettingsSpecify_Ollama_Uses_Ollama_Service_Only()
+    {
+        // Arrange
+        var settingsService = new FakeAppSettingsService(new AiSettingsData(
+            EndpointUrl: "http://localhost:11434",
+            ModelName: "llama",
+            Temperature: 0.3m,
+            MaxTokens: 200,
+            TimeoutSeconds: 30,
+            IsEnabled: true,
+            BackendType: AiBackendType.Ollama));
+        var service = CreateService(settingsService, CreateConfiguration(new Dictionary<string, string?>
+        {
+            ["AiSettings:BackendType"] = nameof(AiBackendType.LlamaCpp),
+        }));
+
+        _ollamaHandler.ResponseFactory = (_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = CreateJsonContent("""
+                {
+                  "message": {
+                    "content": "ollama completion"
+                  },
+                  "prompt_eval_count": 2,
+                  "eval_count": 3
+                }
+                """),
+        });
+
+        // Act
+        var response = await service.CompleteAsync(new AiPrompt("system", "user", 0.3m, 128));
+
+        // Assert
+        Assert.True(response.Success);
+        Assert.Equal("ollama completion", response.Content);
+        Assert.Equal("http://localhost:11434/api/chat", _ollamaHandler.LastRequestUri?.ToString());
+        Assert.Equal(1, _ollamaHandler.RequestCount);
+        Assert.Equal(0, _llamaHandler.RequestCount);
+    }
+
+    private static StringContent CreateJsonContent(string json)
+    {
+        return new StringContent(json, Encoding.UTF8, "application/json");
     }
 
     private static IConfiguration CreateConfiguration(Dictionary<string, string?>? values = null)
@@ -151,10 +319,16 @@ public sealed class BackendSelectingAiServiceTests : IDisposable
             get; private set;
         }
 
+        public int RequestCount
+        {
+            get; private set;
+        }
+
         /// <inheritdoc />
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             LastRequestUri = request.RequestUri;
+            RequestCount++;
             return await ResponseFactory(request, cancellationToken);
         }
     }

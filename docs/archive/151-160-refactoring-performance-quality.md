@@ -130,6 +130,20 @@ Added date range filtering and pagination support to transactions endpoint.
 
 ---
 
+## Feature 160: Pluggable AI Backend
+
+> **Status:** Done
+> **Category:** Architecture / Integration
+
+Implemented runtime-selectable AI backends so the application can switch between Ollama and llama.cpp without Application or Domain layer changes.
+
+**Key Points:**
+- Added backend strategy selection via `BackendSelectingAiService` with DI-registered `OllamaAiService` and `LlamaCppAiService`
+- Introduced shared `AiBackendType` + endpoint configuration flow, including API settings/status contract support for backend visibility
+- Added persistence and validation coverage for backend settings (including migration `AddAiBackendTypeToAppSettings` and backend/default behavior tests)
+
+---
+
 ## Feature 161: Budget Scope — Removal
 
 > **Status:** Done

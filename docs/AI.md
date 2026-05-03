@@ -1,10 +1,10 @@
 # AI Features
 
-Budget Experiment includes two AI features, both powered by a local Ollama instance. Your financial data never leaves your machine.
+Budget Experiment includes two local AI features. You can choose the AI backend: Ollama or llama.cpp. Your financial data stays on your machine.
 
 ## 🤖 AI-Powered Rule Suggestions
 
-Budget Experiment includes AI-powered categorization rule suggestions using a local LLM via [Ollama](https://ollama.ai/).
+Budget Experiment includes AI-powered categorization rule suggestions using a local LLM backend.
 
 ### Features
 
@@ -16,14 +16,53 @@ Budget Experiment includes AI-powered categorization rule suggestions using a lo
 
 ### Setup
 
-1. **Install Ollama**: Download from [ollama.ai](https://ollama.ai/)
-2. **Pull a model**: `ollama pull llama3.2` (or another supported model)
-3. **Start Ollama**: Ensure the Ollama service is running (default: `http://localhost:11434`)
-4. **Configure (optional)**: Customize settings via appsettings or user secrets:
+1. Install and start your preferred backend:
+   - Ollama: [ollama.ai](https://ollama.ai/) (default endpoint: `http://localhost:11434`)
+   - llama.cpp server (OpenAI-compatible mode) (default endpoint: `http://localhost:8080`)
+2. Ensure the model you want is available on that backend.
+3. Configure AI settings (optional) with backend-agnostic keys:
    ```powershell
-   dotnet user-secrets set "AiSettings:OllamaEndpoint" "http://localhost:11434" --project src/BudgetExperiment.Api
-   dotnet user-secrets set "AiSettings:ModelName" "llama3.2" --project src/BudgetExperiment.Api
+   dotnet user-secrets set "AiSettings:BackendType" "Ollama" --project c:\ws\BudgetExperiment\src\BudgetExperiment.Api\BudgetExperiment.Api.csproj
+   dotnet user-secrets set "AiSettings:EndpointUrl" "http://localhost:11434" --project c:\ws\BudgetExperiment\src\BudgetExperiment.Api\BudgetExperiment.Api.csproj
+   dotnet user-secrets set "AiSettings:ModelName" "llama3.2" --project c:\ws\BudgetExperiment\src\BudgetExperiment.Api\BudgetExperiment.Api.csproj
    ```
+
+Use `AiSettings:BackendType` as `Ollama` or `LlamaCpp`.
+
+### Configuration Examples
+
+Use one of the following backend profiles.
+
+Ollama (`appsettings.json`):
+
+```json
+{
+   "AiSettings": {
+      "BackendType": "Ollama",
+      "EndpointUrl": "http://localhost:11434",
+      "ModelName": "llama3.2"
+   }
+}
+```
+
+llama.cpp (`appsettings.json`):
+
+```json
+{
+   "AiSettings": {
+      "BackendType": "LlamaCpp",
+      "EndpointUrl": "http://localhost:8080",
+      "ModelName": "Meta-Llama-3.1-8B-Instruct"
+   }
+}
+```
+
+Development override (`user-secrets`) for llama.cpp:
+
+```powershell
+dotnet user-secrets set "AiSettings:BackendType" "LlamaCpp" --project c:\ws\BudgetExperiment\src\BudgetExperiment.Api\BudgetExperiment.Api.csproj
+dotnet user-secrets set "AiSettings:EndpointUrl" "http://localhost:8080" --project c:\ws\BudgetExperiment\src\BudgetExperiment.Api\BudgetExperiment.Api.csproj
+```
 
 ### Usage
 
@@ -35,7 +74,7 @@ Budget Experiment includes AI-powered categorization rule suggestions using a lo
 
 ### Privacy
 
-All AI processing happens locally on your machine. Your financial data is never sent to external services. The AI runs entirely through your local Ollama instance.
+All AI processing happens through your configured local backend. Your financial data is never sent to external services.
 
 ## 💬 AI Chat Assistant
 
@@ -70,4 +109,4 @@ A natural language interface for managing your finances through conversation.
 
 ### Privacy
 
-Like the AI Rule Suggestions, all chat processing happens locally via Ollama. Your conversation and financial data stay on your machine.
+Like AI Rule Suggestions, chat processing uses your configured local backend (Ollama or llama.cpp). Your conversation and financial data stay on your machine.

@@ -7,6 +7,7 @@ using BudgetExperiment.Shared;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BudgetExperiment.Infrastructure.Tests;
 
@@ -47,13 +48,66 @@ public sealed class DependencyInjectionTests
         Assert.NotNull(llamaCppService);
     }
 
-    private static IServiceCollection CreateServices()
+    [Theory]
+    [InlineData(AiBackendType.Ollama, "http://localhost:11434", "http://localhost:11434/api/version")]
+    [InlineData(AiBackendType.LlamaCpp, "http://localhost:8080", "http://localhost:8080/health")]
+    public async Task AddInfrastructure_IAiService_Uses_Selected_Backend_Endpoint(
+        AiBackendType backendType,
+        string endpointUrl,
+        string expectedStatusUrl)
+    {
+        // Arrange
+        using var ollamaHandler = new RecordingHttpMessageHandler();
+        using var ollamaClient = new HttpClient(ollamaHandler);
+        using var llamaHandler = new RecordingHttpMessageHandler();
+        using var llamaClient = new HttpClient(llamaHandler);
+
+        ollamaHandler.ResponseFactory = (_, _) => Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK));
+        llamaHandler.ResponseFactory = (_, _) => Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK));
+
+        var services = CreateServices(backendType, endpointUrl);
+        services.AddScoped<OllamaAiService>(sp => new OllamaAiService(
+            ollamaClient,
+            sp.GetRequiredService<IAppSettingsService>(),
+            NullLogger<OllamaAiService>.Instance));
+        services.AddScoped<LlamaCppAiService>(sp => new LlamaCppAiService(
+            llamaClient,
+            sp.GetRequiredService<IAppSettingsService>(),
+            NullLogger<LlamaCppAiService>.Instance));
+
+        // Act
+        using var provider = services.BuildServiceProvider(validateScopes: true);
+        using var scope = provider.CreateScope();
+        var aiService = scope.ServiceProvider.GetRequiredService<IAiService>();
+        var status = await aiService.GetStatusAsync(CancellationToken.None);
+        var actualStatusUrl = backendType == AiBackendType.Ollama
+            ? ollamaHandler.LastRequestUri?.ToString()
+            : llamaHandler.LastRequestUri?.ToString();
+
+        // Assert
+        Assert.True(status.IsAvailable);
+        Assert.Equal(expectedStatusUrl, actualStatusUrl);
+        if (backendType == AiBackendType.Ollama)
+        {
+            Assert.Equal(1, ollamaHandler.RequestCount);
+            Assert.Equal(0, llamaHandler.RequestCount);
+        }
+        else
+        {
+            Assert.Equal(1, llamaHandler.RequestCount);
+            Assert.Equal(0, ollamaHandler.RequestCount);
+        }
+    }
+
+    private static IServiceCollection CreateServices(
+        AiBackendType backendType = AiBackendType.Ollama,
+        string endpointUrl = "http://localhost:11434")
     {
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["ConnectionStrings:AppDb"] = "Host=localhost;Database=budgetexperiment;Username=test;Password=test",
-                ["AiSettings:BackendType"] = nameof(AiBackendType.LlamaCpp),
+                ["AiSettings:BackendType"] = backendType.ToString(),
             })
             .Build();
 
@@ -61,15 +115,38 @@ public sealed class DependencyInjectionTests
         services.AddLogging();
         services.AddSingleton<IConfiguration>(configuration);
         services.AddScoped<IAppSettingsService>(_ => new FakeAppSettingsService(new AiSettingsData(
-            EndpointUrl: "http://localhost:11434",
+            EndpointUrl: endpointUrl,
             ModelName: "llama3.2",
             Temperature: 0.3m,
             MaxTokens: 2000,
             TimeoutSeconds: 120,
             IsEnabled: true,
-            BackendType: AiBackendType.Ollama)));
+            BackendType: backendType)));
         services.AddInfrastructure(configuration);
 
         return services;
+    }
+
+    private sealed class RecordingHttpMessageHandler : HttpMessageHandler
+    {
+        public Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> ResponseFactory { get; set; } =
+            (_, _) => Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK));
+
+        public Uri? LastRequestUri
+        {
+            get; private set;
+        }
+
+        public int RequestCount
+        {
+            get; private set;
+        }
+
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            LastRequestUri = request.RequestUri;
+            RequestCount++;
+            return await ResponseFactory(request, cancellationToken);
+        }
     }
 }
