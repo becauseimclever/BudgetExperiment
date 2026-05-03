@@ -192,7 +192,8 @@ public sealed class Feature160OpenApiContractTests : IClassFixture<CustomWebAppl
         if (schema.TryGetProperty(compositionKeyword, out var compositionNode) &&
             compositionNode.ValueKind == JsonValueKind.Array)
         {
-            foreach (var item in compositionNode.EnumerateArray())
+            foreach (var item in compositionNode.EnumerateArray().Where(static candidate =>
+                         candidate.ValueKind == JsonValueKind.Object))
             {
                 if (TryFindPropertySchema(item, propertyName, schemas, out propertySchema))
                 {
