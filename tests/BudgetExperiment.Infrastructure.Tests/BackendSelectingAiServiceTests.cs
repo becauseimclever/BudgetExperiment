@@ -19,6 +19,12 @@ namespace BudgetExperiment.Infrastructure.Tests;
 /// </summary>
 public sealed class BackendSelectingAiServiceTests : IDisposable
 {
+    private readonly HttpResponseMessage _llamaModelsResponse = new(HttpStatusCode.OK)
+    {
+        Content = CreateJsonContent("""
+            { "data": [ { "id": "llama-model" } ] }
+            """),
+    };
     private readonly HttpClient _llamaHttpClient;
     private readonly RecordingHttpMessageHandler _llamaHandler;
     private readonly HttpClient _ollamaHttpClient;
@@ -133,12 +139,7 @@ public sealed class BackendSelectingAiServiceTests : IDisposable
             BackendType: AiBackendType.LlamaCpp));
         var service = CreateService(settingsService, CreateConfiguration());
 
-        _llamaHandler.ResponseFactory = (_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = CreateJsonContent("""
-                { "data": [ { "id": "llama-model" } ] }
-                """),
-        });
+        _llamaHandler.ResponseFactory = (_, _) => Task.FromResult(_llamaModelsResponse);
 
         // Act
         var models = await service.GetAvailableModelsAsync();
@@ -331,5 +332,10 @@ public sealed class BackendSelectingAiServiceTests : IDisposable
             RequestCount++;
             return await ResponseFactory(request, cancellationToken);
         }
+    }
+    public void Dispose()
+    {
+        _llamaModelsResponse.Dispose();
+        _llamaHttpClient.Dispose();
     }
 }
