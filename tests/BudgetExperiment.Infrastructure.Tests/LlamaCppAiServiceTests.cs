@@ -191,13 +191,23 @@ public sealed class LlamaCppAiServiceTests : IDisposable
     public async Task CompleteAsync_When_BackendReturnsErrorStatus_Returns_LlamaCpp_Error_Message()
     {
         // Arrange
-        _handler.ResponseFactory = (_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.BadRequest)
+        var httpResponse = new HttpResponseMessage(HttpStatusCode.BadRequest)
         {
             Content = new StringContent("invalid request", Encoding.UTF8, "text/plain"),
-        });
+        };
 
-        // Act
-        var response = await _service.CompleteAsync(new AiPrompt("system", "user"));
+        _handler.ResponseFactory = (_, _) => Task.FromResult(httpResponse);
+
+        AiResponse response;
+        try
+        {
+            // Act
+            response = await _service.CompleteAsync(new AiPrompt("system", "user"));
+        }
+        finally
+        {
+            httpResponse.Dispose();
+        }
 
         // Assert
         Assert.False(response.Success);
