@@ -258,7 +258,8 @@ public sealed class BackendSelectingAiServiceTests : IDisposable
 
         _ollamaHandler.ResponseFactory = (_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
         {
-            Content = CreateJsonContent("""
+            Content = new StringContent(
+                """
                 {
                   "message": {
                     "content": "ollama completion"
@@ -266,7 +267,9 @@ public sealed class BackendSelectingAiServiceTests : IDisposable
                   "prompt_eval_count": 2,
                   "eval_count": 3
                 }
-                """),
+                """,
+                Encoding.UTF8,
+                "application/json"),
         });
 
         // Act
@@ -278,11 +281,6 @@ public sealed class BackendSelectingAiServiceTests : IDisposable
         Assert.Equal("http://localhost:11434/api/chat", _ollamaHandler.LastRequestUri?.ToString());
         Assert.Equal(1, _ollamaHandler.RequestCount);
         Assert.Equal(0, _llamaHandler.RequestCount);
-    }
-
-    private static StringContent CreateJsonContent(string json)
-    {
-        return new StringContent(json, Encoding.UTF8, "application/json");
     }
 
     private static IConfiguration CreateConfiguration(Dictionary<string, string?>? values = null)
