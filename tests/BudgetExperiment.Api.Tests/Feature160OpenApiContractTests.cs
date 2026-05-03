@@ -219,7 +219,8 @@ public sealed class Feature160OpenApiContractTests : IClassFixture<CustomWebAppl
 
         if (propertySchema.TryGetProperty("allOf", out var allOfNode) && allOfNode.ValueKind == JsonValueKind.Array)
         {
-            foreach (var item in allOfNode.EnumerateArray())
+            foreach (var item in allOfNode.EnumerateArray().Where(static candidate =>
+                         candidate.ValueKind == JsonValueKind.Object))
             {
                 if (item.TryGetProperty("$ref", out var allOfRef))
                 {
