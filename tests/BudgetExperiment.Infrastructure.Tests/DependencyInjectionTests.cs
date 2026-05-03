@@ -61,9 +61,11 @@ public sealed class DependencyInjectionTests
         using var ollamaClient = new HttpClient(ollamaHandler);
         using var llamaHandler = new RecordingHttpMessageHandler();
         using var llamaClient = new HttpClient(llamaHandler);
+        using var ollamaResponse = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+        using var llamaResponse = new HttpResponseMessage(System.Net.HttpStatusCode.OK);
 
-        ollamaHandler.ResponseFactory = (_, _) => Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK));
-        llamaHandler.ResponseFactory = (_, _) => Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK));
+        ollamaHandler.ResponseFactory = (_, _) => Task.FromResult(ollamaResponse);
+        llamaHandler.ResponseFactory = (_, _) => Task.FromResult(llamaResponse);
 
         var services = CreateServices(backendType, endpointUrl);
         services.AddScoped<OllamaAiService>(sp => new OllamaAiService(
