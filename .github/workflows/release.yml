@@ -34,20 +34,94 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Generate Changelog
-        id: changelog
+      - name: Fetch default branch
+        run: git fetch origin "${{ github.event.repository.default_branch }}"
+
+      - name: Verify tag commit belongs to default branch
+        run: |
+          DEFAULT_BRANCH="${{ github.event.repository.default_branch }}"
+          if ! git merge-base --is-ancestor "${{ github.sha }}" "origin/${DEFAULT_BRANCH}"; then
+            echo "::error::Tag commit ${GITHUB_SHA} is not on origin/${DEFAULT_BRANCH}. Create release tags from ${DEFAULT_BRANCH}."
+            exit 1
+          fi
+
+      - name: Generate Changelog Entry
+        id: changelog_entry
         uses: orhun/git-cliff-action@v4
         with:
           config: cliff.toml
           args: --tag ${{ github.ref_name }} --strip header
+
+      - name: Persist changelog update
+        id: persist_changelog
         env:
-          OUTPUT: CHANGELOG.md
+          CHANGELOG_ENTRY: ${{ steps.changelog_entry.outputs.content }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          MARKER="## [${VERSION}]"
+
+          if [ ! -f CHANGELOG.md ]; then
+            echo "::error::CHANGELOG.md was not found in the repository root."
+            exit 1
+          fi
+
+          printf '%s\n' "$CHANGELOG_ENTRY" > /tmp/release-entry.md
+          if ! grep -q '[^[:space:]]' /tmp/release-entry.md; then
+            echo "::error::Generated changelog entry is empty."
+            exit 1
+          fi
+
+          if grep -Fq "$MARKER" CHANGELOG.md; then
+            echo "Changelog already contains ${MARKER}; skipping update."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          LINE_COUNT=$(wc -l < CHANGELOG.md)
+          if [ "$LINE_COUNT" -lt 4 ]; then
+            {
+              cat /tmp/release-entry.md
+              printf '\n\n'
+              cat CHANGELOG.md
+            } > /tmp/CHANGELOG.new.md
+          else
+            {
+              head -n 4 CHANGELOG.md
+              cat /tmp/release-entry.md
+              printf '\n\n'
+              tail -n +5 CHANGELOG.md
+            } > /tmp/CHANGELOG.new.md
+          fi
+
+          mv /tmp/CHANGELOG.new.md CHANGELOG.md
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push changelog update
+        if: steps.persist_changelog.outputs.changed == 'true'
+        run: |
+          DEFAULT_BRANCH="${{ github.event.repository.default_branch }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add CHANGELOG.md
+          if git diff --cached --quiet; then
+            echo "No changelog changes detected after staging; skipping commit."
+            exit 0
+          fi
+
+          git commit -m "chore(release): update changelog for ${{ github.ref_name }}"
+
+          if ! git push origin "HEAD:${DEFAULT_BRANCH}"; then
+            echo "::error::Failed to push changelog update to ${DEFAULT_BRANCH}. The branch likely advanced after tagging; retag from the latest ${DEFAULT_BRANCH} commit."
+            exit 1
+          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
-          body: ${{ steps.changelog.outputs.content }}
+          body: ${{ steps.changelog_entry.outputs.content }}
           draft: false
           prerelease: ${{ contains(github.ref_name, '-alpha') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-rc') }}
           generate_release_notes: true
