@@ -2,6 +2,22 @@
 
 All notable changes to Budget Experiment.
 
+## [3.34.0] - 2026-05-03
+
+### Features
+
+- **ai:** Implement pluggable AI backends (Feature 160) (#92) by @Fortinbra
+
+### Miscellaneous
+
+- Bump dotnet-reportgenerator-globaltool from 5.5.4 to 5.5.7 (#88) by @dependabot[bot]
+- Bump dotnet-ef from 10.0.5 to 10.0.7 (#87) by @dependabot[bot]
+- Bump coverlet.collector from 8.0.1 to 10.0.0 (#67) by @dependabot[bot]
+
+# Changelog
+
+All notable changes to Budget Experiment.
+
 ## [3.33.0] - 2026-04-30
 
 ### Features
