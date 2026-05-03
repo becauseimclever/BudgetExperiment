@@ -29,6 +29,7 @@ Every handoff must include:
 - Deliverables: exact expected outputs.
 - Validation: required checks or tests.
 - Done definition: measurable completion criteria.
+- When delegating Dotnet Auditor Reviewer: include audit artifact policy (`docs/audit/YYYY-MM-DD-<feature-slug>.md`) and the consolidation target file if an existing workstream artifact already exists.
 
 ## Coordination Workflow
 1. Classify the request by domain and risk.
