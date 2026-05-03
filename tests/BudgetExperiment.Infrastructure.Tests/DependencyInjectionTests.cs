@@ -131,8 +131,7 @@ public sealed class DependencyInjectionTests
 
     private sealed class RecordingHttpMessageHandler : HttpMessageHandler
     {
-        public Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> ResponseFactory { get; set; } =
-            (_, _) => Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK));
+        public Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>>? ResponseFactory { get; set; }
 
         public Uri? LastRequestUri
         {
@@ -148,6 +147,12 @@ public sealed class DependencyInjectionTests
         {
             LastRequestUri = request.RequestUri;
             RequestCount++;
+
+            if (ResponseFactory is null)
+            {
+                return new HttpResponseMessage(System.Net.HttpStatusCode.OK);
+            }
+
             return await ResponseFactory(request, cancellationToken);
         }
     }
