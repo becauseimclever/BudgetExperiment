@@ -209,7 +209,7 @@ public sealed class BackendSelectingAiServiceTests : IDisposable
             BackendType: AiBackendType.LlamaCpp));
         var service = CreateService(settingsService, CreateConfiguration());
 
-        _llamaHandler.ResponseFactory = (_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        using var llamaResponseMessage = new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = CreateJsonContent("""
                 {
@@ -225,7 +225,8 @@ public sealed class BackendSelectingAiServiceTests : IDisposable
                   }
                 }
                 """),
-        });
+        };
+        _llamaHandler.ResponseFactory = (_, _) => Task.FromResult(llamaResponseMessage);
 
         // Act
         var response = await service.CompleteAsync(new AiPrompt("system", "user", 0.3m, 128));
