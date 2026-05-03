@@ -25,9 +25,13 @@ public sealed class BackendSelectingAiServiceTests : IDisposable
             { "data": [ { "id": "llama-model" } ] }
             """),
     };
+
     private readonly HttpClient _llamaHttpClient;
+
     private readonly RecordingHttpMessageHandler _llamaHandler;
+
     private readonly HttpClient _ollamaHttpClient;
+
     private readonly RecordingHttpMessageHandler _ollamaHandler;
 
     /// <summary>
@@ -44,6 +48,7 @@ public sealed class BackendSelectingAiServiceTests : IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
+        _llamaModelsResponse.Dispose();
         _ollamaHttpClient.Dispose();
         _ollamaHandler.Dispose();
         _llamaHttpClient.Dispose();
@@ -169,7 +174,7 @@ public sealed class BackendSelectingAiServiceTests : IDisposable
             ["AiSettings:BackendType"] = nameof(AiBackendType.LlamaCpp),
         }));
 
-        _ollamaHandler.ResponseFactory = (_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        using var ollamaModelsResponse = new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = CreateJsonContent("""
                 {
@@ -182,7 +187,8 @@ public sealed class BackendSelectingAiServiceTests : IDisposable
                   ]
                 }
                 """),
-        });
+        };
+        _ollamaHandler.ResponseFactory = (_, _) => Task.FromResult(ollamaModelsResponse);
 
         // Act
         var models = await service.GetAvailableModelsAsync();
@@ -256,7 +262,7 @@ public sealed class BackendSelectingAiServiceTests : IDisposable
             ["AiSettings:BackendType"] = nameof(AiBackendType.LlamaCpp),
         }));
 
-        _ollamaHandler.ResponseFactory = (_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        using var ollamaResponseMessage = new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = new StringContent(
                 """
@@ -270,7 +276,8 @@ public sealed class BackendSelectingAiServiceTests : IDisposable
                 """,
                 Encoding.UTF8,
                 "application/json"),
-        });
+        };
+        _ollamaHandler.ResponseFactory = (_, _) => Task.FromResult(ollamaResponseMessage);
 
         // Act
         var response = await service.CompleteAsync(new AiPrompt("system", "user", 0.3m, 128));
@@ -288,6 +295,11 @@ public sealed class BackendSelectingAiServiceTests : IDisposable
         return new ConfigurationBuilder()
             .AddInMemoryCollection(values ?? new Dictionary<string, string?>())
             .Build();
+    }
+
+    private static StringContent CreateJsonContent(string json)
+    {
+        return new StringContent(json, Encoding.UTF8, "application/json");
     }
 
     private BackendSelectingAiService CreateService(IAppSettingsService settingsService, IConfiguration configuration)
@@ -331,10 +343,5 @@ public sealed class BackendSelectingAiServiceTests : IDisposable
             RequestCount++;
             return await ResponseFactory(request, cancellationToken);
         }
-    }
-    public void Dispose()
-    {
-        _llamaModelsResponse.Dispose();
-        _llamaHttpClient.Dispose();
     }
 }

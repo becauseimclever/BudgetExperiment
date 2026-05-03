@@ -2,6 +2,7 @@
 // Copyright (c) BecauseImClever. All rights reserved.
 // </copyright>
 
+using System.Linq;
 using System.Net;
 using System.Text.Json;
 
@@ -162,17 +163,40 @@ public sealed class Feature160OpenApiContractTests : IClassFixture<CustomWebAppl
             return TryFindPropertySchema(referencedSchema, propertyName, schemas, out propertySchema);
         }
 
-        foreach (var compositionKeyword in new[] { "allOf", "oneOf", "anyOf" })
+        if (TryFindInComposition(schema, "allOf", propertyName, schemas, out propertySchema))
         {
-            if (schema.TryGetProperty(compositionKeyword, out var compositionNode) &&
-                compositionNode.ValueKind == JsonValueKind.Array)
+            return true;
+        }
+
+        if (TryFindInComposition(schema, "oneOf", propertyName, schemas, out propertySchema))
+        {
+            return true;
+        }
+
+        if (TryFindInComposition(schema, "anyOf", propertyName, schemas, out propertySchema))
+        {
+            return true;
+        }
+
+        propertySchema = default;
+        return false;
+    }
+
+    private static bool TryFindInComposition(
+        JsonElement schema,
+        string compositionKeyword,
+        string propertyName,
+        JsonElement schemas,
+        out JsonElement propertySchema)
+    {
+        if (schema.TryGetProperty(compositionKeyword, out var compositionNode) &&
+            compositionNode.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in compositionNode.EnumerateArray())
             {
-                foreach (var item in compositionNode.EnumerateArray())
+                if (TryFindPropertySchema(item, propertyName, schemas, out propertySchema))
                 {
-                    if (TryFindPropertySchema(item, propertyName, schemas, out propertySchema))
-                    {
-                        return true;
-                    }
+                    return true;
                 }
             }
         }
@@ -248,17 +272,11 @@ public sealed class Feature160OpenApiContractTests : IClassFixture<CustomWebAppl
 
     private static HashSet<string> ToStringSet(JsonElement enumNode)
     {
-        var values = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var enumItem in enumNode.EnumerateArray())
-        {
-            var stringValue = enumItem.GetString();
-            if (!string.IsNullOrWhiteSpace(stringValue))
-            {
-                values.Add(stringValue);
-            }
-        }
-
-        return values;
+        return enumNode.EnumerateArray()
+            .Select(enumItem => enumItem.GetString())
+            .Where(static stringValue => !string.IsNullOrWhiteSpace(stringValue))
+            .Select(static stringValue => stringValue!)
+            .ToHashSet(StringComparer.Ordinal);
     }
 
     private async Task<JsonDocument> GetOpenApiDocumentAsync()

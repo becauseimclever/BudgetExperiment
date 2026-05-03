@@ -191,23 +191,15 @@ public sealed class LlamaCppAiServiceTests : IDisposable
     public async Task CompleteAsync_When_BackendReturnsErrorStatus_Returns_LlamaCpp_Error_Message()
     {
         // Arrange
-        var httpResponse = new HttpResponseMessage(HttpStatusCode.BadRequest)
+        using var httpResponse = new HttpResponseMessage(HttpStatusCode.BadRequest)
         {
             Content = new StringContent("invalid request", Encoding.UTF8, "text/plain"),
         };
 
         _handler.ResponseFactory = (_, _) => Task.FromResult(httpResponse);
 
-        AiResponse response;
-        try
-        {
-            // Act
-            response = await _service.CompleteAsync(new AiPrompt("system", "user"));
-        }
-        finally
-        {
-            httpResponse.Dispose();
-        }
+        // Act
+        var response = await _service.CompleteAsync(new AiPrompt("system", "user"));
 
         // Assert
         Assert.False(response.Success);
@@ -218,10 +210,11 @@ public sealed class LlamaCppAiServiceTests : IDisposable
     public async Task CompleteAsync_When_ResponseIsInvalidJson_Returns_Parse_Error_Message()
     {
         // Arrange
-        _handler.ResponseFactory = (_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+        using var invalidJsonResponse = new HttpResponseMessage(HttpStatusCode.OK)
         {
             Content = new StringContent("{ bad-json", Encoding.UTF8, "application/json"),
-        });
+        };
+        _handler.ResponseFactory = (_, _) => Task.FromResult(invalidJsonResponse);
 
         // Act
         var response = await _service.CompleteAsync(new AiPrompt("system", "user"));
