@@ -25,6 +25,7 @@ public sealed class OpenAiCompatibleAiServiceTests : IDisposable
     private readonly HttpClient _httpClient;
     private readonly FakeAppSettingsService _settingsService;
     private readonly TestOpenAiCompatibleAiService _service;
+    private HttpResponseMessage? _serviceUnavailableResponse;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="OpenAiCompatibleAiServiceTests"/> class.
@@ -49,6 +50,7 @@ public sealed class OpenAiCompatibleAiServiceTests : IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
+        _serviceUnavailableResponse?.Dispose();
         _httpClient.Dispose();
         _handler.Dispose();
     }
@@ -72,7 +74,8 @@ public sealed class OpenAiCompatibleAiServiceTests : IDisposable
     public async Task GetStatusAsync_When_BackendRespondsWithFailureStatus_Returns_Unavailable_Status()
     {
         // Arrange
-        _handler.ResponseFactory = (_, _) => Task.FromResult(new HttpResponseMessage(HttpStatusCode.ServiceUnavailable));
+        _serviceUnavailableResponse = new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+        _handler.ResponseFactory = (_, _) => Task.FromResult(_serviceUnavailableResponse);
 
         // Act
         var status = await _service.GetStatusAsync();
