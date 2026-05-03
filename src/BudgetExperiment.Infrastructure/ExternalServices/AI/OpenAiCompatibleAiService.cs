@@ -17,6 +17,10 @@ namespace BudgetExperiment.Infrastructure.ExternalServices.AI;
 /// <summary>
 /// Base class for AI backends that share the same HTTP execution flow.
 /// </summary>
+/// <remarks>
+/// Extension point for OpenAI-compatible providers. To add a backend, derive from this class,
+/// implement the abstract members, and register the new service in infrastructure DI.
+/// </remarks>
 public abstract class OpenAiCompatibleAiService : IAiService
 {
     /// <summary>
@@ -203,30 +207,46 @@ public abstract class OpenAiCompatibleAiService : IAiService
     /// <summary>
     /// Gets the backend display name used in log and error messages.
     /// </summary>
+    /// <remarks>
+    /// Extension point: override with a stable backend label (for example, "Ollama" or "llama.cpp").
+    /// </remarks>
     /// <returns>The backend display name.</returns>
     protected abstract string GetBackendDisplayName();
 
     /// <summary>
     /// Gets the relative health check endpoint.
     /// </summary>
+    /// <remarks>
+    /// Extension point: override when a backend exposes a non-standard health endpoint.
+    /// </remarks>
     /// <returns>The health check endpoint.</returns>
     protected abstract string GetHealthCheckEndpoint();
 
     /// <summary>
     /// Gets the relative models endpoint.
     /// </summary>
+    /// <remarks>
+    /// Extension point: override when model discovery uses a backend-specific route.
+    /// </remarks>
     /// <returns>The models endpoint.</returns>
     protected abstract string GetModelsEndpoint();
 
     /// <summary>
     /// Gets the relative completion endpoint.
     /// </summary>
+    /// <remarks>
+    /// Extension point: override to target the backend's text completion/chat endpoint.
+    /// </remarks>
     /// <returns>The completion endpoint.</returns>
     protected abstract string GetCompletionEndpoint();
 
     /// <summary>
     /// Builds a backend-specific completion request payload.
     /// </summary>
+    /// <remarks>
+    /// Extension point: override to shape provider-specific request JSON. Use
+    /// <see cref="CreateOpenAiCompatibleCompletionRequest(AiPrompt,AiSettingsData)"/> when possible.
+    /// </remarks>
     /// <param name="prompt">The prompt to send.</param>
     /// <param name="settings">The active AI settings.</param>
     /// <returns>The backend request payload.</returns>
@@ -235,6 +255,9 @@ public abstract class OpenAiCompatibleAiService : IAiService
     /// <summary>
     /// Parses the backend-specific models response.
     /// </summary>
+    /// <remarks>
+    /// Extension point: override to map the backend's models payload into <see cref="AiModelInfo"/>.
+    /// </remarks>
     /// <param name="content">The HTTP response content.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>The available models.</returns>
@@ -243,6 +266,9 @@ public abstract class OpenAiCompatibleAiService : IAiService
     /// <summary>
     /// Parses the backend-specific completion response.
     /// </summary>
+    /// <remarks>
+    /// Extension point: override to map provider-specific response payloads into <see cref="AiResponse"/>.
+    /// </remarks>
     /// <param name="content">The HTTP response content.</param>
     /// <param name="stopwatch">The request stopwatch.</param>
     /// <param name="cancellationToken">Cancellation token.</param>

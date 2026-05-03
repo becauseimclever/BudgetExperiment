@@ -52,7 +52,7 @@ When ready for production, see [DEPLOY-QUICKSTART.md](DEPLOY-QUICKSTART.md) for 
 
 - **Calendar-first ledger** — Daily summaries, weekly Kakeibo breakdowns, monthly reflections
 - **Kakeibo + Kaizen** — Four intentional spending categories, weekly micro-goals, monthly reflection ritual
-- **AI (local, private)** — Chat assistant and rule suggestions via Ollama — data stays on your machine
+- **AI (local, private)** — Chat assistant and rule suggestions via Ollama or llama.cpp — data stays on your machine
 - **CSV import** — Bank of America, Capital One, and UHCU with duplicate detection
 - **Reports** — Category spending, trends, budget vs. actual, custom report builder
 - **Self-hosted** — Runs on a Raspberry Pi, single Docker command for demo mode

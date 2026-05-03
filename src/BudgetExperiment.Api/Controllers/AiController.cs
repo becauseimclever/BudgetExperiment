@@ -136,6 +136,7 @@ public sealed class AiController : ControllerBase
     /// <returns>Analysis results.</returns>
     [HttpPost("analyze")]
     [RequestTimeout("AiAnalysis")]
+    [Produces("application/json", "application/problem+json")]
     [ProducesResponseType<AnalysisResponseDto>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status503ServiceUnavailable)]
     [ProducesResponseType(StatusCodes.Status504GatewayTimeout)]
@@ -147,13 +148,11 @@ public sealed class AiController : ControllerBase
         if (!status.IsAvailable)
         {
             _logger.LogWarning("AI service is not available: {ErrorMessage}", status.ErrorMessage);
-            return this.StatusCode(
-                StatusCodes.Status503ServiceUnavailable,
-                new
-                {
-                    message = "AI service is not available",
-                    error = status.ErrorMessage,
-                });
+            var detail = string.IsNullOrWhiteSpace(status.ErrorMessage)
+                ? "AI service is not available"
+                : $"AI service is not available. {status.ErrorMessage}";
+
+            return this.CreateAnalyzeProblem(StatusCodes.Status503ServiceUnavailable, detail);
         }
 
         try
@@ -182,32 +181,22 @@ public sealed class AiController : ControllerBase
         {
             // Client disconnected or cancelled - return 499 (Client Closed Request, nginx convention)
             _logger.LogInformation("AI analysis was cancelled by client");
-            return this.StatusCode(499, new
-            {
-                message = "Client cancelled the request",
-            });
+            return this.CreateAnalyzeProblem(499, "Client cancelled the request");
         }
         catch (OperationCanceledException ex)
         {
             _logger.LogWarning(ex, "AI analysis timed out");
-            return this.StatusCode(
+            return this.CreateAnalyzeProblem(
                 StatusCodes.Status504GatewayTimeout,
-                new
-                {
-                    message = "AI analysis timed out. The AI service took too long to respond.",
-                    suggestion = "Try increasing the timeout in AI Settings or ensure Ollama is running properly.",
-                });
+                "AI analysis timed out. The AI service took too long to respond.",
+                "Try increasing the timeout in AI Settings or ensure Ollama is running properly.");
         }
         catch (HttpRequestException ex)
         {
             _logger.LogError(ex, "Failed to communicate with AI service during analysis");
-            return this.StatusCode(
+            return this.CreateAnalyzeProblem(
                 StatusCodes.Status503ServiceUnavailable,
-                new
-                {
-                    message = "Failed to communicate with AI service",
-                    error = ex.Message,
-                });
+                $"Failed to communicate with AI service. {ex.Message}");
         }
     }
 
@@ -223,5 +212,40 @@ public sealed class AiController : ControllerBase
             IsEnabled = settings.IsEnabled,
             BackendType = settings.BackendType,
         };
+    }
+
+    private IActionResult CreateAnalyzeProblem(int statusCode, string detail, string? suggestion = null)
+    {
+        var title = statusCode switch
+        {
+            StatusCodes.Status503ServiceUnavailable => "Service Unavailable",
+            StatusCodes.Status504GatewayTimeout => "Gateway Timeout",
+            499 => "Client Closed Request",
+            _ => "Error",
+        };
+
+        var problemDetails = new ProblemDetails
+        {
+            Type = "about:blank",
+            Title = title,
+            Status = statusCode,
+            Detail = detail,
+            Instance = this.HttpContext.Request.Path,
+        };
+
+        problemDetails.Extensions["traceId"] = this.HttpContext.TraceIdentifier;
+
+        if (!string.IsNullOrWhiteSpace(suggestion))
+        {
+            problemDetails.Extensions["suggestion"] = suggestion;
+        }
+
+        var result = new JsonResult(problemDetails)
+        {
+            StatusCode = statusCode,
+            ContentType = "application/problem+json",
+        };
+
+        return result;
     }
 }

@@ -31,6 +31,18 @@ Please review the comprehensive engineering guide in [`.github/copilot-instructi
 - REST API design patterns
 - Testing strategy
 
+### Adding a New AI Backend
+
+When introducing a new AI backend, keep the Application and Domain layers unchanged.
+
+1. Add a new value to `AiBackendType`.
+2. Implement a new infrastructure service:
+   - Prefer extending `OpenAiCompatibleAiService` for OpenAI-compatible backends.
+   - Implement `IAiService` directly only when protocol behavior is materially different.
+3. Update infrastructure DI registration to map the new enum value to the service.
+4. Validate API behavior for `/api/v1/ai/status`, `/api/v1/ai/models`, and `/api/v1/ai/analyze`.
+5. Update `docs/AI.md` with configuration examples for the new backend.
+
 ## 🔄 Development Workflow
 
 ### 1. Create a Feature Branch

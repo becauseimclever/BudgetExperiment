@@ -187,6 +187,44 @@ public sealed class LlamaCppAiServiceTests : IDisposable
         Assert.Equal(21, response.TokensUsed);
     }
 
+    [Fact]
+    public async Task CompleteAsync_When_BackendReturnsErrorStatus_Returns_LlamaCpp_Error_Message()
+    {
+        // Arrange
+        using var httpResponse = new HttpResponseMessage(HttpStatusCode.BadRequest)
+        {
+            Content = new StringContent("invalid request", Encoding.UTF8, "text/plain"),
+        };
+
+        _handler.ResponseFactory = (_, _) => Task.FromResult(httpResponse);
+
+        // Act
+        var response = await _service.CompleteAsync(new AiPrompt("system", "user"));
+
+        // Assert
+        Assert.False(response.Success);
+        Assert.Equal("llama.cpp returned status BadRequest: invalid request", response.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task CompleteAsync_When_ResponseIsInvalidJson_Returns_Parse_Error_Message()
+    {
+        // Arrange
+        using var invalidJsonResponse = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent("{ bad-json", Encoding.UTF8, "application/json"),
+        };
+        _handler.ResponseFactory = (_, _) => Task.FromResult(invalidJsonResponse);
+
+        // Act
+        var response = await _service.CompleteAsync(new AiPrompt("system", "user"));
+
+        // Assert
+        Assert.False(response.Success);
+        Assert.NotNull(response.ErrorMessage);
+        Assert.StartsWith("Failed to parse llama.cpp response:", response.ErrorMessage, StringComparison.Ordinal);
+    }
+
     private sealed class RecordingHttpMessageHandler : HttpMessageHandler
     {
         public Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> ResponseFactory { get; set; } =

@@ -25,6 +25,7 @@ public sealed class OpenAiCompatibleAiServiceTests : IDisposable
     private readonly HttpClient _httpClient;
     private readonly FakeAppSettingsService _settingsService;
     private readonly TestOpenAiCompatibleAiService _service;
+    private HttpResponseMessage? _serviceUnavailableResponse;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="OpenAiCompatibleAiServiceTests"/> class.
@@ -49,6 +50,7 @@ public sealed class OpenAiCompatibleAiServiceTests : IDisposable
     /// <inheritdoc />
     public void Dispose()
     {
+        _serviceUnavailableResponse?.Dispose();
         _httpClient.Dispose();
         _handler.Dispose();
     }
@@ -66,6 +68,38 @@ public sealed class OpenAiCompatibleAiServiceTests : IDisposable
         Assert.True(status.IsAvailable);
         Assert.Equal("test-model", status.CurrentModel);
         Assert.Equal("http://localhost:1234/health", _handler.LastRequestUri?.ToString());
+    }
+
+    [Fact]
+    public async Task GetStatusAsync_When_BackendRespondsWithFailureStatus_Returns_Unavailable_Status()
+    {
+        // Arrange
+        _serviceUnavailableResponse = new HttpResponseMessage(HttpStatusCode.ServiceUnavailable);
+        _handler.ResponseFactory = (_, _) => Task.FromResult(_serviceUnavailableResponse);
+
+        // Act
+        var status = await _service.GetStatusAsync();
+
+        // Assert
+        Assert.False(status.IsAvailable);
+        Assert.Null(status.CurrentModel);
+        Assert.Equal("Test Backend returned status ServiceUnavailable", status.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task GetStatusAsync_When_HttpRequestException_Returns_Unavailable_Status()
+    {
+        // Arrange
+        _handler.ResponseFactory = (_, _) => throw new HttpRequestException("connection refused");
+
+        // Act
+        var status = await _service.GetStatusAsync();
+
+        // Assert
+        Assert.False(status.IsAvailable);
+        Assert.Null(status.CurrentModel);
+        Assert.Contains("Failed to connect to Test Backend", status.ErrorMessage, StringComparison.Ordinal);
+        Assert.Contains("connection refused", status.ErrorMessage, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -140,6 +174,99 @@ public sealed class OpenAiCompatibleAiServiceTests : IDisposable
         // Assert
         Assert.False(response.Success);
         Assert.Equal("AI request timed out after 1 seconds.", response.ErrorMessage);
+    }
+
+    [Fact]
+    public async Task CompleteAsync_OpenAiCompatibleCompletion_Serializes_Request_And_Parses_TotalTokens()
+    {
+        // Arrange
+        using var completionResponse = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(
+                """
+                {
+                    "choices": [
+                        {
+                            "message": {
+                                "role": "assistant",
+                                "content": "A categorized response"
+                            }
+                        }
+                    ],
+                    "usage": {
+                        "prompt_tokens": 11,
+                        "completion_tokens": 4,
+                        "total_tokens": 15
+                    }
+                }
+                """,
+                Encoding.UTF8,
+                "application/json"),
+        };
+        _handler.ResponseFactory = (_, _) => Task.FromResult(completionResponse);
+
+        var service = new OpenAiProtocolTestService(
+            _httpClient,
+            _settingsService,
+            NullLogger<OpenAiProtocolTestService>.Instance);
+
+        // Act
+        var response = await service.CompleteAsync(new AiPrompt("system prompt", "user prompt", 0.55m, 144));
+
+        // Assert
+        Assert.True(response.Success);
+        Assert.Equal("A categorized response", response.Content);
+        Assert.Equal(15, response.TokensUsed);
+
+        using var json = JsonDocument.Parse(_handler.LastRequestBody);
+        Assert.Equal("test-model", json.RootElement.GetProperty("model").GetString());
+        Assert.Equal(0.55d, json.RootElement.GetProperty("temperature").GetDouble(), 3);
+        Assert.Equal(144, json.RootElement.GetProperty("max_tokens").GetInt32());
+        Assert.Equal("system", json.RootElement.GetProperty("messages")[0].GetProperty("role").GetString());
+        Assert.Equal("system prompt", json.RootElement.GetProperty("messages")[0].GetProperty("content").GetString());
+        Assert.Equal("user", json.RootElement.GetProperty("messages")[1].GetProperty("role").GetString());
+        Assert.Equal("user prompt", json.RootElement.GetProperty("messages")[1].GetProperty("content").GetString());
+    }
+
+    [Fact]
+    public async Task CompleteAsync_OpenAiCompatibleCompletion_When_TotalTokensMissing_Sums_Prompt_And_Completion()
+    {
+        // Arrange
+        using var completionResponse = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(
+                """
+                {
+                    "choices": [
+                        {
+                            "message": {
+                                "role": "assistant",
+                                "content": "A categorized response"
+                            }
+                        }
+                    ],
+                    "usage": {
+                        "prompt_tokens": 7,
+                        "completion_tokens": 3
+                    }
+                }
+                """,
+                Encoding.UTF8,
+                "application/json"),
+        };
+        _handler.ResponseFactory = (_, _) => Task.FromResult(completionResponse);
+
+        var service = new OpenAiProtocolTestService(
+            _httpClient,
+            _settingsService,
+            NullLogger<OpenAiProtocolTestService>.Instance);
+
+        // Act
+        var response = await service.CompleteAsync(new AiPrompt("system prompt", "user prompt", 0.55m, 144));
+
+        // Assert
+        Assert.True(response.Success);
+        Assert.Equal(10, response.TokensUsed);
     }
 
     private sealed class RecordingHttpMessageHandler : HttpMessageHandler
@@ -230,6 +357,49 @@ public sealed class OpenAiCompatibleAiServiceTests : IDisposable
             public decimal Temperature { get; set; }
 
             public int MaxTokens { get; set; }
+        }
+    }
+
+    private sealed class OpenAiProtocolTestService : OpenAiCompatibleAiService
+    {
+        public OpenAiProtocolTestService(
+            HttpClient httpClient,
+            IAppSettingsService settingsService,
+            ILogger<OpenAiProtocolTestService> logger)
+            : base(httpClient, settingsService, logger)
+        {
+        }
+
+        protected override string GetBackendDisplayName() => "Test Backend";
+
+        protected override string GetCompletionEndpoint() => "chat/completions";
+
+        protected override string GetHealthCheckEndpoint() => "health";
+
+        protected override string GetModelsEndpoint() => "models";
+
+        protected override object CreateCompletionRequest(AiPrompt prompt, AiSettingsData settings)
+        {
+            return CreateOpenAiCompatibleCompletionRequest(prompt, settings);
+        }
+
+        protected override Task<AiResponse> ParseCompletionResponseAsync(
+            HttpContent content,
+            Stopwatch stopwatch,
+            CancellationToken cancellationToken)
+        {
+            return ParseOpenAiCompatibleCompletionResponseAsync(
+                content,
+                stopwatch,
+                GetBackendDisplayName(),
+                cancellationToken);
+        }
+
+        protected override Task<IReadOnlyList<AiModelInfo>> ParseModelsResponseAsync(
+            HttpContent content,
+            CancellationToken cancellationToken)
+        {
+            return Task.FromResult<IReadOnlyList<AiModelInfo>>([]);
         }
     }
 }
