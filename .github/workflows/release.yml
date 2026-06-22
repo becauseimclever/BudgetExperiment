@@ -1,7 +1,7 @@
 name: Create Release
 
 # Action versions:
-# - actions/checkout@v4
+# - actions/checkout@v7
 # - orhun/git-cliff-action@v4
 # - softprops/action-gh-release@v3
 # Triggers: push to tags matching 'v*'; docker-build job calls docker-build-publish.yml
@@ -30,7 +30,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
