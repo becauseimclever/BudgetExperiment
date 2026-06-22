@@ -1,7 +1,7 @@
 name: Performance Tests
 
 # Action versions:
-# - actions/checkout@v4
+# - actions/checkout@v7
 # - actions/setup-dotnet@v4
 # - actions/cache@v4
 # - actions/upload-artifact@v4
@@ -47,7 +47,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
