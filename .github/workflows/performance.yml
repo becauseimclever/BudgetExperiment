@@ -3,7 +3,7 @@ name: Performance Tests
 # Action versions:
 # - actions/checkout@v4
 # - actions/setup-dotnet@v4
-# - actions/cache@v4
+# - actions/cache@v6
 # - actions/upload-artifact@v4
 on:
   # Scheduled: full load test suite weekly (Sunday 03:00 UTC)
@@ -57,7 +57,7 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Cache NuGet packages
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.nuget/packages
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Build.props') }}
