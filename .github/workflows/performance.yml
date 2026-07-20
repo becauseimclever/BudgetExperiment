@@ -2,7 +2,7 @@ name: Performance Tests
 
 # Action versions:
 # - actions/checkout@v4
-# - actions/setup-dotnet@v4
+# - actions/setup-dotnet@v6
 # - actions/cache@v4
 # - actions/upload-artifact@v4
 on:
@@ -52,7 +52,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: '10.0.x'
 
