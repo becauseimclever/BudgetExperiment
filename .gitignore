@@ -452,3 +452,6 @@ tests/BudgetExperiment.Performance.Tests/**/reports/
 
 # Git worktrees (agent workspaces)
 .worktrees/
+
+# Archived docs (kept local, not tracked)
+docs-archive/
